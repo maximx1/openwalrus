@@ -9,3 +9,4 @@ target/
 .sbtserver/
 .cache-main
 .cache-tests
+bin/
