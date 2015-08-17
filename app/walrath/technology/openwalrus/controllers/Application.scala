@@ -8,7 +8,7 @@ import walrath.technology.openwalrus.model.tos.User
 
 class Application extends Controller {
   def index = Action {
-    //(new PersonDao()).storeUser(User(None, "Timmay", "Turner"))
+    (new UserDao()).store(User(None, "timmay","test@sample.com","samplePass", "Testy", "Testerson", System.currentTimeMillis(), true))
     Ok(views.html.index("Your new application is ready."))
   }
 

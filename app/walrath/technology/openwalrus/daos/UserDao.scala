@@ -12,9 +12,15 @@ class UserDao()(implicit app: Application) extends MongoDaoBase {
   
   def mongoColl = connect(collName)
   
-  def storeUser(user: User) = mongoColl.insert(user.toMongoDBObject)
+  def store(user: User) = mongoColl.insert(user.toMongoDBObject)
   
   def findAll = mongoColl.find()
+  
+  def login(handle: String, password: String): Option[User] = {
+    mongoColl.findOne(MongoDBObject("handle"->handle, "password"->password)) match {
+    case Some(x) => Some(User.fromMongoObject(x))
+    case None => None
+  }}
   
   def count = mongoColl.count()
 }
