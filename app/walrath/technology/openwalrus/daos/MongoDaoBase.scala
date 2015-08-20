@@ -7,6 +7,7 @@ import play.api.Application
  * @author maximx1
  */
 trait MongoDaoBase {
+  //val
   val mongodbURI = "mongodb.default.host"
   val mongodbNameProp = "mongodb.default.name"
   protected def openClient()(implicit app: Application) = MongoClient(MongoClientURI(app.configuration.getString(mongodbURI).get))

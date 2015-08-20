@@ -14,8 +14,8 @@ case class User(
     lastName: String,
     creationDate: Long,
     currentlyActivated: Boolean
-  ) {
-  def toMongoDBObject = MongoDBObject(
+  ) extends BaseTOModel {
+  override def toMongoDBObject = MongoDBObject(
     "handle"->handle,
     "email"->email,
     "password"->password,

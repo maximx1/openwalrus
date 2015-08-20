@@ -15,20 +15,20 @@ class UserDaoIntegrationTest extends MongoTestBase with BeforeAndAfter {
   "A User" should {
     "be made and a document should be able to be added to the db" in {
       val user = createTestUser
-      userDao.store(user)
+      userDao.create(user)
       assert(userDao.count === 1)
     }
     
     "not be stopped from logging in with valid credentials" in {
       val user = createTestUser
-      userDao.store(user)
+      userDao.create(user)
       val results = userDao.login(user.handle, user.password)
       assert(results !== None)
     }
     
     "be stopped from logging in with invalid credentials" in {
       val user = createTestUser
-      userDao.store(user)
+      userDao.create(user)
       val results = userDao.login(user.handle, "asdf")
       assert(results === None)
     }
@@ -38,8 +38,8 @@ class UserDaoIntegrationTest extends MongoTestBase with BeforeAndAfter {
     "be made and documents should be able to be added to the db" in {
       val user1 = createTestUser
       val user2 = createTestUser.copy(firstName="Westy", lastName="Westerson")
-      userDao.store(user1)
-      userDao.store(user2)
+      userDao.create(user1)
+      userDao.create(user2)
       assert(userDao.count === 2)
     }
   }

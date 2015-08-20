@@ -7,6 +7,7 @@ import play.api.test._
 import play.api.test.Helpers._
 import org.scalatestplus.play._
 import com.mongodb.casbah.Imports._
+import org.scalatest.Matchers
 
 trait MongoTestBase extends PlaySpec with OneAppPerSuite with MongoEmbedDatabase with MongoDaoBase {
     val testPort = 27017
