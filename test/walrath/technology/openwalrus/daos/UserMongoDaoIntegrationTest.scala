@@ -3,12 +3,15 @@ package walrath.technology.openwalrus.daos
 import org.scalatest.BeforeAndAfter
 import com.mongodb.casbah.Imports._
 import walrath.technology.openwalrus.model.tos.User
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.Mode
 
-class UserDaoIntegrationTest extends MongoTestBase with BeforeAndAfter {
-  var userDao: UserDao = null
-  before { 
+class UserMongoDaoIntegrationTest extends MongoTestBase with BeforeAndAfter {
+  var userDao: UserMongoDao = null
+  
+  before {
     startMongoServer
-    userDao = new UserDao()
+    userDao = new UserMongoDao()
   }
   after { stopMongoServer }
 
@@ -19,17 +22,17 @@ class UserDaoIntegrationTest extends MongoTestBase with BeforeAndAfter {
       assert(userDao.count === 1)
     }
     
-    "not be stopped from logging in with valid credentials" in {
+    "found in db by looking for the handle if user exists" in {
       val user = createTestUser
       userDao.create(user)
-      val results = userDao.login(user.handle, user.password)
+      val results = userDao.findByHandle(user.handle)
       assert(results !== None)
+      assert(results.get.copy(id=None) === user)
     }
     
-    "be stopped from logging in with invalid credentials" in {
+    "not found in db by looking for the handle if user exists" in {
       val user = createTestUser
-      userDao.create(user)
-      val results = userDao.login(user.handle, "asdf")
+      val results = userDao.findByHandle(user.handle)
       assert(results === None)
     }
   }

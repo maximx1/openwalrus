@@ -8,15 +8,18 @@ import play.api.test.Helpers._
 import org.scalatestplus.play._
 import com.mongodb.casbah.Imports._
 import org.scalatest.Matchers
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.Mode
 
-trait MongoTestBase extends PlaySpec with OneAppPerSuite with MongoEmbedDatabase with MongoDaoBase {
-    val testPort = 27017
-    implicit override lazy val app: FakeApplication = FakeApplication(
-      additionalConfiguration = Map(
+trait MongoTestBase extends PlaySpec with MongoEmbedDatabase with MongoDaoBase {
+    val testPort = 27100
+    
+    implicit lazy val app = new GuiceApplicationBuilder().configure(Map(
         mongodbNameProp -> "testDB",
         mongodbURI -> ("mongodb://localhost:" + testPort.toString)
       )
-    )
+    ).in(Mode.Test).build
+    
     protected var mongoInstance: MongodProps = null
     protected def startMongoServer = Try { mongoInstance = mongoStart(testPort) }
     protected def stopMongoServer = mongoStop(mongoInstance)
