@@ -16,6 +16,9 @@ class UserManager @Inject() (userDao: UserDao) {
   
   /**
    * Attempts the login of a user
+   * @param handle The username to try
+   * @param password The password to try
+   * @return The User if matched.
    */
   def login(handle: String, password: String): Option[User] = {
     userDao.findByHandle(handle) match {
@@ -23,4 +26,11 @@ class UserManager @Inject() (userDao: UserDao) {
       case None => { Logger.info(userNotFoundErrMsg);None }
     }
   }
+  
+  /**
+   * Checks to see if the User with passed in handle exists.
+   * @param handle The username to try
+   * @return true if the handle exists, false if it doesn't.
+   */
+  def checkIfHandleInUse(handle: String): Boolean = !userDao.findByHandle(handle).isEmpty
 }

@@ -10,15 +10,20 @@ import com.mongodb.casbah.Imports._
 import org.scalatest.Matchers
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.Mode
+import org.scalatest.WordSpec
+import play.api.inject.guice.GuiceInjectorBuilder
+import play.api.inject.bind
+import org.scalatest.OneInstancePerTest
 
-trait MongoTestBase extends PlaySpec with MongoEmbedDatabase with MongoDaoBase {
+trait MongoTestBase extends PlaySpec with OneAppPerSuite with MongoEmbedDatabase with MongoDaoBase {
     val testPort = 27100
     
-    implicit lazy val app = new GuiceApplicationBuilder().configure(Map(
+    implicit override lazy val app: FakeApplication = FakeApplication(
+      additionalConfiguration = Map(
         mongodbNameProp -> "testDB",
         mongodbURI -> ("mongodb://localhost:" + testPort.toString)
       )
-    ).in(Mode.Test).build
+    )
     
     protected var mongoInstance: MongodProps = null
     protected def startMongoServer = Try { mongoInstance = mongoStart(testPort) }

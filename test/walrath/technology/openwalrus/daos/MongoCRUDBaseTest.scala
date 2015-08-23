@@ -5,17 +5,19 @@ import com.mongodb.casbah.Imports._
 import walrath.technology.openwalrus.model.tos.BaseTOModel
 import walrath.technology.openwalrus.model.tos.BaseModel
 import play.api.Application
+import com.google.inject.Inject
 
 class MongoCRUDBaseTest extends MongoTestBase with BeforeAndAfter {
-  var dao: TestDocumentDao = null
+  private var dao: TestDocumentDao = null//app.injector.instanceOf[TestDocumentDao]
+  
   before { 
     startMongoServer
-    dao = new TestDocumentDao()
+    dao = new TestDocumentDao
   }
   after { stopMongoServer }
   
   "A TO" should {
-    "Be able to be created" in {
+    "be able to be created" in {
       val doc = createTestDoc
       dao.create(doc)
       val results = TestDocument.fromMongoObjectList(dao.findAll.toList)
@@ -25,7 +27,7 @@ class MongoCRUDBaseTest extends MongoTestBase with BeforeAndAfter {
   }
   
   "Multiple TOs" should {
-    "Be able to be created" in {
+    "be able to be created" in {
       val doc1 = createTestDoc
       val doc2 = doc1.copy(value1="secondary_val")
       dao.create(doc1)
@@ -38,7 +40,7 @@ class MongoCRUDBaseTest extends MongoTestBase with BeforeAndAfter {
   }
   
   "DB Count Operation" should {
-    "Be able to correctly count the number of documents in a database" in {
+    "be able to correctly count the number of documents in a database" in {
       val doc = createTestDoc
       (0 to 99).foreach(x => dao.create(doc))
       assert(dao.count === 100)
@@ -46,7 +48,7 @@ class MongoCRUDBaseTest extends MongoTestBase with BeforeAndAfter {
   }
   
   "Read DB operations" should {
-    "Be able to retrieve all documents from collection" in {
+    "be able to retrieve all documents from collection" in {
       (0 to 99).foreach(x => dao.create(TestDocument(None, x.toString)))
       val results = TestDocument.fromMongoObjectList(dao.findAll.toList)
       val values = results.map(_.value1.toInt)
@@ -58,7 +60,7 @@ class MongoCRUDBaseTest extends MongoTestBase with BeforeAndAfter {
   def createTestDoc = TestDocument(None, "sample")
 }
 
-class TestDocumentDao()(implicit app: Application) extends MongoCRUDBase[TestDocument] {
+class TestDocumentDao @Inject() ()(implicit app: Application) extends MongoCRUDBase[TestDocument] {
   override val collName = "TestDocument"
 }
 

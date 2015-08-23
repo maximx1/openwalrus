@@ -5,13 +5,15 @@ import com.mongodb.casbah.Imports._
 import walrath.technology.openwalrus.model.tos.User
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.Mode
+import javax.inject.Inject
 
 class UserMongoDaoIntegrationTest extends MongoTestBase with BeforeAndAfter {
-  var userDao: UserMongoDao = null
+  
+  private var userDao: UserMongoDao = null
   
   before {
     startMongoServer
-    userDao = new UserMongoDao()
+    userDao = new UserMongoDao
   }
   after { stopMongoServer }
 
@@ -22,7 +24,7 @@ class UserMongoDaoIntegrationTest extends MongoTestBase with BeforeAndAfter {
       assert(userDao.count === 1)
     }
     
-    "found in db by looking for the handle if user exists" in {
+    "be found in db by looking for the handle if user exists" in {
       val user = createTestUser
       userDao.create(user)
       val results = userDao.findByHandle(user.handle)
