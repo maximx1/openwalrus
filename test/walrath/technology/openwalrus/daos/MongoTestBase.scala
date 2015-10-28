@@ -15,7 +15,7 @@ import play.api.inject.guice.GuiceInjectorBuilder
 import play.api.inject.bind
 import org.scalatest.OneInstancePerTest
 
-trait MongoTestBase extends PlaySpec with OneAppPerSuite with MongoEmbedDatabase with MongoDaoBase {
+trait MongoTestBase extends PlaySpec with OneAppPerSuite with MongoEmbedDatabase with MongoDaoBaseConnectionHandler {
     val testPort = 27100
     
     implicit override lazy val app: FakeApplication = FakeApplication(

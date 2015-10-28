@@ -7,7 +7,7 @@ import javax.inject.Inject
 
 class UserManagerTest extends ManagerTestBase {
   
-  @Inject val userManager = injector.instanceOf[UserManager]
+  @Inject val userManager: UserManager = injector.instanceOf[UserManager]
   
   "A User" should {
     "be able to login if they have a correct username/password combination for existing user" in {

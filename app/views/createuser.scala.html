@@ -1,0 +1,50 @@
+@(languages: List[String])
+<!DOCTYPE html>
+
+<html>
+	<head>
+	    <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Sign up for OpenWalrus</title>
+		<link rel="stylesheet" media="screen, handheld" href='@routes.WebJarAssets.at(WebJarAssets.locate("css/bootstrap.min.css"))'>
+		<link rel="stylesheet" media="screen, handheld" href='@routes.Assets.versioned("stylesheets/main.css")'>
+	</head>
+	<body>
+        <nav class="navbar navbar-inverse" role="navigation">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>    
+            </div>
+            <a class="navbar-brand" href="#">
+                <div class="white circle headerCircle"></div>
+            </a>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <!--<li><a href="#" class="unbold">Language: <span class="bold">@languages.head</span></a></li>-->
+                    <li><a href="#" class="unbold">Have an account? <span class="bold">Log in</span></a></li>
+                </ul>
+            </div>
+        </nav>
+    		<form class="signupForm" method="post" action="/account/create">
+    		    <h3>Join OpenWalrus today.</h3>
+    		    <div class="form-group">
+    		        <input name="fullname" type="text" class="form-control fullWidth" placeholder="Full Name" />
+    		    </div>
+    		    <div class="form-group">
+    		        <input name="phoneoremail" type="text" class="form-control fullWidth" placeholder="Phone or Email" />
+    		    </div>
+    		    <div class="form-group">
+    		        <input name="handle" type="text" class="form-control fullWidth" placeholder="Handle" />
+    		    </div>
+    		    <div class="form-group">
+    		        <input name="password" type="password" class="form-control fullWidth" placeholder="Password" />
+    		    </div>
+    		    <button class="fullWidth centerText" type="submit">Sign Me Up</button>
+    		</form>
+		<script type='text/javascript' src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))'></script>
+		<script type='text/javascript' src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.js"))'></script>
+	</body>
+</html>

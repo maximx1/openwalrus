@@ -6,13 +6,21 @@ import walrath.technology.openwalrus.model.tos.User
 import com.google.inject.ImplementedBy
 import javax.inject.Inject
 
+/**
+ * User Dao to handle db operations for Users.
+ */
 @ImplementedBy(classOf[UserMongoDao])
 trait UserDao {
+  /**
+   * Finds a user document by the handle.
+   * @param handle The user handle to key off.
+   * @return The Optional User object found.
+   */
   def findByHandle(handle: String): Option[User]
 }
 
 /**
- * User Mongo access document
+ * Implementation for UserDao using Mongo.
  * @author maximx1
  */
 class UserMongoDao @Inject() ()(implicit app: Application) extends MongoCRUDBase[User] with UserDao {
@@ -20,6 +28,8 @@ class UserMongoDao @Inject() ()(implicit app: Application) extends MongoCRUDBase
   
   /**
    * Finds a user document by the handle.
+   * @param handle The user handle to key off.
+   * @return The Optional User object found.
    */
   override def findByHandle(handle: String): Option[User] = {
     mongoColl.findOne(MongoDBObject("handle"->handle)) match {

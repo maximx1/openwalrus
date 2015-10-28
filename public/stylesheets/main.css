@@ -1,0 +1,81 @@
+.circle {
+    border-radius: 50%;
+}
+
+.centerText {
+    text-align: center;
+}
+
+.white {
+    background-color: white;
+}
+
+.whiteText {
+    font-color:asdf
+}
+
+.headerCircle {
+    transition: background-color 0.5s ease;
+    width: 1.3em;
+    height: 1.3em;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.headerCircle:hover {
+    background-color: #FF6600;
+}
+
+.navbar-brand {
+    display: block;
+    position: absolute;
+    width: 1.5em;
+    text-align: center;
+    left: 46%;
+}
+
+@media screen and (max-width: 40.5em) {
+    .navbar-inverse {
+        font-size: 2em;
+    }
+    
+    .navbar-brand {
+        top:-10em;
+    }
+}
+
+.navbar-inverse {
+    border-radius: 0px;
+    border: 0px;
+    background: -webkit-linear-gradient(left, #557EBF, #48B9A6);
+    background: -moz-linear-gradient(left, #557EBF, #48B9A6);
+    background: -o-linear-gradient(left, #557EBF, #48B9A6);
+    background: linear-gradient(to right, #557EBF, #48B9A6);
+}
+
+.navbar-inverse .navbar-nav>li>a {
+    color: white;
+}
+
+.navbar-inverse .navbar-nav>li>a:hover {
+    color: #FF6600;
+}
+
+.bold {
+    font-weight: bolder;
+}
+
+.unbold {
+    font-weight: lighter;
+}
+
+.signupForm {
+    width: 30em;
+    margin: 0 auto;
+    margin-top: 3em;
+}
+
+.fullWidth {
+    width: 100%;
+    height: 3em;
+}

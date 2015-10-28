@@ -9,11 +9,14 @@ scalaVersion := "2.11.7"
 libraryDependencies ++= Seq(
   cache,
   ws,
-  "org.scalatest" % "scalatest_2.11" % "2.2.4" % "test",
-  "org.scalamock" %% "scalamock-scalatest-support" % "3.2" % "test",
-  "org.scalatestplus" %% "play" % "1.4.0-M3" % "test",
   "org.reactivemongo" %% "play2-reactivemongo" % "0.11.5.play24",
   "org.mongodb" %% "casbah" % "2.8.2",
+  "org.webjars" %% "webjars-play" % "2.4.0-1",
+  "org.webjars" % "jquery" % "2.1.4",
+  "org.webjars" % "bootstrap" % "3.3.5",
+  "org.scalatestplus" %% "play" % "1.4.0-M3" % "test",
+  "org.scalatest" % "scalatest_2.11" % "2.2.4" % "test",
+  "org.scalamock" %% "scalamock-scalatest-support" % "3.2" % "test",
   "com.github.simplyscala" %% "scalatest-embedmongo" % "0.2.2" % "test"
 )
 
