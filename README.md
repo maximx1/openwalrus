@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/maximx1/openwalrus.svg?branch=develop)](https://travis-ci.org/maximx1/openwalrus)
+[![Stories in Ready](https://badge.waffle.io/maximx1/openwalrus.svg?label=ready&title=Ready)](http://waffle.io/maximx1/openwalrus)
+
 OpenWalrus
 ==========
 
