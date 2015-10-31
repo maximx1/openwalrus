@@ -15,6 +15,7 @@ libraryDependencies ++= Seq(
   "org.webjars" %% "webjars-play" % "2.4.0-1",
   "org.webjars" % "jquery" % "2.1.4",
   "org.webjars" % "bootstrap" % "3.3.5",
+  "com.github.nscala-time" %% "nscala-time" % "2.4.0",
   "org.scalatestplus" %% "play" % "1.4.0-M3" % "test",
   "org.scalatest" % "scalatest_2.11" % "2.2.4" % "test",
   "org.scalamock" %% "scalamock-scalatest-support" % "3.2" % "test",

@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 
 <html>
-	@partials.headtag()
+	@partials.headtag("Sign up for OpenWalrus")
 	<body>
         @partials.navbar() {
             <ul class="nav navbar-nav navbar-right">
@@ -10,7 +10,7 @@
                 <li><a href="#" class="unbold">Have an account? <span class="bold">Log in</span></a></li>
             </ul>
         }
-    		<form class="signupForm" method="post" action="/account/create">
+    		<form class="signupForm" method="post" action="@routes.Application.performSignup">
     		    <h3>Join OpenWalrus today.</h3>
     		    <div class="form-group">
     		        <input name="fullname" type="text" class="form-control fullWidth" placeholder="Full Name" />

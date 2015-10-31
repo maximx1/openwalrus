@@ -1,4 +1,4 @@
-package walrath.technology.openwalrus.business
+package business
 
 import walrath.technology.openwalrus.model.tos.User
 import org.junit.runner.RunWith

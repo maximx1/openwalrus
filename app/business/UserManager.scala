@@ -1,4 +1,4 @@
-package walrath.technology.openwalrus.business
+package business
 
 import walrath.technology.openwalrus.model.tos.User
 import walrath.technology.openwalrus.daos.UserDao
@@ -8,12 +8,20 @@ import javax.inject.Inject
 import com.google.inject.ImplementedBy
 import org.mindrot.jbcrypt.BCrypt
 import java.util.Date
+import walrath.technology.openwalrus.model.tos.Grunt
 
 /**
  * Business logic for User operations.
  */
 @ImplementedBy(classOf[UserManagerImpl])
 trait UserManager {
+  /**
+   * Finds a user profile and gets the latest grunts.
+   * @param handle The user's handle.
+   * @return The User if exists and some of the latest grunts
+   */
+  def getUserProfile(handle: String): (Option[User], Option[List[Grunt]])
+  
   /**
    * Attempts the login of a user
    * @param handle The username to try
@@ -44,6 +52,18 @@ trait UserManager {
 class UserManagerImpl @Inject() (userDao: UserDao) extends UserManager {
   val userNotFoundErrMsg = "User not found"
   val userAuthFailErrMsg = "User(%s) failed to authenticate"
+  
+  /**
+   * Finds a user profile and gets the latest grunts.
+   * @param handle The user's handle.
+   * @return The User if exists and some of the latest grunts
+   */
+  def getUserProfile(handle: String): (Option[User], Option[List[Grunt]]) = {
+    userDao.findByHandle(handle) match {
+      case Some(x) => (Some(x), Some(Grunt(x.id.get, x.handle, x.fullName, "My first Grunt", 0) :: Nil))
+      case _ => (None, None)
+    }
+  }
   
   /**
    * Attempts the login of a user

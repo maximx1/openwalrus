@@ -1,4 +1,4 @@
-package walrath.technology.openwalrus.business
+package business
 
 import play.api.inject.bind
 import walrath.technology.openwalrus.daos.UserDao
