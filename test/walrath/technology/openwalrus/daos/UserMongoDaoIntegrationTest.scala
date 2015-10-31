@@ -20,7 +20,7 @@ class UserMongoDaoIntegrationTest extends MongoTestBase with BeforeAndAfter {
   "A User" should {
     "be made and a document should be able to be added to the db" in {
       val user = createTestUser
-      userDao.create(user)
+      userDao ++ user
       assert(userDao.count === 1)
     }
     
@@ -42,12 +42,12 @@ class UserMongoDaoIntegrationTest extends MongoTestBase with BeforeAndAfter {
   "Multiple Users" should {
     "be made and documents should be able to be added to the db" in {
       val user1 = createTestUser
-      val user2 = createTestUser.copy(firstName="Westy", lastName="Westerson")
+      val user2 = createTestUser.copy(fullName="Westy Westerson")
       userDao.create(user1)
       userDao.create(user2)
       assert(userDao.count === 2)
     }
   }
   
-  def createTestUser = User(None, "timmay","test@sample.com","samplePass", "Testy", "Testerson", System.currentTimeMillis(), true)
+  def createTestUser = User(None, "timmay", Some("test@sample.com"), None, "samplePass", "Testy Testerson", System.currentTimeMillis(), true, true)
 }

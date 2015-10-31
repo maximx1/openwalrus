@@ -1,5 +1,6 @@
-package walrath.technology.openwalrus.validatorutils
+package walrath.technology.openwalrus.utils
 import walrath.technology.openwalrus.testing.BaseTestSpec
+import walrath.technology.openwalrus.utils.PhoneAndEmailValidatorUtils
 
 
 class PhoneAndEmailValidatorUtilsTest extends BaseTestSpec {

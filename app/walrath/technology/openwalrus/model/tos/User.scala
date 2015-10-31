@@ -1,6 +1,7 @@
 package walrath.technology.openwalrus.model.tos
 
 import com.mongodb.casbah.Imports._
+import walrath.technology.openwalrus.utils.TypeUtils.nullToNone
 
 /**
  * User Model
@@ -9,12 +10,13 @@ import com.mongodb.casbah.Imports._
 case class User(
     id: Option[ObjectId],
     handle: String,
-    email: String,
+    email: Option[String],
+    phone: Option[String],
     password: String,
-    firstName: String,
-    lastName: String,
+    fullName: String,
     creationDate: Long,
-    currentlyActivated: Boolean
+    currentlyActivated: Boolean,
+    verified: Boolean
   ) extends BaseTOModel {
   /**
    * Mapper to serialize object to MongoDBObject
@@ -23,11 +25,12 @@ case class User(
   override def toMongoDBObject = MongoDBObject(
     "handle"->handle,
     "email"->email,
+    "phone"->phone,
     "password"->password,
-    "firstName"->firstName,
-    "lastName"->lastName,
+    "fullName"->fullName,
     "creationDate"->creationDate,
-    "currentlyActivated"->currentlyActivated
+    "currentlyActivated"->currentlyActivated,
+    "verified"->verified
   )
 }
 
@@ -44,11 +47,12 @@ object User extends BaseModel[User] {
   override def fromMongoObject(mongoObject: DBObject): User = User(
     Some(mongoObject.as[ObjectId]("_id")),
     mongoObject.as[String]("handle"),
-    mongoObject.as[String]("email"),
+    nullToNone(Some(mongoObject.as[String]("email"))),
+    nullToNone(Some(mongoObject.as[String]("phone"))),
     mongoObject.as[String]("password"),
-    mongoObject.as[String]("firstName"),
-    mongoObject.as[String]("lastName"),
+    mongoObject.as[String]("fullName"),
     mongoObject.as[Long]("creationDate"),
-    mongoObject.as[Boolean]("currentlyActivated")
+    mongoObject.as[Boolean]("currentlyActivated"),
+    mongoObject.as[Boolean]("verified")
   )
 }

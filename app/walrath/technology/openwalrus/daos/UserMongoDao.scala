@@ -17,6 +17,13 @@ trait UserDao {
    * @return The Optional User object found.
    */
   def findByHandle(handle: String): Option[User]
+  
+  /**
+   * Add to database.
+   * @param user The user to enter.
+   * @return The new id entered.
+   */
+  def ++(user: User): Option[ObjectId]
 }
 
 /**
@@ -36,5 +43,16 @@ class UserMongoDao @Inject() ()(implicit app: Application) extends MongoCRUDBase
       case Some(x) => Some(User.fromMongoObject(x))
       case None => None
   }}
+  
+  /**
+   * Add to database.
+   * @param user The user to enter.
+   * @return The new id entered.
+   */
+  override def ++(user: User): Option[ObjectId] = {
+    val id = Some(new ObjectId)
+    create(user.copy(id=id))
+    return id
+  }
 }
 

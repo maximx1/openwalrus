@@ -1,0 +1,14 @@
+@(profileData: User, grunts: List[Grunt])
+
+<html>
+	@partials.headtag()
+	<body>
+		@partials.navbar() {
+        	<ul class="nav navbar-nav navbar-right">
+	            <li><a href="#" class="unbold">Have an account? <span class="bold">Log in</span></a></li>
+	        </ul>
+       	}
+       	<p>Something Beautiful</p>
+       	@partials.commonscripts()
+	</body>
+</html>

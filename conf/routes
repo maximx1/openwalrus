@@ -4,8 +4,7 @@
 
 # Home page
 GET     /                     		walrath.technology.openwalrus.controllers.Application.index
-# GET     /create                     walrath.technology.openwalrus.controllers.Application.index2
-# GET		/login/:handle/:password	walrath.technology.openwalrus.controllers.Application.read(handle: String, password:String)
+GET		/login/:handle/:password	walrath.technology.openwalrus.controllers.Application.read(handle: String, password:String)
 GET		/signup						walrath.technology.openwalrus.controllers.Application.signup
 POST    /account/create             walrath.technology.openwalrus.controllers.Application.performSignup
 GET     /:handle                    walrath.technology.openwalrus.controllers.Application.loadProfile(handle: String)

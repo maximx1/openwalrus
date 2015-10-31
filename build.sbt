@@ -11,6 +11,7 @@ libraryDependencies ++= Seq(
   ws,
   "org.reactivemongo" %% "play2-reactivemongo" % "0.11.5.play24",
   "org.mongodb" %% "casbah" % "2.8.2",
+  "org.mindrot" % "jbcrypt" % "0.3m",
   "org.webjars" %% "webjars-play" % "2.4.0-1",
   "org.webjars" % "jquery" % "2.1.4",
   "org.webjars" % "bootstrap" % "3.3.5",
@@ -27,11 +28,13 @@ resolvers ++= Seq(
   "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 )
 
+TwirlKeys.templateImports += "walrath.technology.openwalrus.model.tos._"
+
 resolvers += Resolver.url("Typesafe Ivy releases", url("https://repo.typesafe.com/typesafe/ivy-releases"))(Resolver.ivyStylePatterns)
 
 fork in run := true
 
-coverageExcludedPackages := "<empty>;"
+coverageExcludedPackages := "<empty>;views.*;router;"
 
 coverageMinimum := 80
 

@@ -4,6 +4,8 @@ import walrath.technology.openwalrus.model.tos.User
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import javax.inject.Inject
+import org.mindrot.jbcrypt.BCrypt
+import com.mongodb.casbah.Imports._
 
 class UserManagerTest extends ManagerTestBase {
   
@@ -12,7 +14,7 @@ class UserManagerTest extends ManagerTestBase {
   "A User" should {
     "be able to login if they have a correct username/password combination for existing user" in {
       val user = createTestUser
-      (userDaoMock.findByHandle _) expects(user.handle) returning(Some(user))
+      (userDaoMock.findByHandle _) expects(user.handle) returning(Some(user.copy(password=BCrypt.hashpw(user.password, BCrypt.gensalt()))))
       userManager.login(user.handle, user.password) shouldBe Some(user.copy(password=""))
     }
     
@@ -26,6 +28,11 @@ class UserManagerTest extends ManagerTestBase {
       val user = createTestUser
       (userDaoMock.findByHandle _) expects(*) returning(None)
       userManager.login(user.handle, user.password) shouldBe None
+    }
+    
+    "be able to be added and return true" in {
+      (userDaoMock.++ _) expects(*) returning(Some(new ObjectId))
+      userManager.createUser(createTestUser) shouldBe true
     }
   }
   
@@ -43,5 +50,5 @@ class UserManagerTest extends ManagerTestBase {
     }
   }
   
-  def createTestUser = User(None, "timmay","test@sample.com","samplePass", "Testy", "Testerson", System.currentTimeMillis(), true)
+  def createTestUser = User(None, "timmay", Some("test@sample.com"), None,"samplePass", "Testy Testerson", System.currentTimeMillis(), true, true)
 }

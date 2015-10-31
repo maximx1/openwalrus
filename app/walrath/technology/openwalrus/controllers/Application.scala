@@ -9,14 +9,11 @@ import walrath.technology.openwalrus.business.UserManager
 import javax.inject.Inject
 import play.api.data._
 import play.api.data.Forms._
+import walrath.technology.openwalrus.utils.PhoneAndEmailValidatorUtils._
+import java.util.Date
 
 class Application @Inject() (userManager: UserManager) extends Controller {
   def index = Action {
-    Ok(views.html.index("Your new application is ready."))
-  }
-  
-  def index2 = Action {
-    (new UserMongoDao()).create(User(None, "timmay","test@sample.com","samplePass", "Testy", "Testerson", System.currentTimeMillis(), true))
     Ok(views.html.index("Your new application is ready."))
   }
 
@@ -41,11 +38,19 @@ class Application @Inject() (userManager: UserManager) extends Controller {
   )
   
   def performSignup = Action { implicit request =>
-    val (fullname, handle, phoneoremail, password) = signupForm.bindFromRequest.get
-    Ok(fullname + " " + handle + " " + phoneoremail + " " + password)
+    val (fullName, handle, phoneoremail, password) = signupForm.bindFromRequest.get
+    
+    if(!userManager.checkIfHandleInUse(handle)) {
+      Ok(userManager.createUser(User(None, handle, enterEmail(phoneoremail), convertToDomesticPhone(phoneoremail), password, fullName, 0, true, false)).toString())
+    }
+    else {
+      Ok("Handle in use")
+    }
   }
   
   def loadProfile(handle: String) = Action {
       Ok(handle)
   }
+  
+  def enterEmail(email: String): Option[String] = if(checkIfPossiblyEmail(email)) Some(email) else None
 }

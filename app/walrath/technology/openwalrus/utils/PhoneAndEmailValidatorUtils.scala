@@ -1,4 +1,4 @@
-package walrath.technology.openwalrus.validatorutils
+package walrath.technology.openwalrus.utils
 
 import scala.util.matching.Regex
 

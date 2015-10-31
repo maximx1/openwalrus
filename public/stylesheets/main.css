@@ -34,6 +34,12 @@
     left: 46%;
 }
 
+@media screen and (min-width: 40.5em) {
+    .signupForm {
+        width: 30em;
+    }
+}
+
 @media screen and (max-width: 40.5em) {
     .navbar-inverse {
         font-size: 2em;
@@ -41,6 +47,10 @@
     
     .navbar-brand {
         top:-10em;
+    }
+    
+    .signupForm {
+        width: 95%;
     }
 }
 
@@ -70,7 +80,6 @@
 }
 
 .signupForm {
-    width: 30em;
     margin: 0 auto;
     margin-top: 3em;
 }
