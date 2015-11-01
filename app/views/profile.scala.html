@@ -25,13 +25,13 @@
 			       			<button class="leanRight buffer gruntButton">Grunt</button>
 			       		</div>
 				       	@grunts.map { grunt => 
-				       		<div class="fullWidth gruntBox" style="overflow:auto;">
-						       	<div class="thumbPH inlineBlock top-soft-corners bottom-soft-corners" style="float:left;">&nbsp;</div>
-				       			<div style="width: calc(100% - 4.5em);float:left;">
+				       		<div class="fullWidth gruntBox">
+						       	<div class="thumbPH inlineBlock top-soft-corners bottom-soft-corners">&nbsp;</div>
+				       			<div class="gruntData">
 						   			<div class="inlineBlock">
 					       				<span class="bold">@grunt.fullName</span><span>&nbsp;&#64;@grunt.handle</span>
 					       			</div>
-				       				<div style="margin-top: 1em;">@grunt.message</div>
+				       				<div class="gruntMessageContent">@grunt.message</div>
 				       			</div>
 			       			</div>
 				       	}

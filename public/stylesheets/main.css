@@ -1,3 +1,7 @@
+body {
+	padding-bottom: 1em;
+}
+
 .circle {
     border-radius: 50%;
 }
@@ -124,6 +128,7 @@
 	padding: .5em;
 	min-height: 7em;
 	border: 1px solid #CCCCCC;
+	overflow:auto;
 }
 
 .bordered {
@@ -193,6 +198,7 @@
 	margin-right: .5em;
 	background-color: #FF6600;
 	vertical-align: top;
+	float:left;
 }
 
 .inlineBlock {
@@ -206,6 +212,11 @@
 	text-align: center;
 }
 
-body {
-	padding-bottom: 1em;
+.gruntData {
+	width: calc(100% - 4.5em);
+	float:left;
+}
+
+.gruntMessageContent {
+	margin-top: 1em;
 }
