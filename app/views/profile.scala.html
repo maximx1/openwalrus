@@ -8,13 +8,38 @@
 	            <li><a href="#" class="unbold">Have an account? <span class="bold">Log in</span></a></li>
 	        </ul>
        	}
-       	<a href='@routes.Application.loadProfile(profileData.handle)' class="undecked"><h3 class="bold">&#64;@profileData.handle</h3></a>
-       	<p>@profileData.fullName<p>
-       	<ul>
-       	@grunts.map { grunt => 
-       		<li>@grunt.handle - @grunt.fullName - @grunt.message</li>
-       	}
-       	</ul>
+       	<div class="row row-centered">
+       		<div class="col-xs-12 col-sm-11 col-md-10 col-lg-8 col-centered">
+		     	<div class="row">
+			       	<div class="col-xs-11 col-sm-11 col-md-4 col-lg-4">
+			       		<div class="standardBox bottom-soft-corners top-soft-corners max20">
+			       			<div class="pictureBox top-soft-corners">&nbsp;</div>
+					       	<a href='@routes.Application.loadProfile(profileData.handle)' class="undecked black"><h5 class="bold">@profileData.fullName</h5></a>
+					       	<p class="bold">&#64;@profileData.handle</p>
+				       	</div>
+			       	</div>
+			       	<div class="col-xs-11 col-sm-11 col-md-8 col-lg-8">
+			       		<div class="top-soft-corners bottom-sharp-corners bordered fullWidth noOverflow">
+			       			<div name="grunt" class="gruntInputBox inForARoughRide buffer mostWidth bottom-soft-corners top-soft-corners bordered" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true" data-text="What's up with you?" onblur="wipePlaceholderBlur()"></div>
+			       			<!-- <textarea class="buffer fullWidth bottom-soft-corners top-soft-corners" placeholder="What's up with you?"></textarea> -->
+			       			<button class="leanRight buffer gruntButton">Grunt</button>
+			       		</div>
+				       	@grunts.map { grunt => 
+				       		<div class="fullWidth gruntBox" style="overflow:auto;">
+						       	<div class="thumbPH inlineBlock top-soft-corners bottom-soft-corners" style="float:left;">&nbsp;</div>
+				       			<div style="width: calc(100% - 4.5em);float:left;">
+						   			<div class="inlineBlock">
+					       				<span class="bold">@grunt.fullName</span><span>&nbsp;&#64;@grunt.handle</span>
+					       			</div>
+				       				<div style="margin-top: 1em;">@grunt.message</div>
+				       			</div>
+			       			</div>
+				       	}
+				       	<div class="bordered eogBox bottom-soft-corners">End of Grunts...</div>
+			       	</div>
+		       	</div>
+	       	</div>
+       	</div>
        	@partials.commonscripts()
 	</body>
 </html>

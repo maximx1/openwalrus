@@ -34,12 +34,6 @@
     left: 46%;
 }
 
-@media screen and (min-width: 40.5em) {
-    .signupForm {
-        width: 30em;
-    }
-}
-
 @media screen and (max-width: 40.5em) {
     .navbar-inverse {
         font-size: 2em;
@@ -47,10 +41,6 @@
     
     .navbar-brand {
         top:-10em;
-    }
-    
-    .signupForm {
-        width: 95%;
     }
 }
 
@@ -79,16 +69,143 @@
     font-weight: lighter;
 }
 
-.signupForm {
-    margin: 0 auto;
-    margin-top: 3em;
+.spacer {
+    padding-top: 3em;
+}
+
+.getSkinny {
+	margin-left: 1em;
 }
 
 .fullWidth {
     width: 100%;
-    height: 3em;
+}
+
+.3height {
+	height: 3em;
 }
 
 .undecked,.undecked:hover, .undecked:focus {
 	text-decoration: none;
+}
+
+.row-centered {
+    text-align:center;
+}
+
+.col-centered {
+	display:inline-block;
+    float:none;
+    text-align:left;
+    margin-right:-4px;
+}
+
+.top-soft-corners {
+	border-top-right-radius: 5px;
+	border-top-left-radius: 5px;
+}
+
+.bottom-soft-corners {
+	border-bottom-right-radius: 5px;
+	border-bottom-left-radius: 5px;
+}
+
+.bottom-sharp-corners {
+	border-bottom-right-radius: 0px;
+	border-bottom-left-radius: 0px;
+}
+
+.standardBox {
+	height: 15em;
+	border: 1px solid #CCCCCC;
+}
+
+.gruntBox {
+	padding: .5em;
+	min-height: 7em;
+	border: 1px solid #CCCCCC;
+}
+
+.bordered {
+	border: 1px solid #CCCCCC;
+}
+
+.pictureBox {
+	height: 7em;
+	width: 100%;
+	background-color: #FF6600;
+}
+
+.leanRight {
+	float: right;
+}
+
+.noOverflow {
+	overflow: hidden;
+}
+
+.buffer {
+	margin: .2em;
+}
+
+.mostWidth {
+	width: 98%;
+}
+
+.inForARoughRide {
+	padding: 3px;
+}
+
+.gruntInputBox:empty:not(:focus):before {
+	content:attr(data-text);
+}
+
+.gruntInputBox:empty {
+	color: #CCCCCC;
+}
+
+.gruntInputBox:not(:empty) {
+	color: black;
+}
+
+.gruntInputBox {
+	background-color: white;
+	margin: 1em;
+	width:calc(100% - 2em);
+	height: 4em;
+	overflow: auto;
+	background-color: white;
+}
+
+.gruntButton {
+	margin-right: 1em;
+	margin-top: -.5em;
+	margin-bottom: .5em;
+}
+
+.max20 {
+	max-width: 20em;
+}
+
+.thumbPH {
+	height: 3.5em;
+	width: 3.5em;
+	margin-right: .5em;
+	background-color: #FF6600;
+	vertical-align: top;
+}
+
+.inlineBlock {
+	display: inline-block;
+}
+
+.eogBox {
+	color: #CCCCCC;
+	padding: 5px;
+	font-style: italic;
+	text-align: center;
+}
+
+body {
+	padding-bottom: 1em;
 }
