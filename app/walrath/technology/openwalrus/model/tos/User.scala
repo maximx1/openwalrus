@@ -23,6 +23,7 @@ case class User(
    * @return The serialized object.
    */
   override def toMongoDBObject = MongoDBObject(
+    "_id"->id.getOrElse(new ObjectId),
     "handle"->handle,
     "email"->email,
     "phone"->phone,

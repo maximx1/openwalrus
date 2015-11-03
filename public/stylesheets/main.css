@@ -48,6 +48,19 @@ body {
     }
 }
 
+@media screen and (max-width: 990px) {
+	.mobileWidth {
+		width: 95%;
+		margin-left: auto;
+		margin-right: auto;
+	}
+	
+	.mobileCenter {
+		margin-left: auto;
+		margin-right: auto;
+	}
+}
+
 .navbar-inverse {
     border-radius: 0px;
     border: 0px;
@@ -122,6 +135,7 @@ body {
 .standardBox {
 	height: 15em;
 	border: 1px solid #CCCCCC;
+	margin-bottom: 1.2em;
 }
 
 .gruntBox {

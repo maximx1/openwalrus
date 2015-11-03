@@ -12,6 +12,7 @@ import play.api.data.Forms._
 import walrath.technology.openwalrus.utils.PhoneAndEmailValidatorUtils._
 import java.util.Date
 import walrath.technology.openwalrus.model.tos.Grunt
+import walrath.technology.openwalrus.model.tos.GruntTO
 
 class Application @Inject() (userManager: UserManager) extends Controller {
   def index = Action {
@@ -44,7 +45,7 @@ class Application @Inject() (userManager: UserManager) extends Controller {
     if(!userManager.checkIfHandleInUse(handle)) {
       val newUser = User(None, handle, enterEmail(phoneoremail), convertToDomesticPhone(phoneoremail), password, fullName, 0, true, false)
       val result = userManager.createUser(newUser)
-      Ok(views.html.profile(newUser, List.empty[Grunt]))
+      Ok(views.html.profile(newUser, List.empty[GruntTO]))
       //Ok(userManager.createUser(User(None, handle, enterEmail(phoneoremail), convertToDomesticPhone(phoneoremail), password, fullName, 0, true, false)).toString())
       
     }
