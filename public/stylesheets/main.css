@@ -1,5 +1,6 @@
 body {
 	padding-bottom: 1em;
+	background-color: #F0F0F0;
 }
 
 .circle {
@@ -12,6 +13,10 @@ body {
 
 .white {
     background-color: white;
+}
+
+.grey {
+	color: #777777;
 }
 
 .whiteText {
@@ -145,8 +150,16 @@ body {
 	overflow:auto;
 }
 
+.gruntBox:hover {
+	background-color: #eeeeee;
+}
+
 .bordered {
 	border: 1px solid #CCCCCC;
+}
+
+.superBordered {
+	border: 3px solid #CCCCCC;
 }
 
 .pictureBox {
@@ -189,12 +202,11 @@ body {
 }
 
 .gruntInputBox {
-	background-color: white;
+	background-color: #F0F0F0;
 	margin: 1em;
 	width:calc(100% - 2em);
 	height: 4em;
 	overflow: auto;
-	background-color: white;
 }
 
 .gruntButton {
@@ -216,6 +228,16 @@ body {
 	float:left;
 }
 
+.largeThumbPH {
+	height: 7em;
+	width: 7em;
+	margin-left: .5em;
+	margin-right: .5em;
+	margin-top: -3.5em;
+	background-color: #FF6600;
+	float: left;
+}
+
 .inlineBlock {
 	display: inline-block;
 }
@@ -234,4 +256,23 @@ body {
 
 .gruntMessageContent {
 	margin-top: 1em;
+}
+
+.profileData {
+	width: calc(100% - 8em);
+	margin-left: 8em;
+}
+
+.hangLeft {
+	float: left;
+}
+
+.thirdWidth {
+	width: 33%;
+	text-align: center;
+}
+
+.error {
+	color: red;
+	font-style: italic;
 }

@@ -1,0 +1,24 @@
+@(errorMessage: Option[String])
+
+<html>
+	@partials.headtag("Sign into OpenWalrus")
+	<body>
+        @partials.navbar() {<div></div>}
+        <div class="row row-centered">
+    		<form class="spacer col-xs-11 col-sm-6 col-md-5 col-lg-4 col-centered" method="post" action="@routes.Application.attemptSignin">
+    		    <h3>Log In</h3>
+    		    @errorMessage.map { message =>
+    		    	<div class="error">@message</div>
+    		    }
+    		    <div class="form-group">
+    		        <input name="handle" type="text" class="form-control 3height fullWidth" placeholder="Handle" />
+    		    </div>
+    		    <div class="form-group">
+    		        <input name="password" type="password" class="form-control 3height fullWidth" placeholder="Password" />
+    		    </div>
+    		    <button class="3height fullWidth centerText" type="submit">Sign In</button>
+    		</form>
+    	</div>
+    	@partials.commonscripts()
+	</body>
+</html>
