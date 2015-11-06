@@ -32,7 +32,7 @@ class UserManagerTest extends ManagerTestBase {
     
     "be able to be added and return true" in {
       (userDaoMock.++ _) expects(*) returning(Some(new ObjectId))
-      userManager.createUser(createTestUser) shouldBe true
+      userManager.createUser(createTestUser, None) shouldBe true
     }
   }
   
@@ -50,5 +50,5 @@ class UserManagerTest extends ManagerTestBase {
     }
   }
   
-  def createTestUser = User(None, "timmay", Some("test@sample.com"), None,"samplePass", "Testy Testerson", System.currentTimeMillis(), true, true)
+  def createTestUser = User(None, "timmay", Some("test@sample.com"), None,"samplePass", "Testy Testerson", System.currentTimeMillis(), true, true, None, List.empty, List.empty, List.empty, List.empty)
 }

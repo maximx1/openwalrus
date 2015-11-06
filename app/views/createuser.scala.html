@@ -7,7 +7,7 @@
         @partials.navbar() {
             <ul class="nav navbar-nav navbar-right">
                 <!--<li><a href="#" class="unbold">Language: <span class="bold">@languages.head</span></a></li>-->
-                <li><a href="#" class="unbold">Have an account? <span class="bold">Log in</span></a></li>
+                <li><a href="@routes.Application.loadLogin" class="unbold">Have an account? <span class="bold">Log in</span></a></li>
             </ul>
         }
         <div class="row row-centered">
@@ -25,8 +25,8 @@
     		    <div class="form-group">
     		        <input name="password" type="password" class="form-control 3height fullWidth" placeholder="Password" />
     		    </div>
-    		    <div>
-    		    	<input name="picture" type="file">
+    		    <div class="form-group">
+    		    	<input name="picture" type="file" class="form-control 3height custom-file-input">
     		    </div>
     		    <button class="3height fullWidth centerText" type="submit">Sign Me Up</button>
     		</form>

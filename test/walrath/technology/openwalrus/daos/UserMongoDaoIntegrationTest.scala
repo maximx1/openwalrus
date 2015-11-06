@@ -71,5 +71,5 @@ class UserMongoDaoIntegrationTest extends MongoTestBase with BeforeAndAfter {
     }
   }
   
-  def createTestUser = User(None, "timmay", Some("test@sample.com"), None, "samplePass", "Testy Testerson", System.currentTimeMillis(), true, true)
+  def createTestUser = User(None, "timmay", Some("test@sample.com"), None, "samplePass", "Testy Testerson", System.currentTimeMillis(), true, true, None, List.empty, List.empty, List.empty, List.empty)
 }

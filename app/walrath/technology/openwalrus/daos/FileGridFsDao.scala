@@ -8,6 +8,10 @@ import javax.inject.Inject
 import play.api.Application
 import java.io.InputStream
 
+import walrath.technology.openwalrus.utils.ImageUtils
+
+case class ImageData(inputStream: InputStream, filename: Option[String], contentType: Option[String])
+
 /**
  * File Storage for images and possibly video in the future.
  */
@@ -22,9 +26,9 @@ trait FileDao {
   
   /**
    * Attempts to retrieve a file from the database.
-   * @param retrieve The file id to retrieve.
+   * @param id The file id to retrieve.
    */
-  def retrieve(objectId: String): Option[InputStream]
+  def retrieve(id: ObjectId): Option[ImageData]
 }
 
 class FileGridFsDao @Inject() ()(implicit app: Application) extends GridFsBaseConnectionHandler with FileDao {
@@ -35,14 +39,18 @@ class FileGridFsDao @Inject() ()(implicit app: Application) extends GridFsBaseCo
    * @param file The file to insert.
    * @return The new Id
    */
-  def store(file: File): Option[ObjectId] = gridBucket(file){f=>} match {
+  def store(file: File): Option[ObjectId] = gridBucket(file){ f=>
+    f.filename = file.getName
+    f.contentType = ImageUtils.determineWebType(file.getName()).getOrElse("image/png")
+  } match {
       case Some(x: ObjectId) => Some(x)
       case _ => None
     }
   
   /**
    * Attempts to retrieve a file from the database.
-   * @param retrieve The file id to retrieve.
+   * @param id The file id to retrieve.
+   * @return The stream of the file.
    */
-  def retrieve(id: String): Option[InputStream] = gridBucket.findOne(new ObjectId(id)).map(_.inputStream)
+  def retrieve(id: ObjectId): Option[ImageData] = gridBucket.findOne(id).map(x => ImageData(x.inputStream, x.filename, x.contentType))
 }

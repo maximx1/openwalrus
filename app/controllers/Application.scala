@@ -1,23 +1,16 @@
 package controllers
 
-import play.api._
 import play.api.Play.current
 import play.api.mvc._
-import walrath.technology.openwalrus.daos.UserMongoDao
 import walrath.technology.openwalrus.model.tos.User
 import business.UserManager
 import javax.inject.Inject
 import play.api.data._
 import play.api.data.Forms._
 import walrath.technology.openwalrus.utils.PhoneAndEmailValidatorUtils._
-import java.util.Date
-import walrath.technology.openwalrus.model.tos.Grunt
-import walrath.technology.openwalrus.model.tos.GruntTO
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
 import walrath.technology.openwalrus.daos.FileGridFsDao
 import play.api.libs.iteratee.Enumerator
+import com.mongodb.casbah.Imports._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class Application @Inject() (userManager: UserManager) extends Controller {
@@ -42,7 +35,7 @@ class Application @Inject() (userManager: UserManager) extends Controller {
     request.session.get("userHandle").map { handle =>
       val result = userManager.getUserProfile(handle)
       result match {
-        case (Some(x), _) => Ok(views.html.profile(result._1.get, result._2.getOrElse(List.empty)))
+        case (Some(x), _) => Ok(views.html.profile(result._1.get, result._2.getOrElse(List.empty))(request.session))
         case _ => Redirect(routes.Application.loadLogin)
       }
     }.getOrElse {
@@ -68,30 +61,24 @@ class Application @Inject() (userManager: UserManager) extends Controller {
   def performSignup = Action(parse.multipartFormData) { implicit request =>
     val (fullName, handle, phoneoremail, password) = signupForm.bindFromRequest.get
     
-    request.body.file("picture").map { picture =>
-      val result = (new FileGridFsDao).store(picture.ref.file).get
-      println(result)
-      Ok(result.toString)
-    }.getOrElse {
-      if(!userManager.checkIfHandleInUse(handle)) {
-        val newUser = User(None, handle, enterEmail(phoneoremail), convertToDomesticPhone(phoneoremail), password, fullName, 0, true, false)
-        val result = userManager.createUser(newUser)
-        loginRedirect(newUser)
-      }
-      else {
-        Ok("Handle in use")
-      }
+    if(!userManager.checkIfHandleInUse(handle)) {
+      val newUser = User(None, handle, enterEmail(phoneoremail), convertToDomesticPhone(phoneoremail), password, fullName, 0, true, false, None, List.empty, List.empty, List.empty, List.empty)
+      val result = userManager.createUser(newUser, request.body.file("picture").map(_.ref.file))
+      loginRedirect(newUser)
+    }
+    else {
+      Ok("Handle in use")
     }
   }
   
-  def loadProfile(handle: String) = Action {
+  def loadProfile(handle: String) = Action { implicit request =>
     val result = userManager.getUserProfile(handle)
     result match {
-      case (Some(x), _) => Ok(views.html.profile(result._1.get, result._2.getOrElse(List.empty)))
+      case (Some(x), _) => Ok(views.html.profile(result._1.get, result._2.getOrElse(List.empty))(request.session))
       case _ => Ok("Profile not found")
     }
   }
-  
+
   def loadLogin = Action { implicit request =>
     request.session.get("userHandle").map { handle =>
       Redirect(routes.Application.index)
@@ -99,7 +86,7 @@ class Application @Inject() (userManager: UserManager) extends Controller {
       Ok(views.html.login(None))
     }
   }
-  
+
   def attemptSignin = Action { implicit request =>
     val (handle, password) = signinForm.bindFromRequest.get
     userManager.login(handle, password).map { user => 
@@ -118,8 +105,8 @@ class Application @Inject() (userManager: UserManager) extends Controller {
   def followersPage(handle: String) = TODO
   
   def lookUpImage(key: String) = Action {
-    (new FileGridFsDao).retrieve(key).map { dataStream =>
-      Ok.stream(Enumerator.fromStream(dataStream)).as("image/png")
+    (new FileGridFsDao).retrieve(new ObjectId(key)).map { fileData =>
+      Ok.stream(Enumerator.fromStream(fileData.inputStream)).as(fileData.contentType.getOrElse("image/png"))
     }.getOrElse {
       Ok("404 not found")
     }

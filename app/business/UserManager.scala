@@ -1,14 +1,14 @@
 package business
 
+import java.io.File
+
 import walrath.technology.openwalrus.model.tos.User
-import walrath.technology.openwalrus.daos.UserDao
-import walrath.technology.openwalrus.daos.UserMongoDao
+import walrath.technology.openwalrus.daos.{FileDao, UserDao, UserMongoDao}
 import play.api.{Application, Logger}
 import javax.inject.Inject
 import com.google.inject.ImplementedBy
 import org.mindrot.jbcrypt.BCrypt
 import java.util.Date
-import walrath.technology.openwalrus.model.tos.Grunt
 import walrath.technology.openwalrus.model.tos.GruntTO
 
 /**
@@ -43,14 +43,14 @@ trait UserManager {
    * @param user The new user to insert.
    * @return true if the entry was successful, false otherwise.
    */
-  def createUser(user: User): Boolean
+  def createUser(user: User, file: Option[File]): Boolean
 }
 
 /**
  * Implementation of business logic for user operations.
  * @author maximx1
  */
-class UserManagerImpl @Inject() (userDao: UserDao) extends UserManager {
+class UserManagerImpl @Inject() (userDao: UserDao, fileDao: FileDao) extends UserManager {
   val userNotFoundErrMsg = "User not found"
   val userAuthFailErrMsg = "User(%s) failed to authenticate"
   
@@ -104,8 +104,10 @@ class UserManagerImpl @Inject() (userDao: UserDao) extends UserManager {
    * @param user The new user to insert.
    * @return true if the entry was successful, false otherwise.
    */
-  def createUser(user: User): Boolean = {
-    val newId = userDao ++ user.copy(password=BCrypt.hashpw(user.password, BCrypt.gensalt()), creationDate=CURRENT_TIMESTAMP)
+  def createUser(user: User, file: Option[File]): Boolean = {
+    userDao ++ file.map(fileDao.store).map { imageRef =>
+      user.copy(profileImage = imageRef, images=imageRef.toList)
+    }.getOrElse(user).copy(password=BCrypt.hashpw(user.password, BCrypt.gensalt()), creationDate=CURRENT_TIMESTAMP)
     return true
   }
   

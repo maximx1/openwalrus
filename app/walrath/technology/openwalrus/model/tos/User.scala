@@ -16,7 +16,12 @@ case class User(
     fullName: String,
     creationDate: Long,
     currentlyActivated: Boolean,
-    verified: Boolean
+    verified: Boolean,
+    profileImage: Option[ObjectId],
+    images: List[ObjectId],
+    grunts: List[ObjectId],
+    following: List[ObjectId],
+    followers: List[ObjectId]
   ) extends BaseTOModel {
   /**
    * Mapper to serialize object to MongoDBObject
@@ -31,7 +36,12 @@ case class User(
     "fullName"->fullName,
     "creationDate"->creationDate,
     "currentlyActivated"->currentlyActivated,
-    "verified"->verified
+    "verified"->verified,
+    "profileImage"->profileImage,
+    "images"->images,
+    "grunts"->grunts,
+    "following"->following,
+    "followers"->followers
   )
 }
 
@@ -54,6 +64,11 @@ object User extends BaseModel[User] {
     mongoObject.as[String]("fullName"),
     mongoObject.as[Long]("creationDate"),
     mongoObject.as[Boolean]("currentlyActivated"),
-    mongoObject.as[Boolean]("verified")
+    mongoObject.as[Boolean]("verified"),
+    nullToNone(Some(mongoObject.as[ObjectId]("profileImage"))),
+    mongoObject.as[List[ObjectId]]("images"),
+    mongoObject.as[List[ObjectId]]("grunts"),
+    mongoObject.as[List[ObjectId]]("following"),
+    mongoObject.as[List[ObjectId]]("followers")
   )
 }
