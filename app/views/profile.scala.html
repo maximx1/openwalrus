@@ -1,0 +1,64 @@
+@(profileData: User, grunts: List[GruntTO])
+
+<html>
+	@partials.headtag("OpenWalrus &#64;@profileData.handle")
+	<body>
+		@partials.navbar() {
+        	<ul class="nav navbar-nav navbar-right">
+	            <li><a href="@routes.Application.loadLogin" class="unbold">Have an account? <span class="bold">Log in</span></a></li>
+	        </ul>
+       	}
+       	<div class="row row-centered">
+       		<div class="col-xs-12 col-sm-12 col-md-10 col-lg-8 col-centered">
+		     	<div class="row">
+			       	<div class="col-xs-12 col-sm-12 col-md-4 col-lg-4">
+			       		<div class="mobileCenter standardBox bottom-soft-corners top-soft-corners max20 white">
+			       			<div class="pictureBox top-soft-corners">&nbsp;</div>
+			       			<img class="largeThumbPH inlineBlock circle superBordered" src="https://avatars3.githubusercontent.com/u/2591656?v=3&s=100" alt=“profile">
+					       	<div class="profileData">
+						       	<a href='@routes.Application.loadProfile(profileData.handle)' class="undecked black"><h5 class="bold">@profileData.fullName</h5></a>
+						       	<div class="grey" style="margin-top:-.7em;">&#64;@profileData.handle</div>
+					       	</div>
+					       	<br>
+					       	<div class="fullWidth">
+						       	<div class="hangLeft thirdWidth">
+						       		Grunts<br><a href='@routes.Application.loadProfile(profileData.handle)' class="undecked black">204</a>
+						       	</div>
+						       	<div class="hangLeft thirdWidth">
+						       		Following<br><a href='@routes.Application.followingPage(profileData.handle)' class="undecked black">130</a>
+						       	</div>
+						       	<div class="hangLeft thirdWidth">
+						       		Followers<br><a href='@routes.Application.followersPage(profileData.handle)' class="undecked black">34</a>
+						       	</div>
+					       	</div>
+				       	</div>
+			       	</div>
+			       	<div class="mobileWidth col-md-8 col-lg-8">
+			       		<div class="top-soft-corners bottom-sharp-corners bordered fullWidth noOverflow white">
+			       			<div name="grunt" class="gruntInputBox inForARoughRide buffer mostWidth bottom-soft-corners top-soft-corners bordered" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true" data-text="What's up with you?" onblur="wipePlaceholderBlur()"></div>
+			       			<!-- <textarea class="buffer fullWidth bottom-soft-corners top-soft-corners" placeholder="What's up with you?"></textarea> -->
+			       			<button class="leanRight buffer gruntButton">Grunt</button>
+			       		</div>
+				       	@grunts.map { grunt => 
+				       		<div class="fullWidth gruntBox white">
+						       	<!-- <div class="thumbPH inlineBlock top-soft-corners bottom-soft-corners">&nbsp;</div> -->
+						       	<img class="thumbPH inlineBlock top-soft-corners bottom-soft-corners" src="https://avatars3.githubusercontent.com/u/2591656?v=3&s=100" alt=“profile">
+				       			<div class="gruntData">
+						   			<div class="inlineBlock">
+					       				<a href='@routes.Application.loadProfile(grunt.handle)' class="undecked black">
+					       					<span class="bold">@grunt.fullName</span>
+					       				</a>
+					       				<span class="grey">&#64;@grunt.handle</span>
+					       			</div>
+				       				<div class="gruntMessageContent">@grunt.message</div>
+				       			</div>
+			       			</div>
+				       	}
+				       	<div class="bordered eogBox bottom-soft-corners white">End of Grunts...</div>
+			       	</div>
+		       	</div>
+	       	</div>
+       	</div>
+       	@partials.commonscripts()
+	</body>
+</html>

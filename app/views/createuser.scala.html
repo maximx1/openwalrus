@@ -1,0 +1,33 @@
+@(languages: List[String])
+<!DOCTYPE html>
+
+<html>
+	@partials.headtag("Sign up for OpenWalrus")
+	<body>
+        @partials.navbar() {
+            <ul class="nav navbar-nav navbar-right">
+                <!--<li><a href="#" class="unbold">Language: <span class="bold">@languages.head</span></a></li>-->
+                <li><a href="#" class="unbold">Have an account? <span class="bold">Log in</span></a></li>
+            </ul>
+        }
+        <div class="row row-centered">
+    		<form class="spacer col-xs-11 col-sm-6 col-md-5 col-lg-4 col-centered" method="post" action="@routes.Application.performSignup">
+    		    <h3>Join OpenWalrus today.</h3>
+    		    <div class="form-group">
+    		        <input name="fullname" type="text" class="form-control 3height fullWidth" placeholder="Full Name" />
+    		    </div>
+    		    <div class="form-group">
+    		        <input name="phoneoremail" type="text" class="form-control 3height fullWidth" placeholder="Phone or Email" />
+    		    </div>
+    		    <div class="form-group">
+    		        <input name="handle" type="text" class="form-control 3height fullWidth" placeholder="Handle" />
+    		    </div>
+    		    <div class="form-group">
+    		        <input name="password" type="password" class="form-control 3height fullWidth" placeholder="Password" />
+    		    </div>
+    		    <button class="3height fullWidth centerText" type="submit">Sign Me Up</button>
+    		</form>
+    	</div>
+    	@partials.commonscripts()
+	</body>
+</html>
