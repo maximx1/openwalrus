@@ -13,6 +13,12 @@ import walrath.technology.openwalrus.utils.PhoneAndEmailValidatorUtils._
 import java.util.Date
 import walrath.technology.openwalrus.model.tos.Grunt
 import walrath.technology.openwalrus.model.tos.GruntTO
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import walrath.technology.openwalrus.daos.FileGridFsDao
+import play.api.libs.iteratee.Enumerator
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class Application @Inject() (userManager: UserManager) extends Controller {
   
@@ -59,16 +65,22 @@ class Application @Inject() (userManager: UserManager) extends Controller {
     }
   }
   
-  def performSignup = Action { implicit request =>
+  def performSignup = Action(parse.multipartFormData) { implicit request =>
     val (fullName, handle, phoneoremail, password) = signupForm.bindFromRequest.get
     
-    if(!userManager.checkIfHandleInUse(handle)) {
-      val newUser = User(None, handle, enterEmail(phoneoremail), convertToDomesticPhone(phoneoremail), password, fullName, 0, true, false)
-      val result = userManager.createUser(newUser)
-      loginRedirect(newUser)
-    }
-    else {
-      Ok("Handle in use")
+    request.body.file("picture").map { picture =>
+      val result = (new FileGridFsDao).store(picture.ref.file).get
+      println(result)
+      Ok(result.toString)
+    }.getOrElse {
+      if(!userManager.checkIfHandleInUse(handle)) {
+        val newUser = User(None, handle, enterEmail(phoneoremail), convertToDomesticPhone(phoneoremail), password, fullName, 0, true, false)
+        val result = userManager.createUser(newUser)
+        loginRedirect(newUser)
+      }
+      else {
+        Ok("Handle in use")
+      }
     }
   }
   
@@ -104,6 +116,14 @@ class Application @Inject() (userManager: UserManager) extends Controller {
   def followingPage(handle: String) = TODO
   
   def followersPage(handle: String) = TODO
+  
+  def lookUpImage(key: String) = Action {
+    (new FileGridFsDao).retrieve(key).map { dataStream =>
+      Ok.stream(Enumerator.fromStream(dataStream)).as("image/png")
+    }.getOrElse {
+      Ok("404 not found")
+    }
+  }
   
   private def enterEmail(email: String): Option[String] = if(checkIfPossiblyEmail(email)) Some(email) else None
 

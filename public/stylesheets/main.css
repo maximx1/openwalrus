@@ -194,7 +194,7 @@ body {
 }
 
 .gruntInputBox:empty {
-	color: #CCCCCC;
+	color: #999999;
 }
 
 .gruntInputBox:not(:empty) {

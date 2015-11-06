@@ -8,6 +8,7 @@ GET     /                     		controllers.Application.index
 GET		/signup						controllers.Application.signup
 GET 	/login						controllers.Application.loadLogin
 GET		/logout						controllers.Application.logout
+GET		/image/:key					controllers.Application.lookUpImage(key: String)
 POST	/account/login				controllers.Application.attemptSignin
 POST    /account/create             controllers.Application.performSignup
 GET     /:handle                    controllers.Application.loadProfile(handle: String)

@@ -11,7 +11,7 @@
             </ul>
         }
         <div class="row row-centered">
-    		<form class="spacer col-xs-11 col-sm-6 col-md-5 col-lg-4 col-centered" method="post" action="@routes.Application.performSignup">
+    		<form class="spacer col-xs-11 col-sm-6 col-md-5 col-lg-4 col-centered" method="post" action="@routes.Application.performSignup" enctype="multipart/form-data">
     		    <h3>Join OpenWalrus today.</h3>
     		    <div class="form-group">
     		        <input name="fullname" type="text" class="form-control 3height fullWidth" placeholder="Full Name" />
@@ -24,6 +24,9 @@
     		    </div>
     		    <div class="form-group">
     		        <input name="password" type="password" class="form-control 3height fullWidth" placeholder="Password" />
+    		    </div>
+    		    <div>
+    		    	<input name="picture" type="file">
     		    </div>
     		    <button class="3height fullWidth centerText" type="submit">Sign Me Up</button>
     		</form>
