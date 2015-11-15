@@ -2,8 +2,8 @@ package controllers
 
 import play.api.Play.current
 import play.api.mvc._
-import walrath.technology.openwalrus.model.tos.User
-import business.UserManager
+import walrath.technology.openwalrus.model.tos.{UserTO, User}
+import business.{UserManagerImpl, UserManager}
 import javax.inject.Inject
 import play.api.data._
 import play.api.data.Forms._
@@ -35,7 +35,7 @@ class Application @Inject() (userManager: UserManager) extends Controller {
     request.session.get("userHandle").map { handle =>
       val result = userManager.getUserProfile(handle)
       result match {
-        case (Some(x), _) => Ok(views.html.profile(result._1.get, result._2.getOrElse(List.empty))(request.session))
+        case (Some(x), _, _) => Ok(views.html.profile(UserTO.fromUser(result._1.get), result._2.getOrElse(List.empty), result._3)(request.session))
         case _ => Redirect(routes.Application.loadLogin)
       }
     }.getOrElse {
@@ -63,7 +63,7 @@ class Application @Inject() (userManager: UserManager) extends Controller {
     
     if(!userManager.checkIfHandleInUse(handle)) {
       val newUser = User(None, handle, enterEmail(phoneoremail), convertToDomesticPhone(phoneoremail), password, fullName, 0, true, false, None, List.empty, List.empty, List.empty, List.empty)
-      val result = userManager.createUser(newUser, request.body.file("picture").map(_.ref.file))
+      val result = userManager.createUser(newUser, request.body.file("picture").map(x => (x.filename, x.ref.file)))
       loginRedirect(newUser)
     }
     else {
@@ -74,7 +74,7 @@ class Application @Inject() (userManager: UserManager) extends Controller {
   def loadProfile(handle: String) = Action { implicit request =>
     val result = userManager.getUserProfile(handle)
     result match {
-      case (Some(x), _) => Ok(views.html.profile(result._1.get, result._2.getOrElse(List.empty))(request.session))
+      case (Some(x), _, _) => {result._3.get("asdf").map(_.profileImage).getOrElse("noimage"); Ok(views.html.profile(UserTO.fromUser(result._1.get), result._2.getOrElse(List.empty), result._3)(request.session))}
       case _ => Ok("Profile not found")
     }
   }
@@ -105,10 +105,13 @@ class Application @Inject() (userManager: UserManager) extends Controller {
   def followersPage(handle: String) = TODO
   
   def lookUpImage(key: String) = Action {
-    (new FileGridFsDao).retrieve(new ObjectId(key)).map { fileData =>
-      Ok.stream(Enumerator.fromStream(fileData.inputStream)).as(fileData.contentType.getOrElse("image/png"))
-    }.getOrElse {
-      Ok("404 not found")
+    key match {
+      case "noimage" => Redirect(routes.Assets.versioned("images/noimage.svg"))
+      case _ => (new FileGridFsDao).retrieve(new ObjectId(key)).map { fileData =>
+          Ok.stream(Enumerator.fromStream(fileData.inputStream)).as(fileData.contentType.getOrElse("image/png"))
+        }.getOrElse {
+          Ok("404 not found")
+        }
     }
   }
   

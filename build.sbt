@@ -12,6 +12,7 @@ libraryDependencies ++= Seq(
   "org.reactivemongo" %% "play2-reactivemongo" % "0.11.5.play24",
   "org.mongodb" %% "casbah" % "2.8.2",
   "org.mindrot" % "jbcrypt" % "0.3m",
+  "com.google.jimfs" % "jimfs" % "1.0",
   "org.webjars" %% "webjars-play" % "2.4.0-1",
   "org.webjars" % "jquery" % "2.1.4",
   "org.webjars" % "bootstrap" % "3.3.5",

@@ -11,7 +11,7 @@ trait GruntDao {
   
   /**
    * Add to database.
-   * @param user The grunt to enter.
+   * @param grunt The grunt to enter.
    * @return The new id entered.
    */
   def ++(grunt: Grunt): Option[ObjectId]
@@ -72,7 +72,7 @@ class GruntMongoDao @Inject() ()(implicit app: Application) extends MongoCRUDBas
   
   /**
    * Add to database.
-   * @param user The grunt to enter.
+   * @param grunt The grunt to enter.
    * @return The new id entered.
    */
   override def ++(grunt: Grunt): Option[ObjectId] = {

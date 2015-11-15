@@ -1,8 +1,6 @@
 package business
 
 import walrath.technology.openwalrus.model.tos.User
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 import javax.inject.Inject
 import org.mindrot.jbcrypt.BCrypt
 import com.mongodb.casbah.Imports._

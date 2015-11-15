@@ -285,6 +285,7 @@ body {
 .custom-file-input::-webkit-file-upload-button {
   visibility: hidden;
 }
+
 .custom-file-input::before {
   content: 'Profile img';
   display: inline-block;
@@ -303,9 +304,11 @@ body {
   margin-top: -.2em;
   margin-left: -.7em;
 }
+
 .custom-file-input:hover::before {
   border-color: black;
 }
+
 .custom-file-input:active::before {
   background: -webkit-linear-gradient(top, #e3e3e3, #f9f9f9);
 }
