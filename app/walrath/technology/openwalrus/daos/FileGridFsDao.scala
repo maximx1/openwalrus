@@ -20,6 +20,7 @@ trait FileDao {
   /**
    * Stores a file into database.
    * @param file The file to insert.
+   * @param fileName The name of the file.
    * @return The new Id
    */
   def store(file: File, fileName: String): Option[ObjectId]
@@ -27,6 +28,7 @@ trait FileDao {
   /**
    * Stores a file into database.
    * @param file The file to insert.
+   * @param fileName The name of the file.
    * @return The new Id
    */
   def store(file: Array[Byte], fileName: String): Option[ObjectId]
@@ -34,6 +36,7 @@ trait FileDao {
   /**
    * Attempts to retrieve a file from the database.
    * @param id The file id to retrieve.
+   * @return The image data.
    */
   def retrieve(id: ObjectId): Option[ImageData]
 }
@@ -44,28 +47,24 @@ class FileGridFsDao @Inject() ()(implicit app: Application) extends GridFsBaseCo
   /**
    * Stores a file into database.
    * @param file The file to insert.
+   * @param fileName The name of the file.
    * @return The new Id
    */
   def store(file: File, fileName: String): Option[ObjectId] = gridBucket(file){ f=>
-    f.filename = file.getName
-    f.contentType = ImageUtils.determineWebType(file.getName()).getOrElse("image/png")
-  } match {
-    case Some(x: ObjectId) => Some(x)
-    case _ => None
-  }
+    f.filename = fileName
+    f.contentType = ImageUtils.determineWebType(fileName).getOrElse("image/png")
+  }.map(_.asInstanceOf[ObjectId])
 
   /**
    * Stores a file into database.
    * @param file The file to insert.
+   * @param fileName The name of the file.
    * @return The new Id
    */
   def store(file: Array[Byte], fileName: String): Option[ObjectId] = gridBucket(file){ f=>
     f.filename = fileName
     f.contentType = ImageUtils.determineWebType(fileName).getOrElse("image/png")
-  } match {
-    case Some(x: ObjectId) => Some(x)
-    case _ => None
-  }
+  }.map(_.asInstanceOf[ObjectId])
   
   /**
    * Attempts to retrieve a file from the database.

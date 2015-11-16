@@ -54,6 +54,14 @@ trait UserManager {
    * @return true if the entry was successful, false otherwise.
    */
   def createUser(user: User, file: Option[(String, File)]): Boolean
+
+  /**
+   * Inserts a photo and returns a reference to it and optionally a reference to it's thumb.
+   * @param file The file and filename to insert.
+   * @param createThumb A flag to create a thumbnail or not.
+   * @return A reference to the inserted image and optionally a reference to it's thumb.
+   */
+  def insertPhoto(file: Option[(String, File)], createThumb: Boolean): Option[(Option[ObjectId], Option[ObjectId])]
 }
 
 /**
@@ -136,6 +144,7 @@ class UserManagerImpl @Inject() (userDao: UserDao, fileDao: FileDao) extends Use
 
   /**
    * Inserts a photo and returns a reference to it and optionally a reference to it's thumb.
+   * @param file The file and filename to insert.
    * @param createThumb A flag to create a thumbnail or not.
    * @return A reference to the inserted image and optionally a reference to it's thumb.
    */
@@ -143,7 +152,7 @@ class UserManagerImpl @Inject() (userDao: UserDao, fileDao: FileDao) extends Use
       val original = fileDao.store(x._2, x._1)
       val thumb = createThumb match {
         case true => fileDao.store(ImageUtils.imageToThumb(x._2).get, x._1)
-        case true => None
+        case false => None
       }
       (original, thumb)
     })

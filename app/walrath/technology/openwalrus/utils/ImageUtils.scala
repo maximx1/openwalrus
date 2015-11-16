@@ -1,15 +1,11 @@
 package walrath.technology.openwalrus.utils
 
-import java.awt.{RenderingHints, Image}
+import java.awt.Image
 import java.awt.image.BufferedImage
 import java.io.{ByteArrayOutputStream, File}
-import java.nio.file.Files
-import java.util.UUID
 import javax.imageio.ImageIO
 
 import scala.util.Try
-import com.google.common.jimfs.Jimfs
-import com.google.common.jimfs.Configuration
 
 /**
  * Utilities surrounding basic image tasks.
@@ -17,7 +13,6 @@ import com.google.common.jimfs.Configuration
  */
 object ImageUtils {
 
-  private val fileSystem = Jimfs.newFileSystem(Configuration.unix)
   private val imageTypes = Map(
       "png" -> "image/png",
       "jpeg" -> "image/jpeg",

@@ -8,7 +8,7 @@ import play.api.Application
 import com.google.inject.Inject
 
 class MongoCRUDBaseTest extends MongoTestBase with BeforeAndAfter {
-  private var dao: TestDocumentDao = null//app.injector.instanceOf[TestDocumentDao]
+  private var dao: TestDocumentDao = null
   
   before { 
     startMongoServer

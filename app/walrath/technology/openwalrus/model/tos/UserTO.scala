@@ -18,10 +18,9 @@ case class UserTO(
   following: List[ObjectId],
   followers: List[ObjectId]
 ) {
-  def u = this
-  def toUser = User(u.id, u.handle, u.email, u.phone, u.password, u.fullName, u.creationDate, u.currentlyActivated, u.verified,
-    convertToId(u.profileImage), u.images, u.grunts, u.following, u.followers)
-  def convertToId(str: String) = if(ObjectId.isValid(str)) Some(new ObjectId(str)) else None
+  def toUser = User(id, handle, email, phone, password, fullName, creationDate, currentlyActivated, verified,
+    convertToId(profileImage), images, grunts, following, followers)
+  private def convertToId(str: String) = if(ObjectId.isValid(str)) Some(new ObjectId(str)) else None
 }
 
 object UserTO {
