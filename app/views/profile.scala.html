@@ -1,12 +1,19 @@
-@(profileData: User, grunts: List[GruntTO])
+@(profileData: UserTO, grunts: List[GruntTO], gruntProfilesData: Map[String, UserTO])(implicit session: play.api.mvc.Session)
 
 <html>
-	@partials.headtag("OpenWalrus &#64;@profileData.handle")
+	@partials.headtag("Openwalrus @" + profileData.handle)
 	<body>
 		@partials.navbar() {
-        	<ul class="nav navbar-nav navbar-right">
-	            <li><a href="@routes.Application.loadLogin" class="unbold">Have an account? <span class="bold">Log in</span></a></li>
-	        </ul>
+			@if(session.get("userHandle").isEmpty) {
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="@routes.Application.signup" class="unbold">Have an account? <span class="bold">Sign up</span></a></li>
+					<li><a href="@routes.Application.loadLogin" class="unbold">Have an account? <span class="bold">Log in</span></a></li>
+                </ul>
+			} else {
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="@routes.Application.logout" class="unbold"><span class="bold">Log out</span></a></li>
+                </ul>
+			}
        	}
        	<div class="row row-centered">
        		<div class="col-xs-12 col-sm-12 col-md-10 col-lg-8 col-centered">
@@ -14,7 +21,7 @@
 			       	<div class="col-xs-12 col-sm-12 col-md-4 col-lg-4">
 			       		<div class="mobileCenter standardBox bottom-soft-corners top-soft-corners max20 white">
 			       			<div class="pictureBox top-soft-corners">&nbsp;</div>
-			       			<img class="largeThumbPH inlineBlock circle superBordered" src="https://avatars3.githubusercontent.com/u/2591656?v=3&s=100" alt=“profile">
+			       			<img class="largeThumbPH inlineBlock circle superBordered" src='@routes.Application.lookUpImage(profileData.profileImage)' alt=“profile">
 					       	<div class="profileData">
 						       	<a href='@routes.Application.loadProfile(profileData.handle)' class="undecked black"><h5 class="bold">@profileData.fullName</h5></a>
 						       	<div class="grey" style="margin-top:-.7em;">&#64;@profileData.handle</div>
@@ -22,27 +29,28 @@
 					       	<br>
 					       	<div class="fullWidth">
 						       	<div class="hangLeft thirdWidth">
-						       		Grunts<br><a href='@routes.Application.loadProfile(profileData.handle)' class="undecked black">204</a>
+						       		Grunts<br><a href='@routes.Application.loadProfile(profileData.handle)' class="undecked black">@profileData.grunts.size</a>
 						       	</div>
 						       	<div class="hangLeft thirdWidth">
-						       		Following<br><a href='@routes.Application.followingPage(profileData.handle)' class="undecked black">130</a>
+						       		Following<br><a href='@routes.Application.followingPage(profileData.handle)' class="undecked black">@profileData.following.size</a>
 						       	</div>
 						       	<div class="hangLeft thirdWidth">
-						       		Followers<br><a href='@routes.Application.followersPage(profileData.handle)' class="undecked black">34</a>
+						       		Followers<br><a href='@routes.Application.followersPage(profileData.handle)' class="undecked black">@profileData.followers.size</a>
 						       	</div>
 					       	</div>
 				       	</div>
 			       	</div>
 			       	<div class="mobileWidth col-md-8 col-lg-8">
-			       		<div class="top-soft-corners bottom-sharp-corners bordered fullWidth noOverflow white">
-			       			<div name="grunt" class="gruntInputBox inForARoughRide buffer mostWidth bottom-soft-corners top-soft-corners bordered" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true" data-text="What's up with you?" onblur="wipePlaceholderBlur()"></div>
-			       			<!-- <textarea class="buffer fullWidth bottom-soft-corners top-soft-corners" placeholder="What's up with you?"></textarea> -->
-			       			<button class="leanRight buffer gruntButton">Grunt</button>
-			       		</div>
+                        @if(!session.get("userHandle").isEmpty) {
+                            <div class="top-soft-corners bottom-soft-corners bordered fullWidth noOverflow white onACloud">
+                                <div name="grunt" class="gruntInputBox inForARoughRide buffer mostWidth bottom-soft-corners top-soft-corners bordered" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true" data-text="What's up with you?" onblur="wipePlaceholderBlur()"></div>
+                                <button class="leanRight buffer gruntButton">Grunt</button>
+                            </div>
+                        }
 				       	@grunts.map { grunt => 
 				       		<div class="fullWidth gruntBox white">
 						       	<!-- <div class="thumbPH inlineBlock top-soft-corners bottom-soft-corners">&nbsp;</div> -->
-						       	<img class="thumbPH inlineBlock top-soft-corners bottom-soft-corners" src="https://avatars3.githubusercontent.com/u/2591656?v=3&s=100" alt=“profile">
+						       	<img class="thumbPH inlineBlock top-soft-corners bottom-soft-corners" src='@routes.Application.lookUpImage(gruntProfilesData.get(grunt.userId.toString).map(_.profileImage).getOrElse("noimage"))' alt=“profile">
 				       			<div class="gruntData">
 						   			<div class="inlineBlock">
 					       				<a href='@routes.Application.loadProfile(grunt.handle)' class="undecked black">

@@ -1,8 +1,8 @@
 package business
 
-import walrath.technology.openwalrus.model.tos.User
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
+import java.io.File
+
+import walrath.technology.openwalrus.model.tos.{GruntTO, User}
 import javax.inject.Inject
 import org.mindrot.jbcrypt.BCrypt
 import com.mongodb.casbah.Imports._
@@ -32,7 +32,7 @@ class UserManagerTest extends ManagerTestBase {
     
     "be able to be added and return true" in {
       (userDaoMock.++ _) expects(*) returning(Some(new ObjectId))
-      userManager.createUser(createTestUser) shouldBe true
+      userManager.createUser(createTestUser, None) shouldBe true
     }
   }
   
@@ -49,6 +49,45 @@ class UserManagerTest extends ManagerTestBase {
       userManager.checkIfHandleInUse(user.handle) shouldBe false
     }
   }
+
+  "User Profiles" should {
+    "be found from Grunts" in {
+      val userId1 = new ObjectId()
+      val gruntTO1 = GruntTO(userId1, "", "", "", 0)
+      val userId2 = new ObjectId()
+      val gruntTO2 = GruntTO(userId2, "", "", "", 1)
+      val list = gruntTO1 :: gruntTO2 :: Nil
+
+      val user1 = User(Some(userId1), "", None, None, "", "", 0, true, true, None, List.empty, List.empty, List.empty, List.empty)
+      val user2 = User(Some(userId2), "", None, None, "", "", 0, true, true, None, List.empty, List.empty, List.empty, List.empty)
+
+      (userDaoMock.findByIds _) expects(list.map(_.userId)) returning(user1::user2::Nil)
+      val results = userManager.getGruntProfiles(list)
+      results.size shouldBe 2
+      results(userId1.toString()).id shouldBe Some(userId1)
+      results(userId2.toString()).id shouldBe Some(userId2)
+    }
+  }
+
+  "An image" should {
+    "be inserted into the database without creating a thumbnail" in {
+      val file = new File("tmp.txt")
+      val fileName = "tmp.txt"
+      val expectedId = new ObjectId()
+      (fileDaoMock.store (_: File, _: String)) expects(file, fileName) returning(Some(expectedId))
+      userManager.insertPhoto(Some((fileName, file)), false) shouldBe Some((Some(expectedId), None))
+    }
+
+//    "be inserted into the database and create a thumbnail" in {
+//      val file = new File("tmp.txt")
+//      val fileName = "tmp.txt"
+//      val expectedId = new ObjectId()
+//      val expectedThumbId = new ObjectId()
+//      (fileDaoMock.store (_: File, _: String)) expects(file, fileName) returning(Some(expectedId))
+//      userManager.insertPhoto(Some((fileName, file)), false) shouldBe Some((Some(expectedId), None))
+//
+//    }
+  }
   
-  def createTestUser = User(None, "timmay", Some("test@sample.com"), None,"samplePass", "Testy Testerson", System.currentTimeMillis(), true, true)
+  def createTestUser = User(None, "timmay", Some("test@sample.com"), None,"samplePass", "Testy Testerson", System.currentTimeMillis(), true, true, None, List.empty, List.empty, List.empty, List.empty)
 }

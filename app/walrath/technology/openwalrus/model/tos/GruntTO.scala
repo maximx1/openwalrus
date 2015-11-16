@@ -12,6 +12,3 @@ case class GruntTO(
     message: String,
     timestamp: Long
 )
-
-
-//Grunt(x.id.get, x.handle, x.fullName, "", 4)

@@ -3,7 +3,11 @@
 <html>
 	@partials.headtag("Sign into OpenWalrus")
 	<body>
-        @partials.navbar() {<div></div>}
+        @partials.navbar() {
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="@routes.Application.signup" class="unbold">Want to join? <span class="bold">Sign up</span></a></li>
+			</ul>
+		}
         <div class="row row-centered">
     		<form class="spacer col-xs-11 col-sm-6 col-md-5 col-lg-4 col-centered" method="post" action="@routes.Application.attemptSignin">
     		    <h3>Log In</h3>
