@@ -20,7 +20,7 @@ First download the latest tarball from `https://github.com/maximx1/openwalrus/re
 You need to update application.conf. You can the current `conf/application.conf` prior to building or create a new one from [this template](https://github.com/maximx1/openwalrus/blob/master/conf/application.conf). 
 
 Tasks:
-* Update the `play.crypto.secret = "changeme"`
+* Run `./activator playUpdateSecret` to update the play secret.
 * Update `mongodb.default.host="mongodb://localhost:27017"` with a valid [Mongo URI](https://docs.mongodb.org/manual/reference/connection-string/).
 * Set your collection name in `mongodb.default.name="openwalrus-db"`.
 * You can uncomment `# application.context="/openwalrus"` to add a context root.

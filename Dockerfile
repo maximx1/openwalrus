@@ -1,6 +1,6 @@
 # openwalrus
 #
-# Version     v0.0.1
+# Version     v0.0.2
 FROM          ubuntu
 MAINTAINER    Justin Walrath <walrathjaw@gmail.com>
 
@@ -12,16 +12,15 @@ RUN           apt-get update && apt-get install -y openjdk-8-jdk unzip mongodb
 # Set up environment variables
 ENV           PORT              9000
 ENV           APP_NAME          openwalrus
-ENV           APP_VERSION       v0.0.1
-ENV           APP_ZIP_NAME      $APP_NAME-$APP_VERSION.zip
+ENV           APP_VERSION       v0.0.2
 ENV           APP_INSTALL_DIR   /tmp/$APP_NAME
-ENV           APP_RUN_DIR       $APP_INSTALL_DIR/$APP_NAME-1.0-SNAPSHOT
+ENV           REPOSITORY        https://github.com/maximx1/openwalrus
 
 # Install the application
-ADD           $APP_ZIP_NAME $APP_INSTALL_DIR/
+RUN           git clone --branch $APP_VERSION $REPOSITORY $APP_INSTALL_DIR
 WORKDIR       $APP_INSTALL_DIR
-RUN           unzip $APP_ZIP_NAME
-WORKDIR       APP_RUN_DIR
+RUN           ./activator playUpdateSecret
+RUN           ./activator stage
 
 # Set up mongo install
 RUN           mkdir -p /data/db
@@ -31,4 +30,4 @@ VOLUME        ["/data/db"]
 EXPOSE        $PORT
 
 # Set run command
-CMD           mongod --fork --logpath /var/log/mongod && $APP_RUN_DIR/bin/$APP_NAME -Dhttp.port=$PORT -J-Xms32M -J-Xmx64M
+CMD           mongod --fork --logpath /var/log/mongod && $APP_INSTALL_DIR/target/universal/stage/bin/$APP_NAME -Dhttp.port=$PORT -J-Xms32M -J-Xmx64M

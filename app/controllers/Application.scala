@@ -1,9 +1,10 @@
 package controllers
-
+import play.api.Routes
 import play.api.Play.current
 import play.api.mvc._
+import play.api.routing.JavaScriptReverseRouter
 import walrath.technology.openwalrus.model.tos.{UserTO, User}
-import business.{UserManagerImpl, UserManager}
+import business.UserManager
 import javax.inject.Inject
 import play.api.data._
 import play.api.data.Forms._
@@ -114,7 +115,15 @@ class Application @Inject() (userManager: UserManager) extends Controller {
         }
     }
   }
-  
+
+  def javascriptRoutes = Action { implicit request =>
+    Ok(
+      JavaScriptReverseRouter("jsRoutes")(
+        routes.javascript.ApplicationAPI.postGrunt
+      )
+    ).as("text/javascript")
+  }
+
   private def enterEmail(email: String): Option[String] = if(checkIfPossiblyEmail(email)) Some(email) else None
 
   private def loginRedirect(user: User): Result = Redirect(routes.Application.index) withSession(

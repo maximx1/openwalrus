@@ -44,7 +44,7 @@
                         @if(!session.get("userHandle").isEmpty) {
                             <div class="top-soft-corners bottom-soft-corners bordered fullWidth noOverflow white onACloud">
                                 <div name="grunt" class="gruntInputBox inForARoughRide buffer mostWidth bottom-soft-corners top-soft-corners bordered" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true" data-text="What's up with you?" onblur="wipePlaceholderBlur()"></div>
-                                <button class="leanRight buffer gruntButton">Grunt</button>
+                                <button id="gruntSubmitButton" class="leanRight buffer gruntButton">Grunt</button>
                             </div>
                         }
 				       	@grunts.map { grunt => 
