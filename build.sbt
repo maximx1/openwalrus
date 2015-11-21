@@ -9,6 +9,7 @@ scalaVersion := "2.11.7"
 libraryDependencies ++= Seq(
   cache,
   ws,
+  filters,
   "org.reactivemongo" %% "play2-reactivemongo" % "0.11.5.play24",
   "org.mongodb" %% "casbah" % "2.8.2",
   "org.mindrot" % "jbcrypt" % "0.3m",

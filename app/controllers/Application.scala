@@ -1,4 +1,5 @@
 package controllers
+import play.api.Play.current
 import play.api.mvc._
 import play.api.routing.JavaScriptReverseRouter
 import walrath.technology.openwalrus.model.tos.{UserTO, User}
