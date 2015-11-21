@@ -1,6 +1,4 @@
 package controllers
-import play.api.Routes
-import play.api.Play.current
 import play.api.mvc._
 import play.api.routing.JavaScriptReverseRouter
 import walrath.technology.openwalrus.model.tos.{UserTO, User}
@@ -105,14 +103,25 @@ class Application @Inject() (userManager: UserManager) extends Controller {
   
   def followersPage(handle: String) = TODO
   
-  def lookUpImage(key: String) = Action {
-    key match {
-      case "noimage" => Redirect(routes.Assets.versioned("images/noimage.svg"))
-      case _ => (new FileGridFsDao).retrieve(new ObjectId(key)).map { fileData =>
-          Ok.stream(Enumerator.fromStream(fileData.inputStream)).as(fileData.contentType.getOrElse("image/png"))
-        }.getOrElse {
-          Ok("404 not found")
-        }
+  def lookUpImage(key: String) = Action { implicit request =>
+    request.headers.get("If-None-Match").map { ifNoneMatch =>
+      if(ifNoneMatch == key) {
+        NotModified
+      }
+      else {
+        handleLookUpImage(key)
+      }
+    }.getOrElse {
+      handleLookUpImage(key)
+    }
+  }
+
+  private def handleLookUpImage(key: String) = key match {
+    case "noimage" => Redirect(routes.Assets.versioned("images/noimage.svg"))
+    case _ => (new FileGridFsDao).retrieve(new ObjectId(key)).map { fileData =>
+      Ok.stream(Enumerator.fromStream(fileData.inputStream)).as(fileData.contentType.getOrElse("image/png")).withHeaders(("ETag" -> key))
+    }.getOrElse {
+      NotFound
     }
   }
 
