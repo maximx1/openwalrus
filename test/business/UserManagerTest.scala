@@ -2,7 +2,7 @@ package business
 
 import java.io.File
 
-import walrath.technology.openwalrus.model.tos.{GruntTO, User}
+import models.{GruntTO, User}
 import javax.inject.Inject
 import org.mindrot.jbcrypt.BCrypt
 import com.mongodb.casbah.Imports._

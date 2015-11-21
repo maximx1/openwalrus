@@ -35,7 +35,7 @@ resolvers ++= Seq(
   "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 )
 
-TwirlKeys.templateImports += "walrath.technology.openwalrus.model.tos._"
+TwirlKeys.templateImports += "models._"
 
 resolvers += Resolver.url("Typesafe Ivy releases", url("https://repo.typesafe.com/typesafe/ivy-releases"))(Resolver.ivyStylePatterns)
 

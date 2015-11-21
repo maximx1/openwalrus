@@ -2,16 +2,17 @@ package business
 
 import java.io.File
 
+import data.daos.UserDao
 import org.bson.types.ObjectId
-import walrath.technology.openwalrus.model.tos.{UserTO, User, GruntTO}
-import walrath.technology.openwalrus.daos.{FileDao, UserDao}
+import models.{UserTO, User, GruntTO}
+import data.daos.FileDao
 import play.api.Logger
 import javax.inject.Inject
 import com.google.inject.ImplementedBy
 import org.mindrot.jbcrypt.BCrypt
 import java.util.Date
 
-import walrath.technology.openwalrus.utils.ImageUtils
+import core.utils.ImageUtils
 
 /**
  * Business logic for User operations.

@@ -2,13 +2,13 @@ package controllers
 import play.api.Play.current
 import play.api.mvc._
 import play.api.routing.JavaScriptReverseRouter
-import walrath.technology.openwalrus.model.tos.{UserTO, User}
+import models.{UserTO, User}
 import business.UserManager
 import javax.inject.Inject
 import play.api.data._
 import play.api.data.Forms._
-import walrath.technology.openwalrus.utils.PhoneAndEmailValidatorUtils._
-import walrath.technology.openwalrus.daos.FileGridFsDao
+import core.utils.PhoneAndEmailValidatorUtils._
+import data.daos.FileGridFsDao
 import play.api.libs.iteratee.Enumerator
 import com.mongodb.casbah.Imports._
 import scala.concurrent.ExecutionContext.Implicits.global
