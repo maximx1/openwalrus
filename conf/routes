@@ -14,7 +14,9 @@ POST    /account/create             controllers.Application.performSignup
 GET     /:handle                    controllers.Application.loadProfile(handle: String)
 GET		/:handle/following			controllers.Application.followingPage(handle: String)
 GET		/:handle/followers			controllers.Application.followersPage(handle: String)
+POST    /submitGrunt                controllers.ApplicationAPI.postGrunt
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
 GET     /webjars/*file              controllers.WebJarAssets.at(file)
+GET     /special/javascriptRoutes   controllers.Application.javascriptRoutes
