@@ -137,6 +137,7 @@ class Application @Inject() (userManager: UserManager) extends Controller {
   private def enterEmail(email: String): Option[String] = if(checkIfPossiblyEmail(email)) Some(email) else None
 
   private def loginRedirect(user: User): Result = Redirect(routes.Application.index) withSession(
-    "userHandle" -> user.handle
+    "userHandle" -> user.handle,
+    "userId" -> user.id.get.toString
   )
 }

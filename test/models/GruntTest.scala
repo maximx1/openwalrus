@@ -17,7 +17,15 @@ class GruntTest extends BaseTestSpec {
       val mdbObject = grunt.toMongoDBObject
       mdbObject.as[ObjectId]("_id") shouldBe id
     }
+
+    "Be converted to a GruntTO" in {
+      val userTO = createTestUserTO
+      val grunt = createTestGrunt(Some(new ObjectId()))
+      val gruntTO = GruntTO(grunt.userId, userTO.handle, userTO.fullName, grunt.message, grunt.timestamp)
+      GruntTO.fromGrunt(grunt, userTO) shouldBe gruntTO
+    }
   }
 
+  def createTestUserTO = UserTO(None, "timmay", Some("test@sample.com"), None,"samplePass", "Testy Testerson", System.currentTimeMillis(), true, true, "", List.empty, List.empty, List.empty, List.empty)
   def createTestGrunt(id: Option[ObjectId]) = Grunt(id, new ObjectId(), None, List.empty, List.empty, "My First Grunt", 0)
 }

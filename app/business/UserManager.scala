@@ -2,15 +2,14 @@ package business
 
 import java.io.File
 
-import data.daos.UserDao
+import data.daos.{GruntDao, UserDao, FileDao}
 import org.bson.types.ObjectId
-import models.{UserTO, User, GruntTO}
-import data.daos.FileDao
+import models.{Grunt, UserTO, User, GruntTO}
 import play.api.Logger
 import javax.inject.Inject
 import com.google.inject.ImplementedBy
 import org.mindrot.jbcrypt.BCrypt
-import java.util.Date
+import core.utils.DateUtils.CURRENT_TIMESTAMP
 
 import core.utils.ImageUtils
 
@@ -31,7 +30,7 @@ trait UserManager {
    * @param grunts The grunts to grab all users for.
    * @return Map of objectId to user.
    */
-  def getGruntProfiles(grunts: List[GruntTO]): Map[String, UserTO]
+  def getGruntProfiles(grunts: List[Grunt]): Map[String, UserTO]
 
   /**
    * Attempts the login of a user
@@ -69,7 +68,7 @@ trait UserManager {
  * Implementation of business logic for user operations.
  * @author maximx1
  */
-class UserManagerImpl @Inject() (userDao: UserDao, fileDao: FileDao) extends UserManager {
+class UserManagerImpl @Inject() (userDao: UserDao, fileDao: FileDao, gruntDao: GruntDao) extends UserManager {
   val userNotFoundErrMsg = "User not found"
   val userAuthFailErrMsg = "User(%s) failed to authenticate"
   
@@ -81,18 +80,10 @@ class UserManagerImpl @Inject() (userDao: UserDao, fileDao: FileDao) extends Use
   def getUserProfile(handle: String): (Option[User], Option[List[GruntTO]], Map[String, UserTO]) = {
     
     userDao.findByHandle(handle) match {
-      case Some(x) => {
-        val grunts = GruntTO(x.id.get, x.handle, x.fullName, "8Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", 8) :: 
-                 GruntTO(x.id.get, x.handle, x.fullName, "4Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", 4) ::
-                 GruntTO(x.id.get, x.handle, x.fullName, "7Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", 7) ::
-               	 GruntTO(x.id.get, x.handle, x.fullName, "5Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", 5) ::
-                 GruntTO(x.id.get, x.handle, x.fullName, "3Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", 3) ::
-               	 GruntTO(x.id.get, x.handle, x.fullName, "My first grunt!", 0) ::
-                 GruntTO(x.id.get, x.handle, x.fullName, "2Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", 2) ::
-               	 GruntTO(x.id.get, x.handle, x.fullName, "6Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", 6) ::
-                 GruntTO(x.id.get, x.handle, x.fullName, "1Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", 1) ::
-                 Nil
-        (Some(x), Some(grunts.sortBy(-_.timestamp)), getGruntProfiles(grunts))
+      case Some(u) => {
+        val grunts: List[Grunt] = gruntDao.findByIds(u.grunts)
+        val gruntProfiles = getGruntProfiles(grunts)
+        (Some(u), Some(grunts.map(g => GruntTO.fromGrunt(g, gruntProfiles(g.userId.toString))).sortBy(-_.timestamp)), gruntProfiles)
       }
       case _ => (None, None, Map.empty)
     }
@@ -103,7 +94,7 @@ class UserManagerImpl @Inject() (userDao: UserDao, fileDao: FileDao) extends Use
    * @param grunts The grunts to grab all users for.
    * @return Map of objectId to user.
    */
-  def getGruntProfiles(grunts: List[GruntTO]): Map[String, UserTO] = {
+  def getGruntProfiles(grunts: List[Grunt]): Map[String, UserTO] = {
     userDao.findByIds(grunts.map(_.userId)).map(x => x.id.get.toString -> UserTO.fromUser(x)).toMap
   }
   
@@ -157,7 +148,4 @@ class UserManagerImpl @Inject() (userDao: UserDao, fileDao: FileDao) extends Use
       }
       (original, thumb)
     })
-
-  
-  def CURRENT_TIMESTAMP = (new Date()).getTime
 }

@@ -41,7 +41,7 @@ resolvers += Resolver.url("Typesafe Ivy releases", url("https://repo.typesafe.co
 
 fork in run := false
 
-coverageExcludedPackages := "<empty>;views.*;router;controllers.*;"
+coverageExcludedPackages := "<empty>;views.*;router;controllers.*;core.filters.*;core.localization.Constants;models.json.Jsonify;"
 
 coverageMinimum := 80
 

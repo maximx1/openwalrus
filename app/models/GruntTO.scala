@@ -12,3 +12,16 @@ case class GruntTO(
     message: String,
     timestamp: Long
 )
+
+/**
+  * Helper object to convert Grunts
+  */
+object GruntTO{
+  /**
+    * Converts a grunt to a gruntTO using the user data.
+    * @param g The grunt.
+    * @param u The user.
+    * @return The converted GruntTO.
+    */
+  def fromGrunt(g: Grunt, u: UserTO) = GruntTO(g.userId, u.handle, u.fullName, g.message, g.timestamp)
+}

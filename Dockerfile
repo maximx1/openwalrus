@@ -1,6 +1,6 @@
 # openwalrus
 #
-# Version     v0.0.2
+# Version     v0.0.3
 FROM          ubuntu
 MAINTAINER    Justin Walrath <walrathjaw@gmail.com>
 
@@ -12,7 +12,7 @@ RUN           apt-get update && apt-get install -y openjdk-8-jdk unzip mongodb
 # Set up environment variables
 ENV           PORT              9000
 ENV           APP_NAME          openwalrus
-ENV           APP_VERSION       v0.0.2
+ENV           APP_VERSION       v0.0.3
 ENV           APP_INSTALL_DIR   /tmp/$APP_NAME
 ENV           REPOSITORY        https://github.com/maximx1/openwalrus
 

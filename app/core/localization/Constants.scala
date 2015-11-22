@@ -10,5 +10,8 @@ object Constants {
     */
   val correlationIdHeader = "CorrelationId"
 
+  /**
+    * Name of the application.
+    */
   val applicationName = "Openwalrus"
 }

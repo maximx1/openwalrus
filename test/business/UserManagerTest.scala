@@ -2,7 +2,7 @@ package business
 
 import java.io.File
 
-import models.{GruntTO, User}
+import models.{Grunt, User}
 import javax.inject.Inject
 import org.mindrot.jbcrypt.BCrypt
 import com.mongodb.casbah.Imports._
@@ -53,9 +53,9 @@ class UserManagerTest extends ManagerTestBase {
   "User Profiles" should {
     "be found from Grunts" in {
       val userId1 = new ObjectId()
-      val gruntTO1 = GruntTO(userId1, "", "", "", 0)
+      val gruntTO1 = Grunt(Some(new ObjectId()), userId1, None, List.empty, List.empty,"", 0)
       val userId2 = new ObjectId()
-      val gruntTO2 = GruntTO(userId2, "", "", "", 1)
+      val gruntTO2 = Grunt(Some(new ObjectId()), userId2, None, List.empty, List.empty,"", 0)
       val list = gruntTO1 :: gruntTO2 :: Nil
 
       val user1 = User(Some(userId1), "", None, None, "", "", 0, true, true, None, List.empty, List.empty, List.empty, List.empty)

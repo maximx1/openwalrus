@@ -24,7 +24,7 @@
 			       			<img class="largeThumbPH inlineBlock circle superBordered" src='@routes.Application.lookUpImage(profileData.profileImage)' alt=“profile">
 					       	<div class="profileData">
 						       	<a href='@routes.Application.loadProfile(profileData.handle)' class="undecked black"><h5 class="bold">@profileData.fullName</h5></a>
-						       	<div class="grey" style="margin-top:-.7em;">&#64;@profileData.handle</div>
+						       	<div id="userProfileHandle" class="grey" style="margin-top:-.7em;">&#64;@profileData.handle</div>
 					       	</div>
 					       	<br>
 					       	<div class="fullWidth">
@@ -41,9 +41,12 @@
 				       	</div>
 			       	</div>
 			       	<div class="mobileWidth col-md-8 col-lg-8">
-                        @if(!session.get("userHandle").isEmpty) {
+                        @session.get("userHandle").map { handle =>
                             <div class="top-soft-corners bottom-soft-corners bordered fullWidth noOverflow white onACloud">
-                                <div name="grunt" class="gruntInputBox inForARoughRide buffer mostWidth bottom-soft-corners top-soft-corners bordered" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true" data-text="What's up with you?" onblur="wipePlaceholderBlur()"></div>
+                                <div @if(handle != profileData.handle) {
+									 id="markedOtherProfile"
+								}
+								name="grunt" class="gruntInputBox inForARoughRide buffer mostWidth bottom-soft-corners top-soft-corners bordered" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true" data-text="What's up with you?" onblur="wipePlaceholderBlur()"></div>
                                 <button id="gruntSubmitButton" class="leanRight buffer gruntButton">Grunt</button>
                             </div>
                         }

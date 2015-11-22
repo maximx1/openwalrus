@@ -5,7 +5,7 @@ import java.util.UUID
 import javax.inject.Singleton
 import core.localization.Constants
 import play.api.Logger
-import play.api.mvc.{Filter, Result, RequestHeader, Headers}
+import play.api.mvc._
 
 import scala.concurrent.Future
 

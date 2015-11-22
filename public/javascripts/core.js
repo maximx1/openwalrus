@@ -1,8 +1,19 @@
 var wipePlaceholderBlur = function() {
-	if($('div[name=grunt]').html() === "<br>") {
-		$('div[name=grunt]').html("");
+    var mBox = $('div[name=grunt]')
+    var handle = $('#userProfileHandle').text()
+	if(mBox.html() === "<br>" || mBox.html() === handle + " " || mBox.html() === handle) {
+		mBox.html("");
 	}
 }
+
+$('#markedOtherProfile').focus(function() {
+    var mBox = $('div[name=grunt]')
+    var handle = $('#userProfileHandle').text()
+    console.log(handle);
+    if(mBox.html() == "") {
+        mBox.html(handle + " ");
+    }
+});
 
 $('#gruntSubmitButton').click(function() {
     var route = jsRoutes.controllers.ApplicationAPI.postGrunt();
