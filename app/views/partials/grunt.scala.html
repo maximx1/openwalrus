@@ -1,0 +1,13 @@
+@(grunt: GruntTO, gruntProfilesData: Map[String, UserTO])
+<div class="fullWidth gruntBox white">
+	<img class="thumbPH inlineBlock top-soft-corners bottom-soft-corners" src='@routes.Application.lookUpImage(gruntProfilesData.get(grunt.userId.toString).map(_.profileImage).getOrElse("noimage"))' alt="profile">
+	<div class="gruntData">
+		<div class="inlineBlock">
+			<a href='@routes.Application.loadProfile(grunt.handle)' class="undecked black">
+				<span class="bold">@grunt.fullName</span>
+			</a>
+			<span class="grey">&#64;@grunt.handle</span>
+		</div>
+		<div class="gruntMessageContent">@Html(grunt.message)</div>
+	</div>
+</div>

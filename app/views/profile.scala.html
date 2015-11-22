@@ -42,7 +42,7 @@
 			       	</div>
 			       	<div class="mobileWidth col-md-8 col-lg-8">
                         @session.get("userHandle").map { handle =>
-                            <div class="top-soft-corners bottom-soft-corners bordered fullWidth noOverflow white onACloud">
+                            <div id="mainGruntEntry" class="top-soft-corners bottom-soft-corners bordered fullWidth noOverflow white onACloud">
                                 <div @if(handle != profileData.handle) {
 									 id="markedOtherProfile"
 								}
@@ -51,19 +51,7 @@
                             </div>
                         }
 				       	@grunts.map { grunt => 
-				       		<div class="fullWidth gruntBox white">
-						       	<!-- <div class="thumbPH inlineBlock top-soft-corners bottom-soft-corners">&nbsp;</div> -->
-						       	<img class="thumbPH inlineBlock top-soft-corners bottom-soft-corners" src='@routes.Application.lookUpImage(gruntProfilesData.get(grunt.userId.toString).map(_.profileImage).getOrElse("noimage"))' alt=“profile">
-				       			<div class="gruntData">
-						   			<div class="inlineBlock">
-					       				<a href='@routes.Application.loadProfile(grunt.handle)' class="undecked black">
-					       					<span class="bold">@grunt.fullName</span>
-					       				</a>
-					       				<span class="grey">&#64;@grunt.handle</span>
-					       			</div>
-				       				<div class="gruntMessageContent">@grunt.message</div>
-				       			</div>
-			       			</div>
+				       		@partials.grunt(grunt, gruntProfilesData)
 				       	}
 				       	<div class="bordered eogBox bottom-soft-corners white">End of Grunts...</div>
 			       	</div>

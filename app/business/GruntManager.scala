@@ -7,6 +7,8 @@ import data.daos.{UserDao, GruntDao}
 import core.utils.DateUtils.CURRENT_TIMESTAMP
 import models.Grunt
 import org.bson.types.ObjectId
+import models.GruntTO
+import models.UserTO
 
 /**
   * Business logic for Grunt operations.
@@ -19,6 +21,13 @@ trait GruntManager {
     * @return The new object if inserted correctly.
     */
   def insertNewGrunt(newGrunt: Grunt): Option[ObjectId]
+  
+  /**
+   * Gets a grunt by it's id along with the user data.
+   * @param id The grunt id to look up.
+   * @return The combined gruntTO and the userTO if found.
+   */
+  def getGruntById(id: ObjectId): Option[(GruntTO, UserTO)]
 }
 
 class GruntManagerImpl @Inject() (gruntDao: GruntDao, userDao: UserDao) extends GruntManager {
@@ -29,10 +38,26 @@ class GruntManagerImpl @Inject() (gruntDao: GruntDao, userDao: UserDao) extends 
     * @return The new object if inserted correctly.
     */
   def insertNewGrunt(newGrunt: Grunt): Option[ObjectId] = {
-    (gruntDao ++ newGrunt.copy(timestamp = CURRENT_TIMESTAMP)).map { id: ObjectId =>
+    (gruntDao ++ newGrunt.copy(
+        timestamp = CURRENT_TIMESTAMP,
+        message = MessageUtils.htmlToTextWithNewLines(newGrunt.message))).map { id: ObjectId =>
       val users = userDao.findByHandles(MessageUtils.pullAtUsers(newGrunt.message))
       userDao.addGrunts(users.map(_.id.get) :+ newGrunt.userId, id)
       id
     }
+  }
+  
+  /**
+   * Gets a grunt by it's id along with the user data.
+   * @param id The grunt id to look up.
+   * @return The combined gruntTO and the userTO if found.
+   */
+  def getGruntById(id: ObjectId): Option[(GruntTO, UserTO)] = {
+    gruntDao.findById(id).map{ g => 
+        userDao.findById(g.userId).map{u =>
+          val uTO = UserTO.fromUser(u)
+          (GruntTO.fromGrunt(g, uTO), uTO)
+        }
+    }.getOrElse(None)
   }
 }

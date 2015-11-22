@@ -64,7 +64,7 @@ class Application @Inject() (userManager: UserManager) extends Controller {
     if(!userManager.checkIfHandleInUse(handle)) {
       val newUser = User(None, handle, enterEmail(phoneoremail), convertToDomesticPhone(phoneoremail), password, fullName, 0, true, false, None, List.empty, List.empty, List.empty, List.empty)
       val result = userManager.createUser(newUser, request.body.file("picture").map(x => (x.filename, x.ref.file)))
-      loginRedirect(newUser)
+      result.map(newId => loginRedirect(newUser.copy(id = Some(newId)))).getOrElse(Ok("There was an issue creating the user"))
     }
     else {
       Ok("Handle in use")
@@ -129,7 +129,8 @@ class Application @Inject() (userManager: UserManager) extends Controller {
   def javascriptRoutes = Action { implicit request =>
     Ok(
       JavaScriptReverseRouter("jsRoutes")(
-        routes.javascript.ApplicationAPI.postGrunt
+        routes.javascript.ApplicationAPI.postGrunt,
+        routes.javascript.ApplicationAPI.retrieveSingleGrunt
       )
     ).as("text/javascript")
   }

@@ -22,6 +22,8 @@ libraryDependencies ++= Seq(
   "org.webjars" %% "webjars-play" % "2.4.0-1",
   "org.webjars" % "jquery" % "2.1.4",
   "org.webjars" % "bootstrap" % "3.3.5",
+  "io.github.gitbucket" % "markedj" % "1.0.4",
+  "org.jsoup" % "jsoup" % "1.8.3",
   "org.scalatestplus" %% "play" % "1.4.0-M3" % "test",
   "org.scalatest" % "scalatest_2.11" % "2.2.4" % "test",
   "org.scalamock" %% "scalamock-scalatest-support" % "3.2" % "test",
@@ -32,7 +34,8 @@ routesGenerator := InjectedRoutesGenerator
 
 resolvers ++= Seq(
   "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
-  "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
+  "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases",
+  "amateras-repo" at "http://amateras.sourceforge.jp/mvn/"
 )
 
 TwirlKeys.templateImports += "models._"
