@@ -1,6 +1,8 @@
 package models
 
-import com.mongodb.casbah.Imports._
+import org.bson.types.ObjectId
+import io.github.gitbucket.markedj.Marked
+import models.json.Jsonify
 
 /**
  * Simple transfer object to pass back and forth with all information.
@@ -11,7 +13,7 @@ case class GruntTO(
     fullName: String,
     message: String,
     timestamp: Long
-)
+)  extends Jsonify
 
 /**
   * Helper object to convert Grunts
@@ -23,5 +25,5 @@ object GruntTO{
     * @param u The user.
     * @return The converted GruntTO.
     */
-  def fromGrunt(g: Grunt, u: UserTO) = GruntTO(g.userId, u.handle, u.fullName, g.message, g.timestamp)
+  def fromGrunt(g: Grunt, u: UserTO) = GruntTO(g.userId, u.handle, u.fullName, Marked.marked(g.message), g.timestamp)
 }

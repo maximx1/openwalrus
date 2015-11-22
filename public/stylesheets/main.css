@@ -258,6 +258,10 @@ body {
 	margin-top: 1em;
 }
 
+.gruntMessageContent pre, .gruntMessageContent img {
+	width: 100%;
+}
+
 .profileData {
 	width: calc(100% - 8em);
 	margin-left: 8em;

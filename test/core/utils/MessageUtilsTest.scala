@@ -50,4 +50,13 @@ class MessageUtilsTest extends BaseTestSpec {
       results should contain("Townsend")
     }
   }
+  
+  "HTML" should {
+    "be able to be stripped and turned into plain text with line breaks" in {
+      val original = "### My recipe<br><pre style=\"color: rgb(0, 0, 0); line-height: normal;\">![BBQ Pulled Pork](http://i.imgur.com/YhItOoy.jpg \"IBC BBQ Pulled Pork\")</pre>"
+      val expected = "### My recipe\n![BBQ Pulled Pork](http://i.imgur.com/YhItOoy.jpg \"IBC BBQ Pulled Pork\")"
+      val actual = MessageUtils.htmlToTextWithNewLines(original)
+      actual shouldBe expected
+    }
+  }
 }
