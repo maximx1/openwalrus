@@ -22,7 +22,7 @@ class GruntTest extends BaseTestSpec {
       val userTO = createTestUserTO
       val grunt = createTestGrunt(Some(new ObjectId()))
       val gruntTO = GruntTO(grunt.userId, userTO.handle, userTO.fullName, grunt.message, grunt.timestamp)
-      GruntTO.fromGrunt(grunt, userTO) shouldBe gruntTO
+      GruntTO.fromGrunt(grunt, userTO) shouldBe gruntTO.copy(message= "<p>" + gruntTO.message + "</p>\n")
     }
   }
 

@@ -31,8 +31,9 @@ class UserManagerTest extends ManagerTestBase {
     }
     
     "be able to be added and return true" in {
-      (userDaoMock.++ _) expects(*) returning(Some(new ObjectId))
-      userManager.createUser(createTestUser, None) shouldBe true
+      val newId = new ObjectId
+      (userDaoMock.++ _) expects(*) returning(Some(newId))
+      userManager.createUser(createTestUser, None) shouldBe Some(newId)
     }
   }
   

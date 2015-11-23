@@ -8,14 +8,7 @@ import play.api.Application
  * @author maximx1
  */
 trait MongoDaoBaseConnectionHandler {
-  val mongodbURI = "mongodb.default.host"
   val mongodbNameProp = "mongodb.default.name"
-  
-  /**
-   * Opens a client connection to configured db.
-   * @return The Mongo client connection.
-   */
-  protected def openClient()(implicit app: Application) = MongoClient(MongoClientURI(app.configuration.getString(mongodbURI).get))
   
   /**
    * Gets the Mongo DB object.
@@ -37,5 +30,26 @@ trait MongoDaoBaseConnectionHandler {
    * @param collectionName The name of the collection to open.
    * @return A Mongo Collection object.
    */
-  protected def connect(collectionName: String)(implicit app: Application): MongoCollection = getCollection(getDB(openClient), collectionName)
+  protected def connect(collectionName: String)(implicit app: Application): MongoCollection = getCollection(getDB(MongoDaoBaseConnectionHandler.openClient), collectionName)
+}
+
+object MongoDaoBaseConnectionHandler {
+  private val mongodbURI = "mongodb.default.host"
+  private var _client: Option[MongoClient] = None
+  
+  /**
+   * Creates a singleton instance of of the connection pooler.
+   * @param app the Application context from play.
+   * @return The stored instance of the connection pooler.
+   */
+  def createInstance()(implicit app: Application) = _client.getOrElse {
+    _client = Some(MongoClient(MongoClientURI(app.configuration.getString(mongodbURI).get)))
+    _client.get
+  }
+  
+  /**
+   * Opens a client connection to configured db.
+   * @return The Mongo client connection.
+   */
+  def openClient()(implicit app: Application) = createInstance
 }

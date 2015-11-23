@@ -14,5 +14,5 @@ trait GridFsBaseConnectionHandler extends MongoDaoBaseConnectionHandler {
    * @param bucket The name of the bucket to open.
    * @return A Mongo Collection object.
    */
-  protected def connectGridFs(bucket: String)(implicit app: Application): GridFS = GridFS(getDB(openClient), bucket)
+  protected def connectGridFs(bucket: String)(implicit app: Application): GridFS = GridFS(getDB(MongoDaoBaseConnectionHandler.openClient), bucket)
 }
