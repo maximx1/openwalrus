@@ -9,10 +9,14 @@ class GruntMongoDaoIntegrationTest extends MongoTestBase with BeforeAndAfter {
   private var gruntDao: GruntMongoDao = null
   
   before {
+    MongoDaoBaseConnectionHandler.closeConnection
     startMongoServer
     gruntDao = new GruntMongoDao
   }
-  after { stopMongoServer }
+  after { 
+    MongoDaoBaseConnectionHandler.closeConnection
+    stopMongoServer
+  }
   
   "A grunt" should {
     "be created successfully and added to the db" in {

@@ -10,10 +10,14 @@ class MongoCRUDBaseTest extends MongoTestBase with BeforeAndAfter {
   private var dao: TestDocumentDao = null
   
   before { 
+    MongoDaoBaseConnectionHandler.closeConnection
     startMongoServer
     dao = new TestDocumentDao
   }
-  after { stopMongoServer }
+  after {
+    MongoDaoBaseConnectionHandler.closeConnection
+    stopMongoServer
+  }
   
   "A TO" should {
     "be able to be created" in {

@@ -34,7 +34,7 @@ trait MongoDaoBaseConnectionHandler {
 }
 
 object MongoDaoBaseConnectionHandler {
-  private val mongodbURI = "mongodb.default.host"
+  val mongodbURI = "mongodb.default.host"
   private var _client: Option[MongoClient] = None
   
   /**
@@ -52,4 +52,11 @@ object MongoDaoBaseConnectionHandler {
    * @return The Mongo client connection.
    */
   def openClient()(implicit app: Application) = createInstance
+  
+  /**
+   * Closes the database connection.
+   */
+  def closeConnection = {
+    _client = None
+  }
 }

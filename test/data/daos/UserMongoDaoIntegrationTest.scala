@@ -9,10 +9,14 @@ class UserMongoDaoIntegrationTest extends MongoTestBase with BeforeAndAfter {
   private var userDao: UserMongoDao = null
   
   before {
+    MongoDaoBaseConnectionHandler.closeConnection
     startMongoServer
     userDao = new UserMongoDao
   }
-  after { stopMongoServer }
+  after { 
+    MongoDaoBaseConnectionHandler.closeConnection
+    stopMongoServer
+  }
 
   "A User" should {
     "be made and a document should be able to be added to the db" in {
