@@ -26,11 +26,13 @@
     		        <input name="password" type="password" class="form-control 3height fullWidth" placeholder="Password" />
     		    </div>
     		    <div class="form-group">
-    		    	<input name="picture" type="file" class="form-control 3height custom-file-input">
+    		    	<input name="profileImage" type="text" class="form-control 3height left70Box" placeholder="Profile Image" readonly />
+    		    	<span id="fileOverlayButton" class="3height centerText right30FakeButton">Image</span>
     		    </div>
     		    <button class="3height fullWidth centerText" type="submit">Sign Me Up</button>
     		</form>
     	</div>
+    	<div id="uploadPlaceholder"></div>
     	@partials.commonscripts()
 	</body>
 </html>

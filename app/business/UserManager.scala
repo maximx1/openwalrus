@@ -53,7 +53,7 @@ trait UserManager {
    * @param file The file information. Should be filename and file
    * @return The objectId if the entry was successful
    */
-  def createUser(user: User, file: Option[(String, File)]): Option[ObjectId]
+  def createUser(user: User): Option[ObjectId]
 
   /**
    * Inserts a photo and returns a reference to it and optionally a reference to it's thumb.
@@ -124,13 +124,8 @@ class UserManagerImpl @Inject() (userDao: UserDao, fileDao: FileDao, gruntDao: G
    * @param file The file information. Should be filename and file
    * @return The objectId if the entry was successful
    */
-  def createUser(user: User, file: Option[(String, File)]): Option[ObjectId] = {
-    val newId = userDao ++ insertPhoto(file, true)
-    .map{ case (imageRef, thumbRef) => {
-      user.copy(profileImage=if(thumbRef.isEmpty) imageRef else thumbRef, images=imageRef.toList ++: thumbRef.toList)
-    }}
-    .getOrElse(user)
-    .copy(password=BCrypt.hashpw(user.password, BCrypt.gensalt()), creationDate=CURRENT_TIMESTAMP)
+  def createUser(user: User): Option[ObjectId] = {
+    val newId = userDao ++ user.copy(password=BCrypt.hashpw(user.password, BCrypt.gensalt()), creationDate=CURRENT_TIMESTAMP)
     return newId
   }
 

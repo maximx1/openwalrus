@@ -21,7 +21,7 @@
 			       	<div class="col-xs-12 col-sm-12 col-md-4 col-lg-4">
 			       		<div class="mobileCenter standardBox bottom-soft-corners top-soft-corners max20 white">
 			       			<div class="pictureBox top-soft-corners">&nbsp;</div>
-			       			<img class="largeThumbPH inlineBlock circle superBordered" src='@routes.Application.lookUpImage(profileData.profileImage)' alt=“profile">
+			       			<img class="largeThumbPH inlineBlock circle superBordered" src='@routes.Application.lookUpImageThumb(profileData.profileImage)' alt=“profile">
 					       	<div class="profileData">
 						       	<a href='@routes.Application.loadProfile(profileData.handle)' class="undecked black"><h5 class="bold">@profileData.fullName</h5></a>
 						       	<div id="userProfileHandle" class="grey" style="margin-top:-.7em;">&#64;@profileData.handle</div>
@@ -29,13 +29,13 @@
 					       	<br>
 					       	<div class="fullWidth">
 						       	<div class="hangLeft thirdWidth">
-						       		Grunts<br><a href='@routes.Application.loadProfile(profileData.handle)' class="undecked black">@profileData.grunts.size</a>
+						       		Grunts<br><a id="gruntsCount" href='@routes.Application.loadProfile(profileData.handle)' class="undecked black">@profileData.grunts.size</a>
 						       	</div>
 						       	<div class="hangLeft thirdWidth">
-						       		Following<br><a href='@routes.Application.followingPage(profileData.handle)' class="undecked black">@profileData.following.size</a>
+						       		Following<br><a id="followingCount" href='@routes.Application.followingPage(profileData.handle)' class="undecked black">@profileData.following.size</a>
 						       	</div>
 						       	<div class="hangLeft thirdWidth">
-						       		Followers<br><a href='@routes.Application.followersPage(profileData.handle)' class="undecked black">@profileData.followers.size</a>
+						       		Followers<br><a id="followersCount" href='@routes.Application.followersPage(profileData.handle)' class="undecked black">@profileData.followers.size</a>
 						       	</div>
 					       	</div>
 				       	</div>
@@ -58,6 +58,7 @@
 		       	</div>
 	       	</div>
        	</div>
+       	<div id="uploadPlaceholder"></div>
        	@partials.commonscripts()
 	</body>
 </html>
