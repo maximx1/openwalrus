@@ -9,10 +9,14 @@ class UserMongoDaoIntegrationTest extends MongoTestBase with BeforeAndAfter {
   private var userDao: UserMongoDao = null
   
   before {
+    MongoDaoBaseConnectionHandler.closeConnection
     startMongoServer
     userDao = new UserMongoDao
   }
-  after { stopMongoServer }
+  after { 
+    MongoDaoBaseConnectionHandler.closeConnection
+    stopMongoServer
+  }
 
   "A User" should {
     "be made and a document should be able to be added to the db" in {
@@ -147,6 +151,16 @@ class UserMongoDaoIntegrationTest extends MongoTestBase with BeforeAndAfter {
 
       val withoutGruntsResults = userDao.findById(userId3.get).get
       withoutGruntsResults.grunts must have length 0
+    }
+  }
+  
+  "A profile image" should {
+    "Be able to have updated in a user profile" in {
+      val newImageRef = new ObjectId()
+      val id = userDao ++ createTestUser
+      userDao.updateProfileImage(id.get, newImageRef)
+      val foundUser = userDao.findById(id.get).get
+      foundUser.profileImage.get mustBe newImageRef
     }
   }
   

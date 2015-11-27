@@ -1,54 +1,32 @@
-var wipePlaceholderBlur = function() {
-    var mBox = $('div[name=grunt]')
-    var handle = $('#userProfileHandle').text()
-	if(mBox.html() === "<br>" || mBox.html() === handle + " " || mBox.html() === handle) {
-		mBox.html("");
-	}
-}
+$(document).ready(function() {
+	$.ajax({
+		url: jsRoutes.controllers.ApplicationAPI.fileUploadMenuPartial().url,
+		type: "GET",
+		success: function(data) {
+			$('#uploadPlaceholder').append(data)
+			$('.playsHideAndSeek').hide();
+			$('#closeFileOverlay').click(function() {
+				$('.playsHideAndSeek').hide('slow');
+			});
 
-$('#markedOtherProfile').focus(function() {
-    var mBox = $('div[name=grunt]')
-    var handle = $('#userProfileHandle').text()
-    console.log(handle);
-    if(mBox.html() === "") {
-        mBox.html(handle + " ");
-    }
-});
-
-var createGruntSuccessAction = function(data) {
-	var route = jsRoutes.controllers.ApplicationAPI.retrieveSingleGrunt();
-
-	if(data.status === "ok") {
-		$.ajax({
-            url: route.url,
-            type: "POST",
-            contentType: "application/json",
-            dataType: "json",
-            data: JSON.stringify({ id: data.content }),
-            success: getOneGruntSuccessAction
-        });
-	}
-};
-
-var getOneGruntSuccessAction = function(data) {
-	if(data.status === "ok") {
-		$('#mainGruntEntry').after(data.content);
-	}
-}
-
-$('#gruntSubmitButton').click(function() {
-    var route = jsRoutes.controllers.ApplicationAPI.postGrunt();
-    var messageBox = $('div[name=grunt]');
-    
-    if(messageBox.html() !== "") {
-        $.ajax({
-            url: route.url,
-            type: "POST",
-            contentType: "application/json",
-            dataType: "json",
-            data: JSON.stringify({ message: messageBox.html() }),
-            success: createGruntSuccessAction
-        });
-    }
-    messageBox.html("");
+			$('.opensFileOverlay').click(function() {
+				setFileOverlayHandler($(this).id)
+				$('.playsHideAndSeek').show('slow');
+			});
+			
+			$(function () {
+			    $('#fileupload').fileupload({
+			        dataType: 'json',
+			        progressall: function (e, data) {
+			            var progress = parseInt(data.loaded / data.total * 100, 10);
+			            $('#progress .bar').css(
+			                'width',
+			                progress + '%'
+			            );
+			        },
+			        done: imageHook
+			    });
+			});
+		}
+	});
 });

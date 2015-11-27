@@ -6,5 +6,5 @@ package models.json
 object JsonPayloads {
   case class BasicResponse(status: Option[String], content: Option[Any]) extends Jsonify
   case class NewGrunt(message: String) extends Jsonify
-  case class SingleGruntRequest(id: String) extends Jsonify
+  case class SingleIdRequest(id: String) extends Jsonify
 }

@@ -11,10 +11,14 @@ class FileGridFsDaoIntegrationTest extends MongoTestBase with GridFsBaseConnecti
   private var gridFsDao: FileGridFsDao = null
 
   before {
+    MongoDaoBaseConnectionHandler.closeConnection
     startMongoServer
     gridFsDao = new FileGridFsDao()
   }
-  after { stopMongoServer }
+  after { 
+    MongoDaoBaseConnectionHandler.closeConnection
+    stopMongoServer
+  }
 
   "A file" should {
     "be able to be inserted into the database" in {

@@ -53,7 +53,7 @@ trait UserManager {
    * @param file The file information. Should be filename and file
    * @return The objectId if the entry was successful
    */
-  def createUser(user: User, file: Option[(String, File)]): Option[ObjectId]
+  def createUser(user: User): Option[ObjectId]
 
   /**
    * Inserts a photo and returns a reference to it and optionally a reference to it's thumb.
@@ -62,6 +62,14 @@ trait UserManager {
    * @return A reference to the inserted image and optionally a reference to it's thumb.
    */
   def insertPhoto(file: Option[(String, File)], createThumb: Boolean): Option[(Option[ObjectId], Option[ObjectId])]
+  
+  /**
+   * Updates a user's profile image.
+   * @param userId The user's id.
+   * @param imageRef The new imageSet Id.
+   * @return The imageSet id.
+   */
+  def updateProfileImage(userId: ObjectId, imageRef: ObjectId): Option[ObjectId]
 }
 
 /**
@@ -124,13 +132,8 @@ class UserManagerImpl @Inject() (userDao: UserDao, fileDao: FileDao, gruntDao: G
    * @param file The file information. Should be filename and file
    * @return The objectId if the entry was successful
    */
-  def createUser(user: User, file: Option[(String, File)]): Option[ObjectId] = {
-    val newId = userDao ++ insertPhoto(file, true)
-    .map{ case (imageRef, thumbRef) => {
-      user.copy(profileImage=if(thumbRef.isEmpty) imageRef else thumbRef, images=imageRef.toList ++: thumbRef.toList)
-    }}
-    .getOrElse(user)
-    .copy(password=BCrypt.hashpw(user.password, BCrypt.gensalt()), creationDate=CURRENT_TIMESTAMP)
+  def createUser(user: User): Option[ObjectId] = {
+    val newId = userDao ++ user.copy(password=BCrypt.hashpw(user.password, BCrypt.gensalt()), creationDate=CURRENT_TIMESTAMP)
     return newId
   }
 
@@ -148,4 +151,12 @@ class UserManagerImpl @Inject() (userDao: UserDao, fileDao: FileDao, gruntDao: G
       }
       (original, thumb)
     })
+    
+  /**
+   * Updates a user's profile image.
+   * @param userId The user's id.
+   * @param imageRef The new imageSet Id.
+   * @return The imageSet id.
+   */
+  def updateProfileImage(userId: ObjectId, imageRef: ObjectId): Option[ObjectId] = userDao.updateProfileImage(userId, imageRef)
 }

@@ -63,6 +63,14 @@ trait UserDao {
     * @return The result.
     */
   def addGrunts(userIds: List[ObjectId], gruntId: ObjectId): Boolean
+  
+  /**
+   * Updates a user's profile image.
+   * @param userId The user's id.
+   * @param imageRef The new imageSet Id.
+   * @return The imageSet id.
+   */
+  def updateProfileImage(userId: ObjectId, imageRef: ObjectId): Option[ObjectId]
 }
 
 /**
@@ -117,6 +125,17 @@ class UserMongoDao @Inject() ()(implicit app: Application) extends MongoCRUDBase
   override def addGrunts(userIds: List[ObjectId], gruntId: ObjectId): Boolean = {
     mongoColl.update(("_id" $in userIds), $push("grunts" -> gruntId), multi=true)
     true
+  }
+  
+  /**
+   * Updates a user's profile image.
+   * @param userId The user's id.
+   * @param imageRef The new imageSet Id.
+   * @return The imageSet id.
+   */
+  override def updateProfileImage(userId: ObjectId, imageRef: ObjectId): Option[ObjectId] = {
+    mongoColl.update(MongoDBObject("_id"->userId), $set("profileImage" -> imageRef))
+    Some(imageRef)
   }
 }
 

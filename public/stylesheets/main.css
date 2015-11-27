@@ -148,6 +148,7 @@ body {
 	min-height: 7em;
 	border: 1px solid #CCCCCC;
 	overflow:auto;
+	margin-bottom: -1px;
 }
 
 .gruntBox:hover {
@@ -238,6 +239,14 @@ body {
 	float: left;
 }
 
+.seeThroughOnHover {
+	opacity: 1;
+}
+
+.seeThroughOnHover:hover {
+	opacity: .8;
+}
+
 .inlineBlock {
 	display: inline-block;
 }
@@ -315,4 +324,72 @@ body {
 
 .custom-file-input:active::before {
   background: -webkit-linear-gradient(top, #e3e3e3, #f9f9f9);
+}
+
+.bar {
+	height: 100%;
+    background: green;
+    width: 0%;
+}
+
+.seeThroughBackdrop {
+	height: 100%;
+	width: 100%;
+	position: fixed;
+	left: 0;
+	top: 0;
+	z-index:1 !important;
+	background: black;
+	opacity: 0.3;
+}
+
+.frontAndCenter {
+	background-color: #F0F0F0;
+	width: 27em;
+	height: 20em;
+	z-index:2 !important;
+	position: fixed;
+    top:0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    padding: 1em;
+    text-align: center;
+}
+
+.progressContainer {
+	background-color: white;
+	width: 100%;
+	border: #CCCCCC;
+	margin-top: 1em;
+	margin-bottom: 1em;
+	padding: 0;
+}
+
+.left70Box {
+	width: 70%;
+    float: left;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    margin-bottom: 1em;
+}
+
+.right30FakeButton {
+	width: 30%;
+    float: left;
+    border: solid 1px #CCCCCC;
+    height: 2.6em;
+    color: #EEEEEE;
+    font-weight: bold;
+    background-color: #557EBF;
+    margin-left: -1px;
+    margin-top: -1px;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    padding-top: .4em;
+}
+
+.right30FakeButton:hover {
+	background-color: #48B9A6;
 }

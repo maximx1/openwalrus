@@ -12,7 +12,7 @@ trait MongoTestBase extends PlaySpec with OneAppPerSuite with MongoEmbedDatabase
     implicit override lazy val app: FakeApplication = FakeApplication(
       additionalConfiguration = Map(
         mongodbNameProp -> "testDB",
-        mongodbURI -> ("mongodb://localhost:" + testPort.toString)
+        MongoDaoBaseConnectionHandler.mongodbURI -> ("mongodb://localhost:" + testPort.toString)
       )
     )
     

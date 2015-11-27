@@ -12,15 +12,17 @@ import data.daos.FileGridFsDao
 import play.api.libs.iteratee.Enumerator
 import com.mongodb.casbah.Imports._
 import scala.concurrent.ExecutionContext.Implicits.global
+import business.FileManager
 
-class Application @Inject() (userManager: UserManager) extends Controller {
+class Application @Inject() (userManager: UserManager, fileManager: FileManager) extends Controller {
   
   val signupForm = Form(
     tuple(
       "fullname" -> nonEmptyText,
       "handle" -> nonEmptyText,
       "phoneoremail" -> nonEmptyText,
-      "password" -> nonEmptyText
+      "password" -> nonEmptyText,
+      "profileImage" -> text
     )
   )
   
@@ -59,11 +61,15 @@ class Application @Inject() (userManager: UserManager) extends Controller {
   }
   
   def performSignup = Action(parse.multipartFormData) { implicit request =>
-    val (fullName, handle, phoneoremail, password) = signupForm.bindFromRequest.get
+    val (fullName, handle, phoneoremail, password, profileImage) = signupForm.bindFromRequest.get
+    val profileImageId = org.bson.types.ObjectId.isValid(profileImage) match {
+      case true => Some(new ObjectId(profileImage))
+      case false => None
+    }
     
     if(!userManager.checkIfHandleInUse(handle)) {
-      val newUser = User(None, handle, enterEmail(phoneoremail), convertToDomesticPhone(phoneoremail), password, fullName, 0, true, false, None, List.empty, List.empty, List.empty, List.empty)
-      val result = userManager.createUser(newUser, request.body.file("picture").map(x => (x.filename, x.ref.file)))
+      val newUser = User(None, handle, enterEmail(phoneoremail), convertToDomesticPhone(phoneoremail), password, fullName, 0, true, false, profileImageId, List.empty, List.empty, List.empty, List.empty)
+      val result = userManager.createUser(newUser)
       result.map(newId => loginRedirect(newUser.copy(id = Some(newId)))).getOrElse(Ok("There was an issue creating the user"))
     }
     else {
@@ -110,19 +116,41 @@ class Application @Inject() (userManager: UserManager) extends Controller {
         NotModified
       }
       else {
-        handleLookUpImage(key)
+        handleLookUpImage(key, false)
       }
     }.getOrElse {
-      handleLookUpImage(key)
+      handleLookUpImage(key, false)
+    }
+  }
+  
+  def lookUpImageThumb(key: String) = Action { implicit request =>
+    request.headers.get("If-None-Match").map { ifNoneMatch =>
+      if(ifNoneMatch == key) {
+        NotModified
+      }
+      else {
+        handleLookUpImage(key, true)
+      }
+    }.getOrElse {
+      handleLookUpImage(key, true)
     }
   }
 
-  private def handleLookUpImage(key: String) = key match {
+  private def handleLookUpImage(key: String, isThumb: Boolean) = key match {
     case "noimage" => Redirect(routes.Assets.versioned("images/noimage.svg"))
-    case _ => (new FileGridFsDao).retrieve(new ObjectId(key)).map { fileData =>
-      Ok.stream(Enumerator.fromStream(fileData.inputStream)).as(fileData.contentType.getOrElse("image/png")).withHeaders(("ETag" -> key))
-    }.getOrElse {
-      NotFound
+    case _ => {
+      org.bson.types.ObjectId.isValid(key) match {
+        case true => {
+          fileManager.lookUpImage(new ObjectId(key), isThumb).map { fileData =>
+            Ok.stream(Enumerator.fromStream(fileData.inputStream)).as(fileData.contentType.getOrElse("image/png")).withHeaders(("ETag" -> key))
+          }.getOrElse {
+            NotFound
+          }
+        }
+        case false => {
+          NotFound
+        }
+      }
     }
   }
 
@@ -130,7 +158,11 @@ class Application @Inject() (userManager: UserManager) extends Controller {
     Ok(
       JavaScriptReverseRouter("jsRoutes")(
         routes.javascript.ApplicationAPI.postGrunt,
-        routes.javascript.ApplicationAPI.retrieveSingleGrunt
+        routes.javascript.ApplicationAPI.retrieveSingleGrunt,
+        routes.javascript.ApplicationAPI.fileUploadMenuPartial,
+        routes.javascript.Application.lookUpImageThumb,
+        routes.javascript.Application.lookUpImage,
+        routes.javascript.ApplicationAPI.updateProfileImage
       )
     ).as("text/javascript")
   }

@@ -1,0 +1,12 @@
+@()
+<div class="seeThroughBackdrop playsHideAndSeek"></div>
+<div class="frontAndCenter playsHideAndSeek top-soft-corners bottom-soft-corners">
+	<div>
+		<p>Choose an image</p>
+		<input id="fileupload" class="form-control 3height custom-file-input" type="file" name="picture" data-url="@routes.ApplicationAPI.uploadImage">
+	</div>
+	<div id="progress" class="progressContainer top-soft-corners bottom-soft-corners 3height form-control">
+	    <div class="bar top-soft-corners bottom-soft-corners "></div>
+	</div>
+	<button id="closeFileOverlay" class="3height fullWidth centerText" type="button">Close</button>
+</div>
