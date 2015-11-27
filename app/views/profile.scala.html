@@ -21,7 +21,15 @@
 			       	<div class="col-xs-12 col-sm-12 col-md-4 col-lg-4">
 			       		<div class="mobileCenter standardBox bottom-soft-corners top-soft-corners max20 white">
 			       			<div class="pictureBox top-soft-corners">&nbsp;</div>
-			       			<img class="largeThumbPH inlineBlock circle superBordered" src='@routes.Application.lookUpImageThumb(profileData.profileImage)' alt=“profile">
+			       			<img id="mainProfileImage" 
+			       			@session.get("userHandle").map { handle =>
+			       				@if(handle == profileData.handle) {
+									class="largeThumbPH inlineBlock circle superBordered opensFileOverlay seeThroughOnHover"
+								} else {
+									class="largeThumbPH inlineBlock circle superBordered"
+								}
+			       			}
+			       			src='@routes.Application.lookUpImageThumb(profileData.profileImage)' alt=“profile">
 					       	<div class="profileData">
 						       	<a href='@routes.Application.loadProfile(profileData.handle)' class="undecked black"><h5 class="bold">@profileData.fullName</h5></a>
 						       	<div id="userProfileHandle" class="grey" style="margin-top:-.7em;">&#64;@profileData.handle</div>
@@ -48,6 +56,7 @@
 								}
 								name="grunt" class="gruntInputBox inForARoughRide buffer mostWidth bottom-soft-corners top-soft-corners bordered" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true" data-text="What's up with you?" onblur="wipePlaceholderBlur()"></div>
                                 <button id="gruntSubmitButton" class="leanRight buffer gruntButton">Grunt</button>
+								<button id="gruntAddImgButton" class="leanRight buffer gruntButton opensFileOverlay">Add Image</button>
                             </div>
                         }
 				       	@grunts.map { grunt => 
@@ -59,6 +68,8 @@
 	       	</div>
        	</div>
        	<div id="uploadPlaceholder"></div>
-       	@partials.commonscripts()
+       	@partials.commonscripts() {
+       		<script type='text/javascript' src='@routes.Assets.versioned("javascripts/profile.js")'></script>
+       	}
 	</body>
 </html>

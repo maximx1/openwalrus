@@ -15,4 +15,11 @@ object TypeUtils {
     case Some(x) => Some(x)
     case _ => None
   }
+  
+  /**
+   * Upgrade to Boolean to easily optionify a boolean.
+   */
+  implicit class RichBoolean(val b: Boolean) extends AnyVal {
+    final def option[A](a: => A): Option[A] = if (b) Some(a) else None
+  }
 }

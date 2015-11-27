@@ -62,6 +62,14 @@ trait UserManager {
    * @return A reference to the inserted image and optionally a reference to it's thumb.
    */
   def insertPhoto(file: Option[(String, File)], createThumb: Boolean): Option[(Option[ObjectId], Option[ObjectId])]
+  
+  /**
+   * Updates a user's profile image.
+   * @param userId The user's id.
+   * @param imageRef The new imageSet Id.
+   * @return The imageSet id.
+   */
+  def updateProfileImage(userId: ObjectId, imageRef: ObjectId): Option[ObjectId]
 }
 
 /**
@@ -143,4 +151,12 @@ class UserManagerImpl @Inject() (userDao: UserDao, fileDao: FileDao, gruntDao: G
       }
       (original, thumb)
     })
+    
+  /**
+   * Updates a user's profile image.
+   * @param userId The user's id.
+   * @param imageRef The new imageSet Id.
+   * @return The imageSet id.
+   */
+  def updateProfileImage(userId: ObjectId, imageRef: ObjectId): Option[ObjectId] = userDao.updateProfileImage(userId, imageRef)
 }

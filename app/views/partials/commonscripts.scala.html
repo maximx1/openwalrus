@@ -1,8 +1,9 @@
-@()
+@()(pagejs: Html)
 <script type='text/javascript' src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))'></script>
 <script type='text/javascript' src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.js"))'></script>
-<script type='text/javascript' src='@routes.Assets.versioned("javascripts/core.js")'></script>
 <script type='text/javascript' src='@routes.Application.javascriptRoutes'></script>
-<script type='text/javascript' src='@routes.Assets.versioned("javascripts/js/vendor/jquery.ui.widget.js")'></script>
-<script type='text/javascript' src='@routes.Assets.versioned("javascripts/js/jquery.iframe-transport.js")'></script>
-<script type='text/javascript' src='@routes.Assets.versioned("javascripts/js/jquery.fileupload.js")'></script>
+@pagejs
+<script type='text/javascript' src='@routes.Assets.versioned("javascripts/core.js")'></script>
+<script type='text/javascript' src='@routes.Assets.versioned("jslibs/js/vendor/jquery.ui.widget.js")'></script>
+<script type='text/javascript' src='@routes.Assets.versioned("jslibs/js/jquery.iframe-transport.js")'></script>
+<script type='text/javascript' src='@routes.Assets.versioned("jslibs/js/jquery.fileupload.js")'></script>

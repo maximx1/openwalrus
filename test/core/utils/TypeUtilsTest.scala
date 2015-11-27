@@ -21,4 +21,18 @@ class TypeUtilsTest extends BaseTestSpec {
       TypeUtils.nullToNone(null) shouldBe None
     }
   }
+  
+  "A RichBoolean" should {
+    import core.utils.TypeUtils.RichBoolean
+    
+    "place a value in option if true" in {
+      val trueBool = true
+      trueBool.option(1) shouldBe Some(1)
+    }
+    
+    "give an empty option if false" in {
+      val falseBool = false
+      falseBool.option(1) shouldBe None
+    }
+  }
 }

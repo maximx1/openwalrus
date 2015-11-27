@@ -2,25 +2,23 @@ package controllers
 
 import play.api.mvc._
 import javax.inject.Inject
-import business.GruntManager
-import models.Grunt
+import business.{GruntManager, FileManager, UserManager}
+import models.{Grunt, GruntTO, UserTO}
 import models.json.JsonPayloads._
 import org.bson.types.ObjectId
-import models.UserTO
-import models.GruntTO
-import business.FileManager
+import core.utils.TypeUtils.RichBoolean
 
-class ApplicationAPI @Inject() (gruntManager: GruntManager, fileManager: FileManager) extends ApiControllerBase {
+class ApplicationAPI @Inject() (gruntManager: GruntManager, fileManager: FileManager, userManager: UserManager) extends ApiControllerBase {
   
   val userNotLoggedIn = BasicResponse(Some("failed"), Some("User not logged in"))
   val unspecifiedError = BasicResponse(Some("failed"), Some("There was an unspecified error"))
   val couldNotFindId = BasicResponse(Some("failed"), Some("Could not find the id specified"))
+  val idNotValid = BasicResponse(Some("failed"), Some("The id passed in is not a valid id"))
   
   def postGrunt = JsonAction[NewGrunt] { implicit request =>
     request.session.get("userHandle").map { handle =>
       val newGrunt = Grunt(None, new ObjectId(request.session.get("userId").get), None, List.empty, List.empty, request.jsonData.message, 0)
       val newId: Option[ObjectId] = gruntManager.insertNewGrunt(newGrunt)
-      println(newId)
       newId.map(id => Ok(BasicResponse(Some("ok"), Some(id.toString)) asJson)).getOrElse(Ok(unspecifiedError asJson))
     }.getOrElse(Ok(userNotLoggedIn asJson))
   }
@@ -50,4 +48,16 @@ class ApplicationAPI @Inject() (gruntManager: GruntManager, fileManager: FileMan
   }
   
   def fileUploadMenuPartial = Action { Ok(views.html.partials.fileuploadpopup())}
+  
+  def updateProfileImage = JsonAction[SingleIdRequest] { implicit request =>
+    request.session.get("userId").map { id =>
+      ObjectId.isValid(id).option(new ObjectId(id)).map { userId =>
+        ObjectId.isValid(request.jsonData.id).option(new ObjectId(request.jsonData.id)).map { imageRef =>
+          userManager.updateProfileImage(userId, imageRef).map { result =>
+            Ok(BasicResponse(Some("success"), Some(result.toString)) asJson)
+          }.getOrElse(Ok(unspecifiedError asJson))
+        }.getOrElse(Ok(idNotValid asJson))
+      }.getOrElse(Ok(userNotLoggedIn asJson))
+    }.getOrElse(Ok(userNotLoggedIn asJson))
+  }
 }

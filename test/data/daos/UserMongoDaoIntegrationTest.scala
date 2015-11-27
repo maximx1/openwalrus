@@ -154,5 +154,15 @@ class UserMongoDaoIntegrationTest extends MongoTestBase with BeforeAndAfter {
     }
   }
   
+  "A profile image" should {
+    "Be able to have updated in a user profile" in {
+      val newImageRef = new ObjectId()
+      val id = userDao ++ createTestUser
+      userDao.updateProfileImage(id.get, newImageRef)
+      val foundUser = userDao.findById(id.get).get
+      foundUser.profileImage.get mustBe newImageRef
+    }
+  }
+  
   def createTestUser = User(None, "timmay", Some("test@sample.com"), None, "samplePass", "Testy Testerson", System.currentTimeMillis(), true, true, None, List.empty, List.empty, List.empty, List.empty)
 }

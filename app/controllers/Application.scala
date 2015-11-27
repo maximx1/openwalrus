@@ -159,7 +159,10 @@ class Application @Inject() (userManager: UserManager, fileManager: FileManager)
       JavaScriptReverseRouter("jsRoutes")(
         routes.javascript.ApplicationAPI.postGrunt,
         routes.javascript.ApplicationAPI.retrieveSingleGrunt,
-        routes.javascript.ApplicationAPI.fileUploadMenuPartial
+        routes.javascript.ApplicationAPI.fileUploadMenuPartial,
+        routes.javascript.Application.lookUpImageThumb,
+        routes.javascript.Application.lookUpImage,
+        routes.javascript.ApplicationAPI.updateProfileImage
       )
     ).as("text/javascript")
   }

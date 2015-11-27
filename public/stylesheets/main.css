@@ -237,10 +237,13 @@ body {
 	margin-top: -3.5em;
 	background-color: #FF6600;
 	float: left;
+}
+
+.seeThroughOnHover {
 	opacity: 1;
 }
 
-.largeThumbPH:hover {
+.seeThroughOnHover:hover {
 	opacity: .8;
 }
 

@@ -30,7 +30,7 @@ trait ImageSetDao {
    * @param ids The Ids.
    * @return list of found imageSets.
    */
-  def findByIds(ids: ObjectId): List[ImageSet]
+  def findByIds(ids: List[ObjectId]): List[ImageSet]
 }
 
 class ImageSetMongoDao @Inject() ()(implicit app: Application) extends MongoCRUDBase[ImageSet] with ImageSetDao {
@@ -59,5 +59,5 @@ class ImageSetMongoDao @Inject() ()(implicit app: Application) extends MongoCRUD
    * @param ids The Ids.
    * @return list of found imageSets.
    */
-  def findByIds(ids: ObjectId): List[ImageSet] = mongoColl.find(("_id" $in ids)).map(ImageSet.fromMongoObject(_)).toList
+  def findByIds(ids: List[ObjectId]): List[ImageSet] = mongoColl.find(("_id" $in ids)).map(ImageSet.fromMongoObject(_)).toList
 }

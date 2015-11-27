@@ -68,6 +68,20 @@ class UserManagerTest extends ManagerTestBase {
       results(userId1.toString()).id shouldBe Some(userId1)
       results(userId2.toString()).id shouldBe Some(userId2)
     }
+    
+    "have its profile image updated and return the imageRef to show it's done" in {
+      val userId = new ObjectId()
+      val imageRef = new ObjectId()
+      (userDaoMock.updateProfileImage _) expects(userId, imageRef) returning(Some(imageRef))
+      userManager.updateProfileImage(userId, imageRef) shouldBe Some(imageRef)
+    }
+    
+    "not have its profile image updated and return None to show it" in {
+      val userId = new ObjectId()
+      val imageRef = new ObjectId()
+      (userDaoMock.updateProfileImage _) expects(userId, imageRef) returning(None)
+      userManager.updateProfileImage(userId, imageRef) shouldBe None
+    }
   }
 
   "An image" should {
