@@ -1,16 +1,27 @@
-@()(implicit session: play.api.mvc.Session)
+@(bannerMessage: String, profiles: List[UserTO])(implicit session: play.api.mvc.Session)
 <html>
 	@partials.headtag("OpenWalrus")
 	<body>
 		@partials.navbar() {
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="@routes.Application.signup" class="unbold">Want to join? <span class="bold">Sign up</span></a></li>
-                <li><a href="@routes.Application.loadLogin" class="unbold">Have an account? <span class="bold">Log in</span></a></li>
+			<ul class="nav navbar-nav navbar-left">
+                <li><a href="@routes.Application.team" class="unbold"><span class="bold">Team</span></a></li>
             </ul>
+            @if(session.get("userHandle").isEmpty) {
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="@routes.Application.signup" class="unbold">Have an account? <span class="bold">Sign up</span></a></li>
+					<li><a href="@routes.Application.loadLogin" class="unbold">Have an account? <span class="bold">Log in</span></a></li>
+                </ul>
+			} else {
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="@routes.Application.logout" class="unbold"><span class="bold">Log out</span></a></li>
+                </ul>
+			}
        	}
-       	<h1 style="text-align: center;">Welcome to the winning team</h1>
-       	@partials.commonscripts() {
-       		
-       	}
+       	<h2 style="text-align: center;">@bannerMessage</h2>
+       	<br />
+       	@partials.profilecardslayout(profiles)
+		@partials.commonscripts() {
+	  		
+		}
 	</body>
 </html>

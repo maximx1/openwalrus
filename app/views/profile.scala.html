@@ -4,6 +4,9 @@
 	@partials.headtag("Openwalrus @" + profileData.handle)
 	<body>
 		@partials.navbar() {
+			<ul class="nav navbar-nav navbar-left">
+                <li><a href="@routes.Application.team" class="unbold"><span class="bold">Team</span></a></li>
+            </ul>
 			@if(session.get("userHandle").isEmpty) {
                 <ul class="nav navbar-nav navbar-right">
                     <li><a href="@routes.Application.signup" class="unbold">Have an account? <span class="bold">Sign up</span></a></li>

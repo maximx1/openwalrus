@@ -13,6 +13,7 @@ import play.api.libs.iteratee.Enumerator
 import com.mongodb.casbah.Imports._
 import scala.concurrent.ExecutionContext.Implicits.global
 import business.FileManager
+import scala.util.Random
 
 class Application @Inject() (userManager: UserManager, fileManager: FileManager) extends Controller {
   
@@ -33,6 +34,9 @@ class Application @Inject() (userManager: UserManager, fileManager: FileManager)
     )    
   )
   
+  val welcomeMessage = "Welcome to the winning team"
+  val pleaseJoinMessage = "Come join the winning team"
+  
   def index = Action { implicit request =>
     request.session.get("userHandle").map { handle =>
       val result = userManager.getUserProfile(handle)
@@ -41,8 +45,15 @@ class Application @Inject() (userManager: UserManager, fileManager: FileManager)
         case _ => Redirect(routes.Application.loadLogin)
       }
     }.getOrElse {
-      Ok(views.html.index())
+      Ok(views.html.index(pleaseJoinMessage, Random.shuffle(userManager.getUserProfiles))(request.session))
     }
+  }
+  
+  def team = Action { implicit request =>
+    Ok(views.html.index(
+        request.session.get("userHandle").map(x => welcomeMessage).getOrElse(pleaseJoinMessage),
+        Random.shuffle(userManager.getUserProfiles)
+    )(request.session))
   }
 
   def read(handle:String, password:String) = Action {

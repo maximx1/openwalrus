@@ -1,7 +1,6 @@
 package business
 
 import java.io.File
-
 import data.daos.{GruntDao, UserDao, FileDao}
 import org.bson.types.ObjectId
 import models.{Grunt, UserTO, User, GruntTO}
@@ -10,8 +9,8 @@ import javax.inject.Inject
 import com.google.inject.ImplementedBy
 import org.mindrot.jbcrypt.BCrypt
 import core.utils.DateUtils.CURRENT_TIMESTAMP
-
 import core.utils.ImageUtils
+import data.daos.UserMongoDao
 
 /**
  * Business logic for User operations.
@@ -25,6 +24,12 @@ trait UserManager {
    */
   def getUserProfile(handle: String): (Option[User], Option[List[GruntTO]], Map[String, UserTO])
 
+  /**
+   * Gets all of the users' profile data.
+   * @return All userTOs.
+   */
+  def getUserProfiles: List[UserTO]
+  
   /**
    * Obtains all the users as a map using their key.
    * @param grunts The grunts to grab all users for.
@@ -175,4 +180,10 @@ class UserManagerImpl @Inject() (userDao: UserDao, fileDao: FileDao, gruntDao: G
    * @return The imageSet id.
    */
   def updateBannerImage(userId: ObjectId, imageRef: ObjectId): Option[ObjectId] = userDao.updateBannerImage(userId, imageRef)
+  
+  /**
+   * Gets all of the users' profile data.
+   * @return All userTOs.
+   */
+  def getUserProfiles: List[UserTO] = userDao.all.map(UserTO.fromUser(_))
 }

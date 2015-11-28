@@ -9,6 +9,7 @@ GET		/signup						controllers.Application.signup
 GET 	/login						controllers.Application.loadLogin
 GET		/logout						controllers.Application.logout
 GET		/fileUploadMenu				controllers.ApplicationAPI.fileUploadMenuPartial
+GET		/team						controllers.Application.team
 GET		/image/:key					controllers.Application.lookUpImage(key: String)
 GET		/image/:key/thumb			controllers.Application.lookUpImageThumb(key: String)
 POST	/account/login				controllers.Application.attemptSignin

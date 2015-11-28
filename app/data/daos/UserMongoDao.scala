@@ -79,6 +79,12 @@ trait UserDao {
    * @return The imageSet id.
    */
   def updateBannerImage(userId: ObjectId, imageRef: ObjectId): Option[ObjectId]
+  
+  /**
+   * Retrieves all users from the database.
+   * return All users found.
+   */
+  def all(): List[User]
 }
 
 /**
@@ -156,5 +162,11 @@ class UserMongoDao @Inject() ()(implicit app: Application) extends MongoCRUDBase
     mongoColl.update(MongoDBObject("_id"->userId), $set("bannerImage" -> imageRef))
     Some(imageRef)
   }
+  
+  /**
+   * Retrieves all users from the database.
+   * return All users found.
+   */
+  override def all(): List[User] = User.fromMongoObjectList(this.findAll.toList)
 }
 
