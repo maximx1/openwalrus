@@ -23,14 +23,14 @@
 			       			<div id="bannerImage" class="pictureBox top-soft-corners
 			       			@session.get("userHandle").map { handle =>
 			       				@if(handle == profileData.handle) {
-									opensFileOverlay highlightedBorderOnHover
+									opensFileOverlay highlightedBorderOnHover clickable
 								}
 			       			}
 			       			" style='background-image: url("@routes.Application.lookUpImage(profileData.bannerImage)");'>&nbsp;</div>
 			       			<img id="mainProfileImage" class="largeThumbPH inlineBlock circle superBordered
 			       			@session.get("userHandle").map { handle =>
 			       				@if(handle == profileData.handle) {
-									opensFileOverlay highlightedBorderOnHover
+									opensFileOverlay highlightedBorderOnHover clickable
 								}
 			       			}
 			       			" src='@routes.Application.lookUpImageThumb(profileData.profileImage)' alt="profile">
