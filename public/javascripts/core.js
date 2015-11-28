@@ -31,3 +31,8 @@ $('body').on('click', '.opensFileOverlay', function() {
 	setFileOverlayHandler($(this).attr("id"))
 	$('.playsHideAndSeek').show('slow');
 });
+
+$('.timestamp').each(function() {
+	var timestamp = moment.unix(Number($(this).text()) / 1000);
+	$(this).text(timestamp.format("H:mm M/D/YYYY"));
+});

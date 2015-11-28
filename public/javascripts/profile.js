@@ -110,6 +110,9 @@ var getOneGruntSuccessAction = function(data) {
 	if(data.status === "ok") {
 		$('#mainGruntEntry').after(data.content);
 		$('#gruntsCount').text(Number($('#gruntsCount').text()) + 1)
+		var newTimestamp = $(".timestamp").first()
+		var timestamp = moment.unix(Number(newTimestamp.text()) / 1000);
+		newTimestamp.text(timestamp.format("H:mm M/D/YYYY"));
 	}
 }
 
