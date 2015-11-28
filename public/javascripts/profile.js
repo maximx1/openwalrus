@@ -25,12 +25,31 @@ var gruntImageUpdateHandler = function(data) { //Handler 1
 	$('.playsHideAndSeek').hide('slow');
 };
 
+var bannerImageUpdateHandler = function(data) { //Handler 3
+	var route = jsRoutes.controllers.ApplicationAPI.updateBannerImage();
+		
+	$.ajax({
+		url: route.url,
+        type: "POST",
+        contentType: "application/json",
+        dataType: "json",
+        data: JSON.stringify({ id: data.result.content }),
+        success: function(results) {
+        	$('#bannerImage').attr('style', 'background-image: url("' + jsRoutes.controllers.Application.lookUpImage(results.content).url + '");');
+        	$('.playsHideAndSeek').hide('slow');
+        }
+    });
+};
+
 var setFileOverlayHandler = function(id) {
 	if(id === "mainProfileImage") {
 		currentHandler = 0;
 	}
 	else if(id === "gruntAddImgButton") {
 		currentHandler = 1;
+	}
+	else if(id === "bannerImage") {
+		currentHandler = 2;
 	}
 }
 
@@ -40,6 +59,9 @@ var imageHandler = function(handlerToUseId) {
 	}
 	else if(handlerToUseId === 1) {
 		return gruntImageUpdateHandler;
+	}
+	else if(handlerToUseId === 2) {
+		return bannerImageUpdateHandler;
 	}
 	throw "No handler found";
 };

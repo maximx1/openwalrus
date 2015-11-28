@@ -68,7 +68,7 @@ class Application @Inject() (userManager: UserManager, fileManager: FileManager)
     }
     
     if(!userManager.checkIfHandleInUse(handle)) {
-      val newUser = User(None, handle, enterEmail(phoneoremail), convertToDomesticPhone(phoneoremail), password, fullName, 0, true, false, profileImageId, List.empty, List.empty, List.empty, List.empty)
+      val newUser = User(None, handle, enterEmail(phoneoremail), convertToDomesticPhone(phoneoremail), password, fullName, 0, true, false, profileImageId, None, List.empty, List.empty, List.empty, List.empty)
       val result = userManager.createUser(newUser)
       result.map(newId => loginRedirect(newUser.copy(id = Some(newId)))).getOrElse(Ok("There was an issue creating the user"))
     }
@@ -162,7 +162,8 @@ class Application @Inject() (userManager: UserManager, fileManager: FileManager)
         routes.javascript.ApplicationAPI.fileUploadMenuPartial,
         routes.javascript.Application.lookUpImageThumb,
         routes.javascript.Application.lookUpImage,
-        routes.javascript.ApplicationAPI.updateProfileImage
+        routes.javascript.ApplicationAPI.updateProfileImage,
+        routes.javascript.ApplicationAPI.updateBannerImage
       )
     ).as("text/javascript")
   }

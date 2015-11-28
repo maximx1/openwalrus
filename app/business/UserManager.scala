@@ -70,6 +70,14 @@ trait UserManager {
    * @return The imageSet id.
    */
   def updateProfileImage(userId: ObjectId, imageRef: ObjectId): Option[ObjectId]
+  
+  /**
+   * Updates a user's banner image.
+   * @param userId The user's id.
+   * @param imageRef The new imageSet Id.
+   * @return The imageSet id.
+   */
+  def updateBannerImage(userId: ObjectId, imageRef: ObjectId): Option[ObjectId]
 }
 
 /**
@@ -159,4 +167,12 @@ class UserManagerImpl @Inject() (userDao: UserDao, fileDao: FileDao, gruntDao: G
    * @return The imageSet id.
    */
   def updateProfileImage(userId: ObjectId, imageRef: ObjectId): Option[ObjectId] = userDao.updateProfileImage(userId, imageRef)
+  
+  /**
+   * Updates a user's banner image.
+   * @param userId The user's id.
+   * @param imageRef The new imageSet Id.
+   * @return The imageSet id.
+   */
+  def updateBannerImage(userId: ObjectId, imageRef: ObjectId): Option[ObjectId] = userDao.updateBannerImage(userId, imageRef)
 }

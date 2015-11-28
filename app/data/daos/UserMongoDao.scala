@@ -71,6 +71,14 @@ trait UserDao {
    * @return The imageSet id.
    */
   def updateProfileImage(userId: ObjectId, imageRef: ObjectId): Option[ObjectId]
+  
+  /**
+   * Updates a user's banner image.
+   * @param userId The user's id.
+   * @param imageRef The new imageSet Id.
+   * @return The imageSet id.
+   */
+  def updateBannerImage(userId: ObjectId, imageRef: ObjectId): Option[ObjectId]
 }
 
 /**
@@ -135,6 +143,17 @@ class UserMongoDao @Inject() ()(implicit app: Application) extends MongoCRUDBase
    */
   override def updateProfileImage(userId: ObjectId, imageRef: ObjectId): Option[ObjectId] = {
     mongoColl.update(MongoDBObject("_id"->userId), $set("profileImage" -> imageRef))
+    Some(imageRef)
+  }
+  
+  /**
+   * Updates a user's banner image.
+   * @param userId The user's id.
+   * @param imageRef The new imageSet Id.
+   * @return The imageSet id.
+   */
+  override def updateBannerImage(userId: ObjectId, imageRef: ObjectId): Option[ObjectId] = {
+    mongoColl.update(MongoDBObject("_id"->userId), $set("bannerImage" -> imageRef))
     Some(imageRef)
   }
 }

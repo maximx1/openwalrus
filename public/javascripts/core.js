@@ -10,7 +10,7 @@ $(document).ready(function() {
 			});
 
 			$('.opensFileOverlay').click(function() {
-				setFileOverlayHandler($(this).id)
+				setFileOverlayHandler($(this).attr("id"))
 				$('.playsHideAndSeek').show('slow');
 			});
 			

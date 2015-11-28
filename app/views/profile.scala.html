@@ -20,16 +20,20 @@
 		     	<div class="row">
 			       	<div class="col-xs-12 col-sm-12 col-md-4 col-lg-4">
 			       		<div class="mobileCenter standardBox bottom-soft-corners top-soft-corners max20 white">
-			       			<div class="pictureBox top-soft-corners">&nbsp;</div>
-			       			<img id="mainProfileImage" 
+			       			<div id="bannerImage" class="pictureBox top-soft-corners
 			       			@session.get("userHandle").map { handle =>
 			       				@if(handle == profileData.handle) {
-									class="largeThumbPH inlineBlock circle superBordered opensFileOverlay seeThroughOnHover"
-								} else {
-									class="largeThumbPH inlineBlock circle superBordered"
+									opensFileOverlay highlightedBorderOnHover
 								}
 			       			}
-			       			src='@routes.Application.lookUpImageThumb(profileData.profileImage)' alt=“profile">
+			       			" style='background-image: url("@routes.Application.lookUpImage(profileData.bannerImage)");'>&nbsp;</div>
+			       			<img id="mainProfileImage" class="largeThumbPH inlineBlock circle superBordered
+			       			@session.get("userHandle").map { handle =>
+			       				@if(handle == profileData.handle) {
+									opensFileOverlay highlightedBorderOnHover
+								}
+			       			}
+			       			" src='@routes.Application.lookUpImageThumb(profileData.profileImage)' alt="profile">
 					       	<div class="profileData">
 						       	<a href='@routes.Application.loadProfile(profileData.handle)' class="undecked black"><h5 class="bold">@profileData.fullName</h5></a>
 						       	<div id="userProfileHandle" class="grey" style="margin-top:-.7em;">&#64;@profileData.handle</div>

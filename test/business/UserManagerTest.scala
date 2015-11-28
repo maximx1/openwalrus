@@ -59,8 +59,8 @@ class UserManagerTest extends ManagerTestBase {
       val gruntTO2 = Grunt(Some(new ObjectId()), userId2, None, List.empty, List.empty,"", 0)
       val list = gruntTO1 :: gruntTO2 :: Nil
 
-      val user1 = User(Some(userId1), "", None, None, "", "", 0, true, true, None, List.empty, List.empty, List.empty, List.empty)
-      val user2 = User(Some(userId2), "", None, None, "", "", 0, true, true, None, List.empty, List.empty, List.empty, List.empty)
+      val user1 = User(Some(userId1), "", None, None, "", "", 0, true, true, None, None, List.empty, List.empty, List.empty, List.empty)
+      val user2 = User(Some(userId2), "", None, None, "", "", 0, true, true, None, None, List.empty, List.empty, List.empty, List.empty)
 
       (userDaoMock.findByIds _) expects(list.map(_.userId)) returning(user1::user2::Nil)
       val results = userManager.getGruntProfiles(list)
@@ -104,5 +104,5 @@ class UserManagerTest extends ManagerTestBase {
 //    }
   }
   
-  def createTestUser = User(None, "timmay", Some("test@sample.com"), None,"samplePass", "Testy Testerson", System.currentTimeMillis(), true, true, None, List.empty, List.empty, List.empty, List.empty)
+  def createTestUser = User(None, "timmay", Some("test@sample.com"), None,"samplePass", "Testy Testerson", System.currentTimeMillis(), true, true, None, None, List.empty, List.empty, List.empty, List.empty)
 }

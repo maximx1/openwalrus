@@ -21,6 +21,7 @@ libraryDependencies ++= Seq(
   "com.github.tototoshi" %% "play-json4s-test-jackson" % "0.4.2" % "test",
   "org.webjars" %% "webjars-play" % "2.4.0-1",
   "org.webjars" % "jquery" % "2.1.4",
+  "org.webjars" % "jquery-mobile" % "1.4.5",
   "org.webjars" % "bootstrap" % "3.3.5",
   "io.github.gitbucket" % "markedj" % "1.0.4",
   "org.jsoup" % "jsoup" % "1.8.3",

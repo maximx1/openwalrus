@@ -45,7 +45,7 @@ class GruntManagerTest extends ManagerTestBase {
     }
   }
 
-  val user1 = User(Some(new ObjectId()), "timmay", Some("test@sample.com"), None, "samplePass", "Testy Testerson", System.currentTimeMillis(), true, true, None, List.empty, List.empty, List.empty, List.empty)
-  val user2 = User(Some(new ObjectId()), "yammit", Some("test@sample.com"), None, "samplePass", "Testy Testerson", System.currentTimeMillis(), true, true, None, List.empty, List.empty, List.empty, List.empty)
+  val user1 = User(Some(new ObjectId()), "timmay", Some("test@sample.com"), None, "samplePass", "Testy Testerson", System.currentTimeMillis(), true, true, None, None, List.empty, List.empty, List.empty, List.empty)
+  val user2 = User(Some(new ObjectId()), "yammit", Some("test@sample.com"), None, "samplePass", "Testy Testerson", System.currentTimeMillis(), true, true, None, None, List.empty, List.empty, List.empty, List.empty)
   def createTestGrunt = Grunt(None, user1.id.get, None, List.empty, List.empty, "sample message", 0)
 }

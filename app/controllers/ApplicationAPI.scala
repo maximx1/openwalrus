@@ -60,4 +60,16 @@ class ApplicationAPI @Inject() (gruntManager: GruntManager, fileManager: FileMan
       }.getOrElse(Ok(userNotLoggedIn asJson))
     }.getOrElse(Ok(userNotLoggedIn asJson))
   }
+  
+  def updateBannerImage = JsonAction[SingleIdRequest] { implicit request =>
+    request.session.get("userId").map { id =>
+      ObjectId.isValid(id).option(new ObjectId(id)).map { userId =>
+        ObjectId.isValid(request.jsonData.id).option(new ObjectId(request.jsonData.id)).map { imageRef =>
+          userManager.updateBannerImage(userId, imageRef).map { result =>
+            Ok(BasicResponse(Some("success"), Some(result.toString)) asJson)
+          }.getOrElse(Ok(unspecifiedError asJson))
+        }.getOrElse(Ok(idNotValid asJson))
+      }.getOrElse(Ok(userNotLoggedIn asJson))
+    }.getOrElse(Ok(userNotLoggedIn asJson))
+  }
 }
