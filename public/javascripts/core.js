@@ -5,14 +5,6 @@ $(document).ready(function() {
 		success: function(data) {
 			$('#uploadPlaceholder').append(data)
 			$('.playsHideAndSeek').hide();
-			$('#closeFileOverlay').click(function() {
-				$('.playsHideAndSeek').hide('slow');
-			});
-
-			$('.opensFileOverlay').click(function() {
-				setFileOverlayHandler($(this).attr("id"))
-				$('.playsHideAndSeek').show('slow');
-			});
 			
 			$(function () {
 			    $('#fileupload').fileupload({
@@ -29,4 +21,13 @@ $(document).ready(function() {
 			});
 		}
 	});
+});
+
+$('body').on('click', '.closeFileOverlay', function() {
+	$('.playsHideAndSeek').hide('slow');
+});
+
+$('body').on('click', '.opensFileOverlay', function() {
+	setFileOverlayHandler($(this).attr("id"))
+	$('.playsHideAndSeek').show('slow');
 });
