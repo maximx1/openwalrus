@@ -1,0 +1,33 @@
+@(profileData: UserTO)(implicit session: play.api.mvc.Session)
+<div class="mobileCenter standardBox bottom-soft-corners top-soft-corners max20 white">
+	<div id="bannerImage" class="pictureBox top-soft-corners 
+		@session.get("userHandle").map { handle =>
+			@if(handle == profileData.handle) {
+				opensFileOverlay highlightedBorderOnHover clickable
+			}
+		}
+	" style='background-image: url("@routes.Application.lookUpImage(profileData.bannerImage)");'>&nbsp;</div>
+	<img id="mainProfileImage" class="largeThumbPH inlineBlock circle superBordered
+	@session.get("userHandle").map { handle =>
+		@if(handle == profileData.handle) {
+			opensFileOverlay highlightedBorderOnHover clickable
+		}
+	}
+	" src='@routes.Application.lookUpImageThumb(profileData.profileImage)' alt="profile" />
+	<div class="profileData">
+		<a href='@routes.Application.loadProfile(profileData.handle)' class="undecked black"><h5 class="bold">@profileData.fullName</h5></a>
+		<div id="userProfileHandle" class="grey" style="margin-top:-.7em;">&#64;@profileData.handle</div>
+	</div>
+	<br>
+	<div class="fullWidth">
+		<div class="hangLeft thirdWidth">
+			Grunts<br><a id="gruntsCount" href='@routes.Application.loadProfile(profileData.handle)' class="undecked black">@profileData.grunts.size</a>
+		</div>
+		<div class="hangLeft thirdWidth">
+			Following<br><a id="followingCount" href='@routes.Application.followingPage(profileData.handle)' class="undecked black">@profileData.following.size</a>
+		</div>
+		<div class="hangLeft thirdWidth">
+			Followers<br><a id="followersCount" href='@routes.Application.followersPage(profileData.handle)' class="undecked black">@profileData.followers.size</a>
+		</div>
+	</div>
+</div>

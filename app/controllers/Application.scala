@@ -13,6 +13,7 @@ import play.api.libs.iteratee.Enumerator
 import com.mongodb.casbah.Imports._
 import scala.concurrent.ExecutionContext.Implicits.global
 import business.FileManager
+import scala.util.Random
 
 class Application @Inject() (userManager: UserManager, fileManager: FileManager) extends Controller {
   
@@ -33,6 +34,9 @@ class Application @Inject() (userManager: UserManager, fileManager: FileManager)
     )    
   )
   
+  val welcomeMessage = "Welcome to the winning team"
+  val pleaseJoinMessage = "Come join the winning team"
+  
   def index = Action { implicit request =>
     request.session.get("userHandle").map { handle =>
       val result = userManager.getUserProfile(handle)
@@ -41,8 +45,15 @@ class Application @Inject() (userManager: UserManager, fileManager: FileManager)
         case _ => Redirect(routes.Application.loadLogin)
       }
     }.getOrElse {
-      Ok(views.html.index())
+      Ok(views.html.cardview(pleaseJoinMessage, Random.shuffle(userManager.getUserProfiles))(request.session))
     }
+  }
+  
+  def team = Action { implicit request =>
+    Ok(views.html.cardview(
+        request.session.get("userHandle").map(x => welcomeMessage).getOrElse(pleaseJoinMessage),
+        Random.shuffle(userManager.getUserProfiles)
+    )(request.session))
   }
 
   def read(handle:String, password:String) = Action {
@@ -68,7 +79,7 @@ class Application @Inject() (userManager: UserManager, fileManager: FileManager)
     }
     
     if(!userManager.checkIfHandleInUse(handle)) {
-      val newUser = User(None, handle, enterEmail(phoneoremail), convertToDomesticPhone(phoneoremail), password, fullName, 0, true, false, profileImageId, List.empty, List.empty, List.empty, List.empty)
+      val newUser = User(None, handle, enterEmail(phoneoremail), convertToDomesticPhone(phoneoremail), password, fullName, 0, true, false, profileImageId, None, List.empty, List.empty, List.empty, List.empty)
       val result = userManager.createUser(newUser)
       result.map(newId => loginRedirect(newUser.copy(id = Some(newId)))).getOrElse(Ok("There was an issue creating the user"))
     }
@@ -106,9 +117,13 @@ class Application @Inject() (userManager: UserManager, fileManager: FileManager)
     Redirect(routes.Application.index()) withNewSession
   }
   
-  def followingPage(handle: String) = TODO
+  def followingPage(handle: String) = Action { implicit request =>
+    Ok(views.html.cardview("Following", userManager.getFollowing(handle))(request.session))
+  }
   
-  def followersPage(handle: String) = TODO
+  def followersPage(handle: String) = Action { implicit request =>
+    Ok(views.html.cardview("Followers", userManager.getFollowers(handle))(request.session))
+  }
   
   def lookUpImage(key: String) = Action { implicit request =>
     request.headers.get("If-None-Match").map { ifNoneMatch =>
@@ -162,7 +177,9 @@ class Application @Inject() (userManager: UserManager, fileManager: FileManager)
         routes.javascript.ApplicationAPI.fileUploadMenuPartial,
         routes.javascript.Application.lookUpImageThumb,
         routes.javascript.Application.lookUpImage,
-        routes.javascript.ApplicationAPI.updateProfileImage
+        routes.javascript.ApplicationAPI.updateProfileImage,
+        routes.javascript.ApplicationAPI.updateBannerImage,
+        routes.javascript.ApplicationAPI.updateFollowingStatus
       )
     ).as("text/javascript")
   }

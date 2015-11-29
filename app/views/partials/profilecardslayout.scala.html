@@ -1,0 +1,14 @@
+@(profiles: List[UserTO])(implicit session: play.api.mvc.Session)
+<div class="row row-centered">
+	<div class="col-xs-12 col-sm-12 col-md-10 col-lg-8 col-centered">
+		<div class="row">
+			@profiles.map { profile =>
+				<div class="mobileWidth col-md-4 col-lg-4">
+					@partials.profilecard(profile)
+					@partials.followbutton(profile)
+					<br />
+				</div>
+			}
+		</div>
+	</div>
+</div>

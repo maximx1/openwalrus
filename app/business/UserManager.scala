@@ -1,7 +1,6 @@
 package business
 
 import java.io.File
-
 import data.daos.{GruntDao, UserDao, FileDao}
 import org.bson.types.ObjectId
 import models.{Grunt, UserTO, User, GruntTO}
@@ -10,8 +9,8 @@ import javax.inject.Inject
 import com.google.inject.ImplementedBy
 import org.mindrot.jbcrypt.BCrypt
 import core.utils.DateUtils.CURRENT_TIMESTAMP
-
 import core.utils.ImageUtils
+import data.daos.UserMongoDao
 
 /**
  * Business logic for User operations.
@@ -25,6 +24,12 @@ trait UserManager {
    */
   def getUserProfile(handle: String): (Option[User], Option[List[GruntTO]], Map[String, UserTO])
 
+  /**
+   * Gets all of the users' profile data.
+   * @return All userTOs.
+   */
+  def getUserProfiles: List[UserTO]
+  
   /**
    * Obtains all the users as a map using their key.
    * @param grunts The grunts to grab all users for.
@@ -70,6 +75,37 @@ trait UserManager {
    * @return The imageSet id.
    */
   def updateProfileImage(userId: ObjectId, imageRef: ObjectId): Option[ObjectId]
+  
+  /**
+   * Updates a user's banner image.
+   * @param userId The user's id.
+   * @param imageRef The new imageSet Id.
+   * @return The imageSet id.
+   */
+  def updateBannerImage(userId: ObjectId, imageRef: ObjectId): Option[ObjectId]
+  
+  /**
+   * Updates the relationship with the person signed in and whether or not they are following them.
+   * If the user is following it unfollows, if user isn't following it follows.
+   * @param userId The user's id.
+   * @param followingId The user's id to follow/unfollow
+   * @return true if following, false if not following.
+   */
+  def updateFollowing(userId: ObjectId, followingId: ObjectId): Boolean
+  
+  /**
+   * Gets all of the users that are following the user.
+   * @param handle The user handle to look up followers for.
+   * @return The found followers.
+   */
+  def getFollowers(handle: String): List[UserTO]
+  
+  /**
+   * Gets all of the users that the user is following.
+   * @param handle The user handle to look up following for.
+   * @return The found following.
+   */
+  def getFollowing(handle: String): List[UserTO]
 }
 
 /**
@@ -159,4 +195,68 @@ class UserManagerImpl @Inject() (userDao: UserDao, fileDao: FileDao, gruntDao: G
    * @return The imageSet id.
    */
   def updateProfileImage(userId: ObjectId, imageRef: ObjectId): Option[ObjectId] = userDao.updateProfileImage(userId, imageRef)
+  
+  /**
+   * Updates a user's banner image.
+   * @param userId The user's id.
+   * @param imageRef The new imageSet Id.
+   * @return The imageSet id.
+   */
+  def updateBannerImage(userId: ObjectId, imageRef: ObjectId): Option[ObjectId] = userDao.updateBannerImage(userId, imageRef)
+  
+  /**
+   * Gets all of the users' profile data.
+   * @return All userTOs.
+   */
+  def getUserProfiles: List[UserTO] = userDao.all.map(UserTO.fromUser(_))
+  
+  /**
+   * Updates the relationship with the person signed in and whether or not they are following them.
+   * If the user is following it unfollows, if user isn't following it follows.
+   * @param userId The user's id.
+   * @param followingId The user's id to follow/unfollow
+   * @return true if following, false if not following.
+   */
+  def updateFollowing(userId: ObjectId, followingId: ObjectId): Boolean = {
+	  val acting: Option[User] = userDao.findById(userId)
+    val actee: Option[User] = userDao.findById(followingId)
+    println(acting)
+    acting.map { actingUser =>
+      actee match { 
+        case Some(acteeUser) if(actingUser.following.contains(followingId)) => {
+          userDao.removeFollowing(userId, followingId)
+          userDao.removeFollower(followingId, userId)
+          false
+        }
+        case Some(acteeUser) if(!actingUser.following.contains(followingId)) => {
+          userDao.addFollowing(userId, followingId)
+          userDao.addFollower(followingId, userId)
+          true
+        }
+        case _ => false
+      }
+    }.getOrElse(false)
+  }
+  
+  /**
+   * Gets all of the users that are following the user.
+   * @param handle The user handle to look up followers for.
+   * @return The found followers.
+   */
+  def getFollowers(handle: String): List[UserTO] = {
+    userDao.findByHandle(handle).map { user => 
+      userDao.findByIds(user.followers).map(UserTO.fromUser(_))
+    }.getOrElse(List.empty)
+  }
+  
+  /**
+   * Gets all of the users that the user is following.
+   * @param handle The user handle to look up following for.
+   * @return The found following.
+   */
+  def getFollowing(handle: String): List[UserTO] = {
+    userDao.findByHandle(handle).map { user => 
+      userDao.findByIds(user.following).map(UserTO.fromUser(_))
+    }.getOrElse(List.empty)
+  }
 }

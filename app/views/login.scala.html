@@ -4,6 +4,9 @@
 	@partials.headtag("Sign into OpenWalrus")
 	<body>
         @partials.navbar() {
+        	<ul class="nav navbar-nav navbar-left">
+                <li><a href="@routes.Application.team" class="unbold"><span class="bold">Team</span></a></li>
+            </ul>
             <ul class="nav navbar-nav navbar-right">
                 <li><a href="@routes.Application.signup" class="unbold">Want to join? <span class="bold">Sign up</span></a></li>
 			</ul>
