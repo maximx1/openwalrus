@@ -28,7 +28,7 @@ class ApplicationAPI @Inject() (gruntManager: GruntManager, fileManager: FileMan
       ObjectId.isValid(request.jsonData.id) match {
         case true => {
           gruntManager.getGruntById(new ObjectId(request.jsonData.id)).map{case (gruntTO: GruntTO, userTO: UserTO) =>
-            val htmlResponse = views.html.partials.grunt(gruntTO, Map(userTO.id.get.toString() -> userTO)).body
+            val htmlResponse = views.html.partials.grunt(gruntTO, Map(userTO.id -> userTO)).body
             Ok(BasicResponse(Some("ok"), Some(htmlResponse)) asJson)
           }.getOrElse(Ok(couldNotFindId asJson))
         }
@@ -68,6 +68,18 @@ class ApplicationAPI @Inject() (gruntManager: GruntManager, fileManager: FileMan
           userManager.updateBannerImage(userId, imageRef).map { result =>
             Ok(BasicResponse(Some("success"), Some(result.toString)) asJson)
           }.getOrElse(Ok(unspecifiedError asJson))
+        }.getOrElse(Ok(idNotValid asJson))
+      }.getOrElse(Ok(userNotLoggedIn asJson))
+    }.getOrElse(Ok(userNotLoggedIn asJson))
+  }
+  
+  def updateFollowingStatus = JsonAction[SingleIdRequest] { implicit request =>
+    request.session.get("userId").map { id =>
+      ObjectId.isValid(id).option(new ObjectId(id)).map { userId =>
+        ObjectId.isValid(request.jsonData.id).option(new ObjectId(request.jsonData.id)).map { followee =>
+          userManager.updateFollowing(userId, followee).option(true).map( x =>
+            Ok(BasicResponse(Some("success"), Some("Unfollow")) asJson)
+          ).getOrElse(Ok(BasicResponse(Some("success"), Some("Follow")) asJson))
         }.getOrElse(Ok(idNotValid asJson))
       }.getOrElse(Ok(userNotLoggedIn asJson))
     }.getOrElse(Ok(userNotLoggedIn asJson))

@@ -65,8 +65,8 @@ class UserManagerTest extends ManagerTestBase {
       (userDaoMock.findByIds _) expects(list.map(_.userId)) returning(user1::user2::Nil)
       val results = userManager.getGruntProfiles(list)
       results.size shouldBe 2
-      results(userId1.toString()).id shouldBe Some(userId1)
-      results(userId2.toString()).id shouldBe Some(userId2)
+      results(userId1.toString()).id shouldBe userId1.toString()
+      results(userId2.toString()).id shouldBe userId2.toString()
     }
     
     "have its profile image updated and return the imageRef to show it's done" in {

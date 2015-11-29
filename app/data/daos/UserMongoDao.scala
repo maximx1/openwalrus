@@ -85,6 +85,37 @@ trait UserDao {
    * return All users found.
    */
   def all(): List[User]
+  
+  /**
+   * Adds a follower to an account.
+   * @param userId The account being updated.
+   * @param following The new follower.
+   * @return The new follower.
+   */
+  def addFollower(userId: ObjectId, following: ObjectId): Option[ObjectId]
+  
+  /**
+   * Subscribe/follow an account.
+   * @param userId The account being updated.
+   * @param toFollow The account to be followed.
+   */
+  def addFollowing(userId: ObjectId, toFollow: ObjectId): Option[ObjectId]
+  
+  /**
+   * Removes a follower that no longer follows an account.
+   * @param userId The account being updated.
+   * @param unfollowing The follower to be removed.
+   * @return The no longer following follower..
+   */
+  def removeFollower(userId: ObjectId, unfollowing: ObjectId): Option[ObjectId]
+  
+  /**
+   * Unsubscribes/Unfollows an account.
+   * @param userId The account being updated.
+   * @param toFollow The follower to be removed.
+   * @return The new follower.
+   */
+  def removeFollowing(userId: ObjectId, toFollow: ObjectId): Option[ObjectId]
 }
 
 /**
@@ -168,5 +199,48 @@ class UserMongoDao @Inject() ()(implicit app: Application) extends MongoCRUDBase
    * return All users found.
    */
   override def all(): List[User] = User.fromMongoObjectList(this.findAll.toList)
+  
+  /**
+   * Adds a follower to an account.
+   * @param userId The account being updated.
+   * @param following The new follower.
+   * @return The new follower.
+   */
+  def addFollower(userId: ObjectId, following: ObjectId): Option[ObjectId] = {
+    mongoColl.update(MongoDBObject("_id"->userId), $push("followers" -> following))
+    Some(following)
+  }
+  
+  /**
+   * Subscribe/follow an account.
+   * @param userId The account being updated.
+   * @param toFollow The account to be followed.
+   */
+  def addFollowing(userId: ObjectId, toFollow: ObjectId): Option[ObjectId] = {
+    mongoColl.update(MongoDBObject("_id"->userId), $push("following" -> toFollow))
+    Some(toFollow)
+  }
+  
+  /**
+   * Removes a follower that no longer follows an account.
+   * @param userId The account being updated.
+   * @param unfollowing The follower to be removed.
+   * @return The no longer following follower..
+   */
+  def removeFollower(userId: ObjectId, unfollowing: ObjectId): Option[ObjectId] = {
+    mongoColl.update(MongoDBObject("_id"->userId), $pull("followers" -> unfollowing))
+    Some(unfollowing)
+  }
+  
+  /**
+   * Unsubscribes/Unfollows an account.
+   * @param userId The account being updated.
+   * @param toUnfollow The follower to be removed.
+   * @return The new follower.
+   */
+  def removeFollowing(userId: ObjectId, toUnfollow: ObjectId): Option[ObjectId] = {
+    mongoColl.update(MongoDBObject("_id"->userId), $pull("following" -> toUnfollow))
+    Some(toUnfollow)
+  }
 }
 

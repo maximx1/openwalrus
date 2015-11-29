@@ -1,3 +1,7 @@
+if(typeof imageHook != 'function'){
+   window.imageHook = function(data){};
+}
+
 $(document).ready(function() {
 	$.ajax({
 		url: jsRoutes.controllers.ApplicationAPI.fileUploadMenuPartial().url,
@@ -35,4 +39,23 @@ $('body').on('click', '.opensFileOverlay', function() {
 $('.timestamp').each(function() {
 	var timestamp = moment.unix(Number($(this).text()) / 1000);
 	$(this).text(timestamp.format("H:mm M/D/YYYY"));
+});
+
+$('body').on('click', '.followButton', function() {
+	var followButton = $(this);
+	var toFollowId = followButton.attr("id");
+	var route = jsRoutes.controllers.ApplicationAPI.updateFollowingStatus();
+	
+	$.ajax({
+        url: route.url,
+        type: "POST",
+        contentType: "application/json",
+        dataType: "json",
+        data: JSON.stringify({ id: toFollowId }),
+        success: function(data) {
+        	if(data.content === "Follow" || data.content === "Unfollow") {
+        		followButton.text(data.content);
+        	}
+        }
+    });
 });

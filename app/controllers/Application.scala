@@ -45,12 +45,12 @@ class Application @Inject() (userManager: UserManager, fileManager: FileManager)
         case _ => Redirect(routes.Application.loadLogin)
       }
     }.getOrElse {
-      Ok(views.html.index(pleaseJoinMessage, Random.shuffle(userManager.getUserProfiles))(request.session))
+      Ok(views.html.cardview(pleaseJoinMessage, Random.shuffle(userManager.getUserProfiles))(request.session))
     }
   }
   
   def team = Action { implicit request =>
-    Ok(views.html.index(
+    Ok(views.html.cardview(
         request.session.get("userHandle").map(x => welcomeMessage).getOrElse(pleaseJoinMessage),
         Random.shuffle(userManager.getUserProfiles)
     )(request.session))
@@ -117,9 +117,13 @@ class Application @Inject() (userManager: UserManager, fileManager: FileManager)
     Redirect(routes.Application.index()) withNewSession
   }
   
-  def followingPage(handle: String) = TODO
+  def followingPage(handle: String) = Action { implicit request =>
+    Ok(views.html.cardview("Following", userManager.getFollowing(handle))(request.session))
+  }
   
-  def followersPage(handle: String) = TODO
+  def followersPage(handle: String) = Action { implicit request =>
+    Ok(views.html.cardview("Followers", userManager.getFollowers(handle))(request.session))
+  }
   
   def lookUpImage(key: String) = Action { implicit request =>
     request.headers.get("If-None-Match").map { ifNoneMatch =>
@@ -174,7 +178,8 @@ class Application @Inject() (userManager: UserManager, fileManager: FileManager)
         routes.javascript.Application.lookUpImageThumb,
         routes.javascript.Application.lookUpImage,
         routes.javascript.ApplicationAPI.updateProfileImage,
-        routes.javascript.ApplicationAPI.updateBannerImage
+        routes.javascript.ApplicationAPI.updateBannerImage,
+        routes.javascript.ApplicationAPI.updateFollowingStatus
       )
     ).as("text/javascript")
   }
