@@ -39,9 +39,8 @@ class Application @Inject() (userManager: UserManager, fileManager: FileManager)
   
   def index = Action { implicit request =>
     request.session.get("userHandle").map { handle =>
-      val result = userManager.getUserProfile(handle)
-      result match {
-        case (Some(x), _, _) => Ok(views.html.profile(UserTO.fromUser(result._1.get), result._2.getOrElse(List.empty), result._3)(request.session))
+      userManager.getUserProfile(handle) match {
+        case (Some(user), grunts, gruntProfilesData) => Ok(views.html.profile(user, grunts, gruntProfilesData)(request.session))
         case _ => Redirect(routes.Application.loadLogin)
       }
     }.getOrElse {
@@ -89,9 +88,8 @@ class Application @Inject() (userManager: UserManager, fileManager: FileManager)
   }
   
   def loadProfile(handle: String) = Action { implicit request =>
-    val result = userManager.getUserProfile(handle)
-    result match {
-      case (Some(x), _, _) => {result._3.get("asdf").map(_.profileImage).getOrElse("noimage"); Ok(views.html.profile(UserTO.fromUser(result._1.get), result._2.getOrElse(List.empty), result._3)(request.session))}
+    userManager.getUserProfile(handle) match {
+      case (Some(user), grunts, gruntProfilesData) => Ok(views.html.profile(user, grunts, gruntProfilesData)(request.session))
       case _ => Ok("Profile not found")
     }
   }

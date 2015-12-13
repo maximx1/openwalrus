@@ -16,6 +16,7 @@ case class UserTO(
   bannerImage: String,
   images: List[ObjectId],
   grunts: List[ObjectId],
+  gruntSize: Int,
   following: List[String],
   followers: List[String]
 ) {
@@ -25,7 +26,23 @@ case class UserTO(
 }
 
 object UserTO {
-  def fromUser(u: User) =
-    UserTO(u.id.map(_.toString).getOrElse(""), u.handle, u.email, u.phone, u.password, u.fullName, u.creationDate, u.currentlyActivated, u.verified,
-      u.profileImage.map(_.toString).getOrElse("noimage"), u.bannerImage.map(_.toString()).getOrElse("noimage"), u.images, u.grunts, u.following.map(_.toString), u.followers.map(_.toString))
+  def fromUser(u: User, gruntSize: Int = 0) =
+    UserTO(
+        u.id.map(_.toString).getOrElse(""),
+        u.handle,
+        u.email,
+        u.phone,
+        u.password,
+        u.fullName,
+        u.creationDate,
+        u.currentlyActivated,
+        u.verified,
+        u.profileImage.map(_.toString).getOrElse("noimage"),
+        u.bannerImage.map(_.toString()).getOrElse("noimage"),
+        u.images,
+        u.grunts,
+        gruntSize,
+        u.following.map(_.toString),
+        u.followers.map(_.toString)
+    )
 }

@@ -36,6 +36,13 @@ trait GruntDao {
    * @return List of all matching Grunts.
    */
   def findByIds(ids: List[ObjectId]): List[Grunt]
+  
+  /**
+   * Gets a count of all the grunts originated by a specific user.
+   * @param userId The user's id.
+   * @return The count.
+   */
+  def countByUser(userId: ObjectId): Int
 }
 
 /**
@@ -80,4 +87,11 @@ class GruntMongoDao @Inject() ()(implicit app: Application) extends MongoCRUDBas
     create(grunt.copy(id=id))
     return id
   }
+  
+  /**
+   * Gets a count of all the grunts originated by a specific user.
+   * @param userId The user's id.
+   * @return The count
+   */
+  def countByUser(userId: ObjectId): Int = mongoColl.find(MongoDBObject("userId"->userId)).count()
 }

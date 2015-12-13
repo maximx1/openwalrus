@@ -22,7 +22,7 @@ trait UserManager {
    * @param handle The user's handle.
    * @return The User if exists and some of the latest grunts
    */
-  def getUserProfile(handle: String): (Option[User], Option[List[GruntTO]], Map[String, UserTO])
+  def getUserProfile(handle: String): (Option[UserTO], List[GruntTO], Map[String, UserTO])
 
   /**
    * Gets all of the users' profile data.
@@ -121,15 +121,15 @@ class UserManagerImpl @Inject() (userDao: UserDao, fileDao: FileDao, gruntDao: G
    * @param handle The user's handle.
    * @return The User if exists and some of the latest grunts
    */
-  def getUserProfile(handle: String): (Option[User], Option[List[GruntTO]], Map[String, UserTO]) = {
-    
+  def getUserProfile(handle: String): (Option[UserTO], List[GruntTO], Map[String, UserTO]) = {
     userDao.findByHandle(handle) match {
       case Some(u) => {
         val grunts: List[Grunt] = gruntDao.findByIds(u.grunts)
         val gruntProfiles = getGruntProfiles(grunts)
-        (Some(u), Some(grunts.map(g => GruntTO.fromGrunt(g, gruntProfiles(g.userId.toString))).sortBy(-_.timestamp)), gruntProfiles)
+        val userTO = UserTO.fromUser(u, gruntDao.countByUser(u.id.get))
+        (Some(userTO), grunts.map(g => GruntTO.fromGrunt(g, gruntProfiles(g.userId.toString))).sortBy(-_.timestamp), gruntProfiles)
       }
-      case _ => (None, None, Map.empty)
+      case _ => (None, List.empty, Map.empty)
     }
   }
 
@@ -208,7 +208,7 @@ class UserManagerImpl @Inject() (userDao: UserDao, fileDao: FileDao, gruntDao: G
    * Gets all of the users' profile data.
    * @return All userTOs.
    */
-  def getUserProfiles: List[UserTO] = userDao.all.map(UserTO.fromUser(_))
+  def getUserProfiles: List[UserTO] = userDao.all.map(x => UserTO.fromUser(x, gruntDao.countByUser(x.id.get)))
   
   /**
    * Updates the relationship with the person signed in and whether or not they are following them.
@@ -245,7 +245,7 @@ class UserManagerImpl @Inject() (userDao: UserDao, fileDao: FileDao, gruntDao: G
    */
   def getFollowers(handle: String): List[UserTO] = {
     userDao.findByHandle(handle).map { user => 
-      userDao.findByIds(user.followers).map(UserTO.fromUser(_))
+      userDao.findByIds(user.followers).map(x => UserTO.fromUser(x, gruntDao.countByUser(x.id.get)))
     }.getOrElse(List.empty)
   }
   
@@ -256,7 +256,7 @@ class UserManagerImpl @Inject() (userDao: UserDao, fileDao: FileDao, gruntDao: G
    */
   def getFollowing(handle: String): List[UserTO] = {
     userDao.findByHandle(handle).map { user => 
-      userDao.findByIds(user.following).map(UserTO.fromUser(_))
+      userDao.findByIds(user.following).map(x => UserTO.fromUser(x, gruntDao.countByUser(x.id.get)))
     }.getOrElse(List.empty)
   }
 }

@@ -109,6 +109,8 @@ var createGruntSuccessAction = function(data) {
 var getOneGruntSuccessAction = function(data) {
 	if(data.status === "ok") {
 		$('#mainGruntEntry').after(data.content);
+		//TODO: Need to not update the grunt number if not logged in user.
+		//if($('#userProfileHandle').text())
 		$('#gruntsCount').text(Number($('#gruntsCount').text()) + 1)
 		var newTimestamp = $(".timestamp").first()
 		var timestamp = moment.unix(Number(newTimestamp.text()) / 1000);
