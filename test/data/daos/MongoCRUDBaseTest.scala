@@ -5,7 +5,9 @@ import com.mongodb.casbah.Imports._
 import models.{BaseModel, BaseTOModel}
 import org.scalatest.BeforeAndAfter
 import play.api.Application
+import org.scalatest.DoNotDiscover
 
+@DoNotDiscover
 class MongoCRUDBaseTest extends MongoTestBase with BeforeAndAfter {
   private var dao: TestDocumentDao = null
   

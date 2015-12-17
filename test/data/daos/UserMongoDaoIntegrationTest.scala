@@ -3,7 +3,9 @@ package data.daos
 import org.bson.types.ObjectId
 import org.scalatest.BeforeAndAfter
 import models.User
+import org.scalatest.DoNotDiscover
 
+@DoNotDiscover
 class UserMongoDaoIntegrationTest extends MongoTestBase with BeforeAndAfter {
   
   private var userDao: UserMongoDao = null

@@ -1,10 +1,11 @@
 package data.daos
 
 import java.io.FileInputStream
-
 import org.bson.types.ObjectId
 import org.scalatest.BeforeAndAfter
+import org.scalatest.DoNotDiscover
 
+@DoNotDiscover
 class FileGridFsDaoIntegrationTest extends MongoTestBase with GridFsBaseConnectionHandler with BeforeAndAfter {
 
   val testImage = "test/resources/testImage.png"

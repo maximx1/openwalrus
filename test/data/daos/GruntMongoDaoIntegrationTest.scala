@@ -3,7 +3,9 @@ package data.daos
 import com.mongodb.casbah.Imports._
 import models.Grunt
 import org.scalatest.BeforeAndAfter
+import org.scalatest.DoNotDiscover
 
+@DoNotDiscover
 class GruntMongoDaoIntegrationTest extends MongoTestBase with BeforeAndAfter {
   
   private var gruntDao: GruntMongoDao = null

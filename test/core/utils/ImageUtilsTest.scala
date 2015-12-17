@@ -1,15 +1,16 @@
 package core.utils
 
 import javax.imageio.ImageIO
-
-import org.scalatestplus.play.{OneAppPerSuite, PlaySpec}
+import org.scalatestplus.play.PlaySpec
 import play.api.test._
 import ImageUtils._
+import org.scalatestplus.play.ConfiguredApp
+import org.scalatest.DoNotDiscover
 
-class ImageUtilsTest extends PlaySpec with OneAppPerSuite {
+@DoNotDiscover
+class ImageUtilsTest extends PlaySpec with ConfiguredApp {
 
   val testImage = "test/resources/testImage.png"
-  implicit override lazy val app: FakeApplication = FakeApplication()
 
   "ImageUtils" should {
     "infer image web types from filename" in {

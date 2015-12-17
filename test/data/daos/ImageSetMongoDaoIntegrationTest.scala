@@ -3,7 +3,9 @@ package data.daos
 import org.scalatest.BeforeAndAfter
 import org.bson.types.ObjectId
 import models.ImageSet
+import org.scalatest.DoNotDiscover
 
+@DoNotDiscover
 class ImageSetMongoDaoIntegrationTest  extends MongoTestBase with BeforeAndAfter {
   
   private var imageSetDao: ImageSetDao = null

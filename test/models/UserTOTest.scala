@@ -49,6 +49,9 @@ class UserTOTest extends BaseTestSpec {
     }
   }
 
-  def createTestUser(imageId: Option[ObjectId]) = User(None, "timmay", Some("test@sample.com"), None,"samplePass", "Testy Testerson", System.currentTimeMillis(), true, true, imageId, None, List.empty, List.empty, List.empty, List.empty)
-  def createTestUserTO(imageId: String) = UserTO("", "timmay", Some("test@sample.com"), None,"samplePass", "Testy Testerson", System.currentTimeMillis(), true, true, imageId, "", List.empty, List.empty, 0, List.empty, List.empty)
+  def createTestUser(imageId: Option[ObjectId]) = User(None, "timmay", Some("test@sample.com"), None,"samplePass", "Testy Testerson", System.currentTimeMillis(), true, true, imageId, None, List.empty, List.empty, testFollowing, testFollowers)
+  def createTestUserTO(imageId: String) = UserTO("", "timmay", Some("test@sample.com"), None,"samplePass", "Testy Testerson", System.currentTimeMillis(), true, true, imageId, "", List.empty, List.empty, 0, convertIdToString(testFollowing), convertIdToString(testFollowers))
+  val testFollowers = new ObjectId :: new ObjectId :: Nil
+  val testFollowing = new ObjectId :: new ObjectId :: Nil
+  def convertIdToString(f: List[ObjectId]) = f.map(_.toString)
 }
