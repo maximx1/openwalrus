@@ -26,6 +26,6 @@ class GruntTest extends BaseTestSpec {
     }
   }
 
-  def createTestUserTO = UserTO("", "timmay", Some("test@sample.com"), None,"samplePass", "Testy Testerson", System.currentTimeMillis(), true, true, "", "", List.empty, List.empty, List.empty, List.empty)
+  def createTestUserTO = UserTO("", "timmay", Some("test@sample.com"), None,"samplePass", "Testy Testerson", System.currentTimeMillis(), true, true, "", "", List.empty, List.empty, 0, List.empty, List.empty)
   def createTestGrunt(id: Option[ObjectId]) = Grunt(id, new ObjectId(), None, List.empty, List.empty, "My First Grunt", 0)
 }

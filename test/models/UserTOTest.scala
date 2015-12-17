@@ -50,5 +50,5 @@ class UserTOTest extends BaseTestSpec {
   }
 
   def createTestUser(imageId: Option[ObjectId]) = User(None, "timmay", Some("test@sample.com"), None,"samplePass", "Testy Testerson", System.currentTimeMillis(), true, true, imageId, None, List.empty, List.empty, List.empty, List.empty)
-  def createTestUserTO(imageId: String) = UserTO("", "timmay", Some("test@sample.com"), None,"samplePass", "Testy Testerson", System.currentTimeMillis(), true, true, imageId, "", List.empty, List.empty, List.empty, List.empty)
+  def createTestUserTO(imageId: String) = UserTO("", "timmay", Some("test@sample.com"), None,"samplePass", "Testy Testerson", System.currentTimeMillis(), true, true, imageId, "", List.empty, List.empty, 0, List.empty, List.empty)
 }
