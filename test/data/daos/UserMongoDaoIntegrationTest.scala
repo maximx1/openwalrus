@@ -84,6 +84,72 @@ class UserMongoDaoIntegrationTest extends MongoTestBase with BeforeAndAfter {
       result1.get.grunts must contain(gruntId)
       result2.get.grunts must not contain(gruntId)
     }
+    
+    "be able to have their banner image updated" in {
+      val user1 = createTestUser.copy(bannerImage=Some(new ObjectId))
+      val userId1 = userDao ++ user1
+      val newBannerImage = new ObjectId
+      userDao.updateBannerImage(userId1.get, newBannerImage)      
+      val result1 = userDao.findById(userId1.get)
+      result1.get.bannerImage mustBe Some(newBannerImage)
+    }
+    
+    "be able to have their banner image updated and not affect another user" in {
+      val user1 = createTestUser.copy(bannerImage=Some(new ObjectId))
+      val user2 = createTestUser.copy(bannerImage=Some(new ObjectId))
+      val userId1 = userDao ++ user1
+      val userId2 = userDao ++ user2
+      val newBannerImage = new ObjectId
+      userDao.updateBannerImage(userId1.get, newBannerImage)
+      val result1 = userDao.findById(userId1.get)
+      val result2 = userDao.findById(userId2.get)
+      result1.get.bannerImage mustBe Some(newBannerImage)
+      result2.get.bannerImage mustBe user2.bannerImage
+    }
+    
+    "be able to update who they are following" in {
+      val user1 = createTestUser
+      val id = userDao ++ user1
+      val followingId = new ObjectId
+      userDao.addFollowing(id.get, followingId)
+      val foundUser = userDao.findById(id.get).get
+      foundUser.following must contain (followingId)
+    }
+    
+    "be able to update who they are following without affecting another user" in {
+      val user1 = createTestUser
+      val user2 = createTestUser
+      val id1 = userDao ++ user1
+      val id2 = userDao ++ user2
+      val followingId = new ObjectId
+      userDao.addFollowing(id1.get, followingId)
+      val foundUser1 = userDao.findById(id1.get).get
+      val foundUser2 = userDao.findById(id2.get).get
+      foundUser1.following must contain (followingId)
+      foundUser2.following must not contain (followingId)
+    }
+    
+    "be able to remove someone that they are no longer following" in {
+    	val followingId = new ObjectId
+      val user1: User = (createTestUser).copy(following=List(followingId))
+      val id = userDao ++ user1
+      userDao.removeFollowing(id.get, followingId)
+      val foundUser = userDao.findById(id.get).get
+      foundUser.following must not contain (followingId)
+    }
+    
+    "be able to remove someone that they are no longer following without affecting another user" in {
+    	val followingId = new ObjectId
+      val user1 = (createTestUser).copy(following=List(followingId))
+      val user2 = (createTestUser).copy(following=List(followingId))
+      val id1 = userDao ++ user1
+      val id2 = userDao ++ user2
+      userDao.removeFollowing(id1.get, followingId)
+      val foundUser1 = userDao.findById(id1.get).get
+      val foundUser2 = userDao.findById(id2.get).get
+      foundUser1.following must not contain (followingId)
+      foundUser2.following must contain (followingId)
+    }
   }
   
   "Multiple Users" should {
@@ -156,13 +222,77 @@ class UserMongoDaoIntegrationTest extends MongoTestBase with BeforeAndAfter {
     }
   }
   
+  "All users" should {
+    "be pulled from the database at once if only 1 user" in {
+      val user1 = createTestUser
+      val userId1 = userDao ++ user1
+      val result = userDao.all()
+      result.sortBy(_.id) mustBe List(user1.copy(id=userId1)).sortBy(_.id)
+    }
+    
+    "be pulled from the database at once if multiple users" in {
+      val user1 = createTestUser
+      val user2 = createTestUser
+      val userId1 = userDao ++ user1
+      val userId2 = userDao ++ user2
+      val result = userDao.all()
+      result.sortBy(_.id) mustBe List(user1.copy(id=userId1), user2.copy(id=userId2)).sortBy(_.id)
+    }
+  }
+  
   "A profile image" should {
-    "Be able to have updated in a user profile" in {
+    "be able to have updated in a user profile" in {
       val newImageRef = new ObjectId()
       val id = userDao ++ createTestUser
       userDao.updateProfileImage(id.get, newImageRef)
       val foundUser = userDao.findById(id.get).get
       foundUser.profileImage.get mustBe newImageRef
+    }
+  }
+  
+  "A follower" should {
+    "be able to be added to a user" in {
+      val user1 = createTestUser
+      val id = userDao ++ user1
+      val followerId = new ObjectId
+      userDao.addFollower(id.get, followerId)
+      val foundUser = userDao.findById(id.get).get
+      foundUser.followers must contain (followerId)
+    }
+    
+    "be able to be added to a user without affecting another user" in {
+      val user1 = createTestUser
+      val user2 = createTestUser
+      val id1 = userDao ++ user1
+      val id2 = userDao ++ user2
+      val followerId = new ObjectId
+      userDao.addFollower(id1.get, followerId)
+      val foundUser1 = userDao.findById(id1.get).get
+      val foundUser2 = userDao.findById(id2.get).get
+      foundUser1.followers must contain (followerId)
+      foundUser2.followers must not contain (followerId)
+    }
+    
+    "be able to be removed from a user" in {
+    	val followerId = new ObjectId
+      val user1: User = (createTestUser).copy(followers=List(followerId))
+      val id = userDao ++ user1
+      userDao.removeFollower(id.get, followerId)
+      val foundUser = userDao.findById(id.get).get
+      foundUser.followers must not contain (followerId)
+    }
+    
+    "be able to be removed from a user without affecting another user" in {
+    	val followerId = new ObjectId
+      val user1: User = (createTestUser).copy(followers=List(followerId))
+      val user2: User = (createTestUser).copy(followers=List(followerId))
+      val id1 = userDao ++ user1
+      val id2 = userDao ++ user2
+      userDao.removeFollower(id1.get, followerId)
+      val foundUser1 = userDao.findById(id1.get).get
+      val foundUser2 = userDao.findById(id2.get).get
+      foundUser1.followers must not contain (followerId)
+      foundUser2.followers must contain (followerId)
     }
   }
   
