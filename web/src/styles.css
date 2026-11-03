@@ -1,0 +1,491 @@
+/* The 2015 look, kept: blue-to-teal bar, orange accents, white cards on light grey. */
+:root {
+  --blue: #557ebf;
+  --teal: #48b9a6;
+  --orange: #ff6600;
+  --bg: #f0f0f0;
+  --card: #ffffff;
+  --border: #cccccc;
+  --text: #222222;
+  --muted: #777777;
+  --radius: 5px;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  padding-bottom: 2em;
+}
+
+a {
+  color: var(--blue);
+}
+
+button,
+.button {
+  font: inherit;
+  border: 0;
+  border-radius: var(--radius);
+  padding: 0.5em 1.1em;
+  background: var(--blue);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+button:hover:not(:disabled),
+.button:hover {
+  background: var(--teal);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+button.secondary,
+.button.secondary {
+  background: white;
+  color: var(--blue);
+  border: 1px solid var(--border);
+}
+
+.link-button {
+  background: none;
+  padding: 0;
+  font-weight: inherit;
+}
+
+.link-button:hover:not(:disabled) {
+  background: none;
+}
+
+/* ---- navigation ---- */
+
+.navbar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1em;
+  padding: 0.8em 1em;
+  background: linear-gradient(to right, var(--blue), var(--teal));
+  color: white;
+}
+
+.navbar a,
+.navbar .link-button {
+  color: white;
+  text-decoration: none;
+  font-weight: 300;
+}
+
+.navbar a:hover,
+.navbar .link-button:hover {
+  color: var(--orange);
+}
+
+.navbar a.active {
+  font-weight: 700;
+}
+
+.nav-side {
+  display: flex;
+  gap: 1.2em;
+  align-items: center;
+}
+
+.nav-right {
+  justify-content: flex-end;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.brand-dot {
+  width: 1.3em;
+  height: 1.3em;
+  border-radius: 50%;
+  background: white;
+  transition: background-color 0.5s ease;
+}
+
+.brand:hover .brand-dot {
+  background: var(--orange);
+}
+
+.brand-name {
+  font-weight: 700;
+}
+
+@media (max-width: 560px) {
+  .brand-name {
+    display: none;
+  }
+}
+
+/* ---- layout ---- */
+
+main {
+  max-width: 64em;
+  margin: 0 auto;
+  padding: 1.5em 1em;
+}
+
+.two-column {
+  display: grid;
+  grid-template-columns: 20em minmax(0, 1fr);
+  gap: 1.5em;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .two-column {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .two-column aside {
+    max-width: 22em;
+    width: 100%;
+    margin: 0 auto;
+  }
+}
+
+.page-title {
+  text-align: center;
+  font-weight: 600;
+  margin: 0.5em 0 1em;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17em, 1fr));
+  gap: 1.2em;
+}
+
+.empty {
+  color: var(--muted);
+  text-align: center;
+  padding: 1em;
+}
+
+.error {
+  color: #c0392b;
+  font-style: italic;
+  margin: 0.4em 0;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 0.9em;
+}
+
+/* ---- profile card ---- */
+
+.banner {
+  display: block;
+  width: 100%;
+  height: 7em;
+  padding: 0;
+  border-radius: 0;
+  background: var(--orange) center / cover no-repeat;
+  position: relative;
+}
+
+.profile-head {
+  display: flex;
+  gap: 0.75em;
+  padding: 0 0.75em;
+}
+
+.avatar-large {
+  flex: none;
+  width: 6.5em;
+  height: 6.5em;
+  margin-top: -3.25em;
+  padding: 0;
+  border-radius: 50%;
+  border: 3px solid var(--border);
+  background: var(--orange);
+  overflow: hidden;
+  position: relative;
+}
+
+.avatar-large img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.editable {
+  cursor: pointer;
+}
+
+.banner.editable:hover:not(:disabled),
+.avatar-large.editable:hover:not(:disabled) {
+  outline: 2px solid var(--orange);
+  outline-offset: -2px;
+  background-color: var(--orange);
+}
+
+.image-status {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgb(0 0 0 / 0.45);
+  font-size: 0.8em;
+}
+
+.profile-names {
+  padding-top: 0.4em;
+  min-width: 0;
+}
+
+.name {
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.name:hover {
+  text-decoration: underline;
+}
+
+.handle {
+  color: var(--muted);
+}
+
+.profile-names .handle {
+  overflow-wrap: anywhere;
+}
+
+.counts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  text-align: center;
+  padding: 0.8em 0.4em;
+  font-size: 0.85em;
+}
+
+.counts a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.counts strong {
+  display: block;
+  color: var(--text);
+  font-size: 1.25em;
+}
+
+.follow-button {
+  width: 100%;
+  border-radius: 0;
+  padding: 0.7em;
+}
+
+.follow-button.following {
+  background: var(--teal);
+}
+
+/* ---- tabs ---- */
+
+.tabs {
+  display: flex;
+  gap: 0.3em;
+  margin-bottom: 1em;
+}
+
+.tabs a {
+  padding: 0.4em 0.9em;
+  border-radius: var(--radius);
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.tabs a.active {
+  background: var(--card);
+  color: var(--text);
+  font-weight: 600;
+  border: 1px solid var(--border);
+}
+
+/* ---- grunts ---- */
+
+.composer {
+  padding: 0.8em;
+  margin-bottom: 1em;
+}
+
+.composer textarea {
+  width: 100%;
+  min-height: 5em;
+  resize: vertical;
+  font: inherit;
+  padding: 0.5em;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+
+.composer-actions {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+  margin-top: 0.5em;
+}
+
+.composer-actions .hint {
+  margin-right: auto;
+}
+
+.grunts {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--card);
+}
+
+.grunt {
+  display: flex;
+  gap: 0.6em;
+  padding: 0.7em;
+  border-bottom: 1px solid var(--border);
+}
+
+.grunt:hover {
+  background: #f7f7f7;
+}
+
+.avatar {
+  flex: none;
+  width: 3.2em;
+  height: 3.2em;
+  border-radius: var(--radius);
+  background: var(--orange);
+  object-fit: cover;
+}
+
+.grunt-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.grunt-meta time {
+  float: right;
+  color: var(--muted);
+  font-size: 0.85em;
+}
+
+.grunt-message {
+  overflow-wrap: anywhere;
+}
+
+.grunt-message p {
+  margin: 0.3em 0;
+}
+
+.grunt-message img,
+.grunt-message pre {
+  max-width: 100%;
+}
+
+.grunt-message img {
+  border-radius: var(--radius);
+}
+
+.grunt-message pre {
+  overflow-x: auto;
+  background: var(--bg);
+  padding: 0.5em;
+}
+
+.end-of-grunts {
+  display: block;
+  width: 100%;
+  text-align: center;
+  color: var(--border);
+  font-style: italic;
+  padding: 0.5em;
+  background: var(--card);
+  border-radius: 0;
+  font-weight: normal;
+}
+
+button.end-of-grunts {
+  color: var(--blue);
+}
+
+button.end-of-grunts:hover:not(:disabled) {
+  background: var(--bg);
+}
+
+/* ---- sign in / sign up / welcome ---- */
+
+.auth-form {
+  max-width: 24em;
+  margin: 2em auto;
+  padding: 1.5em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9em;
+}
+
+.auth-form h3 {
+  margin: 0;
+}
+
+.auth-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+  font-size: 0.9em;
+  color: var(--muted);
+}
+
+.auth-form input {
+  font: inherit;
+  color: var(--text);
+  padding: 0.6em;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.auth-form button {
+  padding: 0.7em;
+}
+
+.welcome {
+  text-align: center;
+  margin-bottom: 1.5em;
+}
+
+.welcome-logo {
+  width: 9em;
+  max-width: 50%;
+}
+
+.welcome-actions {
+  display: flex;
+  gap: 0.8em;
+  justify-content: center;
+}
