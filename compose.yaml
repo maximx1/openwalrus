@@ -1,0 +1,99 @@
+# OpenWalrus on a server. See docs/deploy.md.
+#
+#   cp template.env.docker .env     # then set APP_URL and APP_SECRET
+#   docker compose up -d --build
+#
+# Optional, switched on with a profile:
+#   docker compose --profile caddy up -d      # bundled HTTPS reverse proxy
+
+name: openwalrus
+
+services:
+  app:
+    build: .
+    image: openwalrus:latest
+    # Comes back after a crash and after the server reboots (while Docker itself is enabled).
+    restart: unless-stopped
+    # A tiny init process, so stop signals reach the server and it exits promptly.
+    init: true
+    environment:
+      # The address you type into the browser. Requests for any other host are refused, and
+      # the session cookie is HTTPS-only when this starts with https://.
+      APP_URL: "${APP_URL:?Set APP_URL in .env to the address you will open the app at, for example https://walrus.example.com}"
+      APP_SECRET: "${APP_SECRET:?Set APP_SECRET in .env. Generate one with: openssl rand -hex 32}"
+      # The bundled mongo service below, unless .env points somewhere else.
+      MONGO_URI: "${MONGO_URI:-mongodb://mongo:27017/openwalrus}"
+      ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-true}
+    # Lets MONGO_URI reach a MongoDB running on this machine as host.docker.internal.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      # Only this machine can reach the port by default; a reverse proxy on the host does
+      # the rest. Set APP_BIND=0.0.0.0 in .env to expose it to the network directly.
+      - "${APP_BIND:-127.0.0.1}:${APP_PORT:-9000}:9000"
+    # Nothing in the image needs to change at runtime: only a scratch /tmp is writable.
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "1m"
+        max-file: "3"
+
+  # ---- MongoDB ----------------------------------------------------------------------------
+  # Holds everything: accounts, grunts, images. To use a MongoDB you already run instead,
+  # delete this service and the mongo_data volume at the bottom, and set MONGO_URI in .env
+  # (see "Using your own MongoDB" in docs/deploy.md). The app doesn't wait for it to start;
+  # it reports unhealthy until MongoDB answers, then carries on.
+  mongo:
+    image: mongo:9
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    # Not published: only the app, on the compose network, can reach it.
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "1m"
+        max-file: "3"
+  # -----------------------------------------------------------------------------------------
+
+  # Automatic HTTPS for a domain that points at this server. Skip this if you already run
+  # a reverse proxy; point that at 127.0.0.1:9000 instead (see docs/deploy.md).
+  caddy:
+    profiles: [caddy]
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:-}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+    logging:
+      driver: json-file
+      options:
+        max-size: "1m"
+        max-file: "3"
+
+volumes:
+  mongo_data:
+  caddy_data:
+  caddy_config:

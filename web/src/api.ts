@@ -4,8 +4,9 @@ export type User = {
   id: string;
   handle: string;
   fullName: string;
-  profileImage: string | null;
-  bannerImage: string | null;
+  // Left out of the JSON when there is none.
+  profileImage?: string;
+  bannerImage?: string;
   gruntCount: number;
   followingCount: number;
   followerCount: number;
@@ -89,5 +90,5 @@ export const api = {
   },
 };
 
-export const imageUrl = (id: string | null, thumb = false) =>
+export const imageUrl = (id: string | undefined, thumb = false) =>
   id ? `/api/images/${id}${thumb ? "/thumb" : ""}` : "/noimage.svg";

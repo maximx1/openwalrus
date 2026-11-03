@@ -6,7 +6,7 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.*
 import play.api.mvc.{Result, Session, SessionCookieBaker}
-import play.api.test.FakeRequest
+import play.api.test.{FakeRequest, TestServer}
 import play.api.test.Helpers.*
 
 import scala.concurrent.Future
@@ -25,10 +25,12 @@ class ApiIntegrationSpec extends PlaySpec with BeforeAndAfterAll {
     .configure("mongodb.uri" -> s"${mongoUri.get.stripSuffix("/")}/$dbName")
     .build()
 
-  override def afterAll(): Unit = if (mongoUri.isDefined) {
-    import org.mongodb.scala.SingleObservableFuture
-    await(app.injector.instanceOf[repositories.mongo.MongoDatabaseProvider].database.drop().toFuture())
-    await(app.stop())
+  // The last test stops the app along with its server, so clean up with a client of our own.
+  override def afterAll(): Unit = mongoUri.foreach { uri =>
+    import org.mongodb.scala.{MongoClient, SingleObservableFuture}
+    val client = MongoClient(uri)
+    try await(client.getDatabase(dbName).drop().toFuture())
+    finally client.close()
   }
 
   private def call(method: String, path: String, body: Option[JsValue] = None, session: Option[Session] = None): Future[Result] = {
@@ -92,14 +94,31 @@ class ApiIntegrationSpec extends PlaySpec with BeforeAndAfterAll {
       status(call(POST, "/api/session", Some(Json.obj("handle" -> "alice", "password" -> "wrong-one")))) mustBe UNAUTHORIZED
     }
 
-    "refuse a form posted from another site" in {
+    "over real HTTP, accept the web client's requests and refuse ones forged by another site" in {
       assume(mongoUri.isDefined, "TEST_MONGO_URI is not set")
-      val alice = call(POST, "/api/session", Some(Json.obj("handle" -> "alice", "password" -> "password123")))
-      val forged = signedIn(FakeRequest(POST, "/api/grunts"), session(alice)).withTextBody("""{"message": "forged"}""")
-      // A plain HTML form can only send form, multipart or text bodies. None of them is JSON,
-      // so nothing is posted, whatever the cookie.
-      status(route(app, forged).get) must not be CREATED
-      contentAsJson(call(GET, "/api/users/alice/grunts")).as[JsArray].value.map(g => (g \ "html").as[String]).mkString must not include "forged"
+      import java.net.URI
+      import java.net.http.{HttpClient, HttpRequest, HttpResponse}
+      val port = 19123
+      val server = TestServer(port, app)
+      server.start()
+      try {
+        val http = HttpClient.newHttpClient()
+        def post(path: String, body: String, contentType: String, cookie: Option[String], fromClient: Boolean) = {
+          val b = HttpRequest.newBuilder(URI.create(s"http://localhost:$port$path"))
+            .header("Content-Type", contentType)
+            .POST(HttpRequest.BodyPublishers.ofString(body))
+          cookie.foreach(c => b.header("Cookie", c))
+          if (fromClient) b.header("X-Requested-With", "openwalrus")
+          http.send(b.build(), HttpResponse.BodyHandlers.ofString())
+        }
+        val signIn = post("/api/session", """{"handle":"alice","password":"password123"}""", "application/json", None, fromClient = true)
+        signIn.statusCode mustBe OK
+        val cookie = signIn.headers.firstValue("Set-Cookie").get.takeWhile(_ != ';')
+
+        post("/api/grunts", """{"message":"from the client"}""", "application/json", Some(cookie), fromClient = true).statusCode mustBe CREATED
+        post("/api/grunts", """{"message":"forged"}""", "text/plain", Some(cookie), fromClient = false).statusCode mustBe FORBIDDEN
+        post("/api/grunts", "message=forged", "application/x-www-form-urlencoded", Some(cookie), fromClient = false).statusCode mustBe FORBIDDEN
+      } finally server.stop()
     }
   }
 }

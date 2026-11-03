@@ -1,0 +1,20 @@
+# Keep the build context small and keep local state and secrets out of the image.
+target
+project/target
+project/project
+public
+web/node_modules
+web/dist
+logs
+backups
+dev
+docs
+deploy
+test
+.git
+.env
+.env.*
+.bsp
+.metals
+.idea
+*.md

@@ -1,26 +1,70 @@
-[![Build Status](https://travis-ci.org/maximx1/openwalrus.svg?branch=develop)](https://travis-ci.org/maximx1/openwalrus)
-[![Stories in Ready](https://badge.waffle.io/maximx1/openwalrus.svg?label=ready&title=Ready)](http://waffle.io/maximx1/openwalrus)
-
 OpenWalrus
 ==========
 
-#### More to come
-* This is a publicly built secret project.
-* I'm going to be building it for a while and storing in Github without description.
-* This is just a side project for me to do when I have time.
+A small, self-hosted Twitter for a group of friends: sign up, post short messages
+("grunts", in Markdown, with pictures), mention people with `@handle`, follow each other,
+and read a feed of the people you follow.
 
-#### Installation
-First download the latest tarball from `https://github.com/maximx1/openwalrus/releases`, untar it, and then run:
+Started in 2015 on Play 2.4; brought up to date in 2026.
+
+## How it's built
+
+- **Server**: Scala 3, Play 3, a JSON API under `/api` (`conf/routes`). Data access goes
+  through the traits in `app/repositories/Repositories.scala`; the MongoDB versions are in
+  `app/repositories/mongo/` and are chosen in `app/Module.scala`. Another database would
+  be another set of implementations and a change to that binding.
+- **Database**: MongoDB, connected with the official Scala driver. Images are stored in
+  GridFS. The connection comes from `MONGO_URI`.
+- **Web client**: React + TypeScript, built with Vite, in `web/`. It builds into
+  `public/`, which Play serves; every path that isn't the API gets `index.html`.
+
+## Running it on a server
+
+Docker Compose, with MongoDB included or pointed at your own: see
+[docs/deploy.md](docs/deploy.md).
+
+## Developing
+
+You need JDK 21 or later, sbt, Node 22 or later, and a MongoDB:
+
+```bash
+docker run -d --name openwalrus-mongo -p 127.0.0.1:27017:27017 mongo:9
 ```
-    # docker build -t maximx1/openwalrus .
-    # docker run -p 9000:9000 -d --log-driver=syslog -v ~/.openwalrus-data/:/data/db maximx1/openwalrus
+
+The server, on port 9000 (it uses `mongodb://localhost:27017/openwalrus` unless `MONGO_URI`
+says otherwise):
+
+```bash
+sbt run
 ```
 
-#### Configuration
-You need to update application.conf. You can the current `conf/application.conf` prior to building or create a new one from [this template](https://github.com/maximx1/openwalrus/blob/master/conf/application.conf). 
+The web client, on port 5173, passing `/api` through to the server:
 
-Tasks:
-* Run `./activator playUpdateSecret` to update the play secret.
-* Update `mongodb.default.host="mongodb://localhost:27017"` with a valid [Mongo URI](https://docs.mongodb.org/manual/reference/connection-string/).
-* Set your collection name in `mongodb.default.name="openwalrus-db"`.
-* You can uncomment `# application.context="/openwalrus"` to add a context root.
+```bash
+cd web && npm install && npm run dev
+```
+
+Open http://localhost:5173.
+
+### Tests
+
+```bash
+sbt test
+```
+
+The API tests run against a real MongoDB, in a throwaway database, only when
+`TEST_MONGO_URI` is set:
+
+```bash
+TEST_MONGO_URI=mongodb://localhost:27017 sbt test
+```
+
+The web client has a type check:
+
+```bash
+cd web && npm run typecheck
+```
+
+## License
+
+MIT, see [LICENSE](LICENSE).

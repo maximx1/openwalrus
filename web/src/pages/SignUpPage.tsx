@@ -28,7 +28,7 @@ export function SignUpPage() {
     try {
       const created = await api.signUp(fullName, handle, password);
       setUser(created);
-      navigate(`/${created.handle}`);
+      navigate("/");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not sign up.");
     } finally {

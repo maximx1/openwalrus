@@ -358,6 +358,10 @@ main {
   margin-right: auto;
 }
 
+.composer-actions button {
+  white-space: nowrap;
+}
+
 .grunts {
   border: 1px solid var(--border);
   border-radius: var(--radius);
