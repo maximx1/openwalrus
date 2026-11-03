@@ -1,30 +1,28 @@
-# Routes
-# This file defines all application routes (Higher priority routes first)
-# ~~~~
+# The JSON API. The web client (web/) is the only thing that calls it.
+GET     /api/health                         controllers.ApiController.healthCheck
+GET     /api/session                        controllers.ApiController.session
+POST    /api/session                        controllers.ApiController.signIn
+DELETE  /api/session                        controllers.ApiController.signOut
 
-# Home page
-GET     /                     		controllers.Application.index
-GET  	/favicon.ico   				controllers.Assets.at(path="/public/images", file="favicon.ico")
-GET		/signup						controllers.Application.signup
-GET 	/login						controllers.Application.loadLogin
-GET		/logout						controllers.Application.logout
-GET		/fileUploadMenu				controllers.ApplicationAPI.fileUploadMenuPartial
-GET		/team						controllers.Application.team
-GET		/image/:key					controllers.Application.lookUpImage(key: String)
-GET		/image/:key/thumb			controllers.Application.lookUpImageThumb(key: String)
-POST	/account/login				controllers.Application.attemptSignin
-POST    /account/create             controllers.Application.performSignup
-GET     /:handle                    controllers.Application.loadProfile(handle: String)
-GET		/:handle/following			controllers.Application.followingPage(handle: String)
-GET		/:handle/followers			controllers.Application.followersPage(handle: String)
-POST    /submitGrunt                controllers.ApplicationAPI.postGrunt
-POST	/retrieveOneGrunt			controllers.ApplicationAPI.retrieveSingleGrunt
-POST	/file/upload				controllers.ApplicationAPI.uploadImage
-POST	/updateProfileImage			controllers.ApplicationAPI.updateProfileImage
-POST	/updateBannerImage			controllers.ApplicationAPI.updateBannerImage
-POST	/updateFollowingStatus		controllers.ApplicationAPI.updateFollowingStatus
+GET     /api/users                          controllers.ApiController.users
+POST    /api/users                          controllers.ApiController.signUp
+GET     /api/users/:handle                  controllers.ApiController.user(handle: String)
+GET     /api/users/:handle/grunts           controllers.ApiController.userGrunts(handle: String, before: Option[Long])
+GET     /api/users/:handle/followers        controllers.ApiController.followers(handle: String)
+GET     /api/users/:handle/following        controllers.ApiController.following(handle: String)
+PUT     /api/users/:handle/follow           controllers.ApiController.follow(handle: String)
+DELETE  /api/users/:handle/follow           controllers.ApiController.unfollow(handle: String)
+PUT     /api/me/profile-image               controllers.ApiController.setProfileImage
+PUT     /api/me/banner-image                controllers.ApiController.setBannerImage
 
-# Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
-GET     /webjars/*file              controllers.WebJarAssets.at(file)
-GET     /special/javascriptRoutes   controllers.Application.javascriptRoutes
+GET     /api/feed                           controllers.ApiController.feed(before: Option[Long])
+POST    /api/grunts                         controllers.ApiController.postGrunt
+
+POST    /api/images                         controllers.ApiController.uploadImage
+GET     /api/images/:id                     controllers.ApiController.image(id: String)
+GET     /api/images/:id/thumb               controllers.ApiController.imageThumb(id: String)
+
+# The built web client: its hashed bundles, then everything else falls through to index.html.
+GET     /assets/*file                       controllers.Assets.at(path="/public/assets", file)
+GET     /                                   controllers.FrontendController.index
+GET     /*path                              controllers.FrontendController.route(path)

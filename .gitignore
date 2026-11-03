@@ -1,13 +1,22 @@
 logs/
 target/
+project/target/
+project/project/
 /.idea
-/.idea_modules
-/.classpath
-/.project
-/.settings
+/.bsp
+/.metals
+/.bloop
+/.vscode
 /RUNNING_PID
-.sbtserver/
-.cache-main
-.cache-tests
-bin/
-/bin/
+
+# Built by Vite from web/
+/public/
+
+# web client
+web/node_modules/
+web/dist/
+
+# local settings and state
+.env
+.env.*
+backups/

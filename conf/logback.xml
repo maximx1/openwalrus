@@ -1,22 +1,16 @@
 <configuration>
-    
-  <conversionRule conversionWord="coloredLevel" converterClass="play.api.Logger$ColoredLevel" />
-
+  <!-- Everything to stdout; under Docker, `docker compose logs app` shows it. -->
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%coloredLevel - %logger - %message%n%xException</pattern>
+      <pattern>%date{ISO8601} %level %logger{20} - %message%n%xException{10}</pattern>
     </encoder>
   </appender>
 
-  <!--
-    The logger name is typically the Java/Scala package name.
-    This configures the log level to log at for a package and its children packages.
-  -->
   <logger name="play" level="INFO" />
-  <logger name="application" level="DEBUG" />
+  <logger name="application" level="INFO" />
+  <logger name="org.mongodb.driver" level="WARN" />
 
-  <root level="ERROR">
+  <root level="WARN">
     <appender-ref ref="STDOUT" />
   </root>
-
 </configuration>
