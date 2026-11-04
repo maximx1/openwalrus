@@ -11,7 +11,7 @@ check to pass before moving on.
 
 - **The app container** on port 9000, built from this repository.
 - **A MongoDB container** with one volume, `openwalrus_mongo_data`, holding everything:
-  accounts, grunts and uploaded images. It is not published to the network; only the app
+  accounts, grunts and uploaded pictures and videos. It is not published to the network; only the app
   can reach it. You can remove it and use your own MongoDB instead (below).
 - **Restarts by itself** after a crash, and after the server reboots.
 - **A health check** that passes only when the app is up and MongoDB answers it.
@@ -133,7 +133,8 @@ compose.yaml`) and remove `MONGO_URI` from `.env`. Moving data between the two i
 
 The collection names (`persons`, `grunts`, `imageset`, and the `owimages` GridFS bucket)
 and their fields are the old ones, so an old database reads as it is: point `MONGO_URI`
-at it, or `mongorestore` a dump of it into the bundled MongoDB. Old mentions still show on
+at it, or `mongorestore` a dump of it into the bundled MongoDB. (Videos, which the old
+version didn't have, go in a new `owvideos` bucket.) Old mentions still show on
 the mentioned person's profile. The one thing that doesn't carry over is the "phone or
 email" each account was made with, which is no longer asked for or shown.
 
@@ -167,8 +168,8 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        # Picture uploads are up to 10 MB.
-        client_max_body_size 12m;
+        # Pictures are up to 10 MB, videos up to 50 MB.
+        client_max_body_size 55m;
     }
 }
 ```

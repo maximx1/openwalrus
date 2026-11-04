@@ -142,9 +142,20 @@ button.secondary:hover:not(:disabled),
   font-weight: 700;
 }
 
+.navbar a,
+.navbar button {
+  white-space: nowrap;
+}
+
+/* A phone has room for the brand dot and four links, so the name and your handle go (your
+   own card, on the home page, has the handle). */
 @media (max-width: 560px) {
-  .brand-name {
+  .brand-name,
+  .nav-handle {
     display: none;
+  }
+  .nav-side {
+    gap: 0.9em;
   }
 }
 
@@ -391,6 +402,22 @@ main {
   background: var(--field-fill);
 }
 
+/* a file dragged over the box: the header's gradient as a dashed frame, and what dropping does */
+.composer.dropping::before {
+  content: "Drop to add it to your grunt";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  color: var(--blue);
+  background: rgb(255 255 255 / 0.88);
+  border: 2px dashed var(--teal);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
 .composer-actions {
   display: flex;
   gap: 0.5em;
@@ -469,8 +496,17 @@ button.friends-toggle.on:hover:not(:disabled) {
 }
 
 .grunt-message img,
+.grunt-message video,
 .grunt-message pre {
   max-width: 100%;
+}
+
+.grunt-message video {
+  display: block;
+  max-height: 32em;
+  margin: 0.3em 0;
+  border-radius: var(--radius);
+  background: black;
 }
 
 .grunt-message img {

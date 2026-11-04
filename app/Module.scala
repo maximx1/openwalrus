@@ -8,6 +8,7 @@ class Module extends AbstractModule {
     bind(classOf[UserRepository]).to(classOf[MongoUserRepository])
     bind(classOf[GruntRepository]).to(classOf[MongoGruntRepository])
     bind(classOf[ImageRepository]).to(classOf[MongoImageRepository])
+    bind(classOf[VideoRepository]).to(classOf[MongoVideoRepository])
     bind(classOf[SessionRepository]).to(classOf[MongoSessionRepository])
     bind(classOf[DatabaseHealth]).to(classOf[MongoDatabaseProvider])
   }

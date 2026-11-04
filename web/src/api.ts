@@ -65,14 +65,42 @@ async function request<T>(method: string, path: string, body?: unknown, keepaliv
   const res = await fetch(`/api${path}`, { method, headers, body: payload, credentials: "same-origin", keepalive });
   if (res.status === 204) return undefined as T;
   const data: unknown = await res.json().catch(() => null);
-  if (!res.ok) {
-    const message =
-      data && typeof data === "object" && "error" in data
-        ? String((data as { error: unknown }).error)
-        : `Something went wrong (${res.status}).`;
-    throw new ApiError(message, res.status);
-  }
+  if (!res.ok) throw new ApiError(errorMessage(data, res.status), res.status);
   return data as T;
+}
+
+function errorMessage(data: unknown, status: number): string {
+  const error = data && typeof data === "object" && "error" in data ? (data as { error: unknown }).error : null;
+  if (typeof error === "string") return error;
+  if (status === 413) return "That file is too big.";
+  return `Something went wrong (${status}).`;
+}
+
+/** Uploads a file as the form field `field`, calling onProgress with 0 to 1 as it goes (fetch can't report that). */
+function upload(path: string, field: string, file: File, onProgress?: (fraction: number) => void): Promise<{ id: string }> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `/api${path}`);
+    xhr.setRequestHeader("X-Requested-With", "openwalrus");
+    xhr.setRequestHeader("Accept", "application/json");
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress?.(e.loaded / e.total);
+    };
+    xhr.onload = () => {
+      let data: unknown = null;
+      try {
+        data = JSON.parse(xhr.responseText);
+      } catch {
+        // not JSON; errorMessage falls back to the status
+      }
+      if (xhr.status >= 200 && xhr.status < 300) resolve(data as { id: string });
+      else reject(new ApiError(errorMessage(data, xhr.status), xhr.status));
+    };
+    xhr.onerror = () => reject(new ApiError("The upload didn't get through.", 0));
+    const form = new FormData();
+    form.append(field, file);
+    xhr.send(form);
+  });
 }
 
 const enc = encodeURIComponent;
@@ -108,12 +136,11 @@ export const api = {
   recordViews: (ids: string[]) => request<void>("POST", "/views", { ids }, true),
   deleteGrunt: (id: string) => request<void>("DELETE", `/grunts/${enc(id)}`),
 
-  uploadImage: (file: File) => {
-    const form = new FormData();
-    form.append("picture", file);
-    return request<{ id: string }>("POST", "/images", form);
-  },
+  uploadImage: (file: File, onProgress?: (fraction: number) => void) => upload("/images", "picture", file, onProgress),
+  uploadVideo: (file: File, onProgress?: (fraction: number) => void) => upload("/videos", "video", file, onProgress),
 };
+
+export const videoUrl = (id: string) => `/api/videos/${id}`;
 
 export const imageUrl = (id: string | undefined, thumb = false) =>
   id ? `/api/images/${id}${thumb ? "/thumb" : ""}` : "/noimage.svg";

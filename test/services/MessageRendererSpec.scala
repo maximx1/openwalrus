@@ -29,6 +29,16 @@ class MessageRendererSpec extends PlaySpec {
       MessageRenderer.toHtml("![pic](/api/images/abc)") must include("""src="/api/images/abc"""")
     }
 
+    "show the app's own uploaded videos as players, and nothing else" in {
+      val id = "6aeb3377726319dc659be286"
+      val html = MessageRenderer.toHtml(s"![video](/api/videos/$id)")
+      html must include(s"""<video src="/api/videos/$id#t=0.1" controls playsinline preload="metadata"></video>""")
+      html must not include "<img"
+      MessageRenderer.toHtml("![video](https://elsewhere.example/api/videos/" + id + ")") must not include "<video"
+      MessageRenderer.toHtml("![video](/api/videos/" + id + "?x=1)") must not include "<video"
+      MessageRenderer.toHtml("""<video src="/api/videos/x" autoplay></video>""") must not include "<video"
+    }
+
     "link @mentions to profiles, but not inside code" in {
       val html = MessageRenderer.toHtml("hey @bob\n\n`@notalink`")
       html must include("""<a href="/bob">@bob</a>""")

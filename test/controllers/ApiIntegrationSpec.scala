@@ -239,6 +239,29 @@ class ApiIntegrationSpec extends PlaySpec with BeforeAndAfterAll {
       status(call(POST, "/api/session", Some(Json.obj("handle" -> "oldtimer", "password" -> "short1")))) mustBe OK
     }
 
+    "store a video and serve it in byte ranges, from any chunk" in {
+      assume(mongoUri.isDefined, "TEST_MONGO_URI is not set")
+      given org.apache.pekko.stream.Materializer = app.materializer // to read a streamed body
+      // An MP4 header, then enough bytes to span several GridFS chunks (255 KB each).
+      val body = "\u0000\u0000\u0000\u0018ftypisom".getBytes("ISO-8859-1") ++ Array.tabulate[Byte](700 * 1024)(i => (i % 251).toByte)
+      val file = java.nio.file.Files.createTempFile("video", ".mp4")
+      java.nio.file.Files.write(file, body)
+      val id = await(app.injector.instanceOf[services.VideoService].store(file, "clip.mp4")).toOption.get
+
+      val whole = call(GET, s"/api/videos/$id")
+      status(whole) mustBe OK
+      contentType(whole) mustBe Some("video/mp4")
+      contentAsBytes(whole).toArray mustBe body
+
+      val from = 300 * 1024 + 7 // inside the second chunk
+      val part = route(app, FakeRequest(GET, s"/api/videos/$id").withHeaders(RANGE -> s"bytes=$from-${from + 99}")).get
+      status(part) mustBe PARTIAL_CONTENT
+      header(CONTENT_RANGE, part) mustBe Some(s"bytes $from-${from + 99}/${body.length}")
+      contentAsBytes(part).toArray mustBe body.slice(from, from + 100)
+
+      status(call(GET, "/api/videos/6aeb3377726319dc659be286")) mustBe NOT_FOUND
+    }
+
     "over real HTTP, accept the web client's requests and refuse ones forged by another site" in {
       assume(mongoUri.isDefined, "TEST_MONGO_URI is not set")
       import java.net.URI

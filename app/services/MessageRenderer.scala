@@ -16,9 +16,13 @@ object MessageRenderer {
   def mentionedHandles(message: String): Seq[String] =
     mentionPattern.findAllMatchIn(message).map(_.group(1)).toSeq.distinctBy(_.toLowerCase)
 
+  /** Where an uploaded video is served; the composer links one in as an image. */
+  private val uploadedVideo = """^/api/videos/[0-9a-f]{24}$""".r
+
   /**
    * Markdown to HTML, then cleaned down to formatting, links and images, then each
-   * @handle outside a link or code turned into a link to that profile.
+   * @handle outside a link or code turned into a link to that profile, and each "image"
+   * that is one of the app's own videos turned into a player.
    */
   def toHtml(message: String): String = {
     val safelist = Safelist.basicWithImages().preserveRelativeLinks(true)
@@ -29,8 +33,22 @@ object MessageRenderer {
     val markdown = Marked.marked(message, options)
     val body = Jsoup.parseBodyFragment(Jsoup.clean(markdown, "http://openwalrus.invalid/", safelist)).body()
     linkMentions(body)
+    showVideos(body)
     body.html()
   }
+
+  // Built here, after cleaning, from nothing but the checked address, so no attribute of
+  // the user's survives onto the element. "#t=0.1" makes Safari show the first frame.
+  private def showVideos(root: Element): Unit =
+    root.select("img").asScala.filter(img => uploadedVideo.matches(img.attr("src"))).foreach { img =>
+      img.replaceWith(
+        new Element("video")
+          .attr("src", img.attr("src") + "#t=0.1")
+          .attr("controls", true)
+          .attr("playsinline", true)
+          .attr("preload", "metadata")
+      )
+    }
 
   private def linkMentions(root: Element): Unit = {
     val textNodes = root.select("*").asScala

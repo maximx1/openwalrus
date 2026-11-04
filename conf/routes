@@ -29,6 +29,8 @@ DELETE  /api/grunts/:id                     controllers.ApiController.deleteGrun
 POST    /api/images                         controllers.ApiController.uploadImage
 GET     /api/images/:id                     controllers.ApiController.image(id: String)
 GET     /api/images/:id/thumb               controllers.ApiController.imageThumb(id: String)
+POST    /api/videos                         controllers.ApiController.uploadVideo
+GET     /api/videos/:id                     controllers.ApiController.video(id: String)
 
 # The built web client: its hashed bundles, then everything else falls through to index.html.
 GET     /assets/*file                       controllers.Assets.at(path="/public/assets", file)

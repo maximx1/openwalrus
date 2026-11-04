@@ -1,6 +1,10 @@
 package repositories
 
 import models.*
+import org.apache.pekko.stream.scaladsl.Source
+import org.apache.pekko.util.ByteString
+
+import java.nio.file.Path
 import scala.concurrent.Future
 
 /**
@@ -57,6 +61,18 @@ trait ImageRepository {
   /** Stores an image and its thumbnail together, and returns the id that finds either. */
   def store(original: StoredImage, thumb: StoredImage, fileName: String): Future[String]
   def find(id: String, thumb: Boolean): Future[Option[StoredImage]]
+}
+
+/**
+ * A stored video, read as a stream so a large one never sits in memory whole. readFrom
+ * starts at or before the byte offset asked for and says where it actually starts.
+ */
+case class StoredVideo(length: Long, contentType: String, readFrom: Long => (Long, Source[ByteString, ?]))
+
+trait VideoRepository {
+  /** Stores the file as it is and returns the id that finds it. */
+  def store(file: Path, contentType: String, fileName: String): Future[String]
+  def open(id: String): Future[Option[StoredVideo]]
 }
 
 /** Lets the health check ask whether the database is answering. */

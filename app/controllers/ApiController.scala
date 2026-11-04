@@ -7,7 +7,7 @@ import play.api.{Configuration, Logging}
 import play.api.libs.json.*
 import play.api.mvc.*
 import repositories.DatabaseHealth
-import services.{AccountService, AuthThrottle, GruntService, ImageService, SessionService, SignUp}
+import services.{AccountService, AuthThrottle, GruntService, ImageService, SessionService, SignUp, VideoService}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -19,6 +19,7 @@ class ApiController @Inject() (
     accounts: AccountService,
     gruntService: GruntService,
     images: ImageService,
+    videos: VideoService,
     throttle: AuthThrottle,
     sessions: SessionService,
     health: DatabaseHealth,
@@ -274,4 +275,29 @@ class ApiController @Inject() (
   }
 
   private val ImageUploadLimit = 10L * 1024 * 1024
+
+  // ---- videos ----
+
+  def uploadVideo: Action[play.api.mvc.MultipartFormData[play.api.libs.Files.TemporaryFile]] =
+    SignedIn(parse.multipartFormData(maxLength = VideoService.MaxBytes + 1024 * 1024)).async { request =>
+      request.body.file("video") match {
+        case None => Future.successful(BadRequest(error("Choose a video to upload.")))
+        case Some(file) if file.fileSize > VideoService.MaxBytes => Future.successful(EntityTooLarge(error("Videos can be 50 MB at most.")))
+        case Some(file) =>
+          videos.store(file.ref.path, file.filename).map {
+            case Left(problem) => BadRequest(error(problem))
+            case Right(id) => Created(Json.obj("id" -> id))
+          }
+      }
+    }
+
+  /** Answers byte-range requests, which browsers use to start playing early and to seek. */
+  def video(id: String): Action[AnyContent] = Action.async { request =>
+    videos.open(id).map {
+      case None => NotFound
+      case Some(v) =>
+        RangeResult.ofSource(Some(v.length), v.readFrom, request.headers.get(RANGE), None, Some(v.contentType))
+          .withHeaders(CACHE_CONTROL -> "public, max-age=31536000, immutable", "X-Content-Type-Options" -> "nosniff")
+    }
+  }
 }
