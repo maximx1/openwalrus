@@ -82,6 +82,7 @@ export const api = {
 
   feed: (before?: number) => request<Grunt[]>("GET", `/feed${before ? `?before=${before}` : ""}`),
   postGrunt: (message: string) => request<Grunt>("POST", "/grunts", { message }),
+  deleteGrunt: (id: string) => request<void>("DELETE", `/grunts/${enc(id)}`),
 
   uploadImage: (file: File) => {
     const form = new FormData();

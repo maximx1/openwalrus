@@ -18,7 +18,7 @@ function Feed() {
   const session = useSession();
   const me = session.user!;
   const load = useCallback((before?: number) => api.feed(before), []);
-  const { grunts, more, error, loadMore, prepend } = usePagedGrunts(load);
+  const { grunts, more, error, loadMore, prepend, remove } = usePagedGrunts(load);
 
   return (
     <div className="two-column">
@@ -39,7 +39,15 @@ function Feed() {
             <Link to="/team">Team</Link> page.
           </p>
         ) : (
-          <GruntList grunts={grunts} more={more} onMore={loadMore} />
+          <GruntList
+            grunts={grunts}
+            more={more}
+            onMore={loadMore}
+            onDeleted={(g) => {
+              remove(g.id);
+              void session.refresh(); // your grunt count
+            }}
+          />
         )}
       </section>
     </div>

@@ -24,6 +24,14 @@ class GruntService @Inject() (grunts: GruntRepository, users: UserRepository)(us
       } yield Right(render(grunt, Map(author.id -> author)))
   }
 
+  /** Only the author can delete a grunt. Pictures it showed stay stored. */
+  def delete(viewer: User, id: String): Future[GruntService.Deletion] =
+    grunts.findById(id).flatMap {
+      case None => Future.successful(Deletion.NotFound)
+      case Some(g) if g.authorId != viewer.id => Future.successful(Deletion.NotYours)
+      case Some(g) => grunts.delete(g.id).map(_ => Deletion.Deleted)
+    }
+
   /** The signed-in home page: your grunts, the people you follow, and mentions of you. */
   def homeFeed(viewer: User, before: Option[Long]): Future[Seq[GruntView]] =
     grunts.timeline(viewer.id +: viewer.following, Some(viewer.id), before, PageSize).flatMap(withAuthors)
@@ -43,6 +51,8 @@ class GruntService @Inject() (grunts: GruntRepository, users: UserRepository)(us
 }
 
 object GruntService {
+  enum Deletion { case Deleted, NotFound, NotYours }
+
   val MaxLength = 1000
   val PageSize = 50
 }

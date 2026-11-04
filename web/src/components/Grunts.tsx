@@ -1,14 +1,23 @@
 import { useRef, useState } from "react";
 import { Link } from "react-router";
 import { api, imageUrl, type Grunt } from "../api.ts";
+import { useSession } from "../session.tsx";
 
 const MAX_LENGTH = 1000;
 
-export function GruntList({ grunts, more, onMore }: { grunts: Grunt[]; more: boolean; onMore: () => void }) {
+type ListProps = {
+  grunts: Grunt[];
+  more: boolean;
+  onMore: () => void;
+  /** Called after one of your own grunts is deleted. */
+  onDeleted: (grunt: Grunt) => void;
+};
+
+export function GruntList({ grunts, more, onMore, onDeleted }: ListProps) {
   return (
     <div className="grunts">
       {grunts.map((g) => (
-        <GruntItem key={g.id} grunt={g} />
+        <GruntItem key={g.id} grunt={g} onDeleted={() => onDeleted(g)} />
       ))}
       {more ? (
         <button type="button" className="end-of-grunts" onClick={onMore}>
@@ -21,8 +30,23 @@ export function GruntList({ grunts, more, onMore }: { grunts: Grunt[]; more: boo
   );
 }
 
-function GruntItem({ grunt }: { grunt: Grunt }) {
+function GruntItem({ grunt, onDeleted }: { grunt: Grunt; onDeleted: () => void }) {
   const { author } = grunt;
+  const { user } = useSession();
+  const [busy, setBusy] = useState(false);
+
+  async function remove() {
+    if (!window.confirm("Delete this grunt?")) return;
+    setBusy(true);
+    try {
+      await api.deleteGrunt(grunt.id);
+      onDeleted();
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Could not delete that.");
+      setBusy(false);
+    }
+  }
+
   return (
     <article className="grunt">
       <img className="avatar" src={imageUrl(author.profileImage, true)} alt="" />
@@ -36,6 +60,11 @@ function GruntItem({ grunt }: { grunt: Grunt }) {
         </div>
         {/* Rendered from Markdown and cleaned on the server (MessageRenderer). */}
         <div className="grunt-message" dangerouslySetInnerHTML={{ __html: grunt.html }} />
+        {user?.id === author.id && (
+          <button type="button" className="grunt-delete" disabled={busy} onClick={() => void remove()}>
+            Delete
+          </button>
+        )}
       </div>
     </article>
   );

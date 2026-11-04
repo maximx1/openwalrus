@@ -26,6 +26,7 @@ trait UserRepository {
 trait GruntRepository {
   def create(grunt: NewGrunt): Future[Grunt]
   def findById(id: String): Future[Option[Grunt]]
+  def delete(id: String): Future[Unit]
   /** Newest first: grunts by any of the authors or mentioning the user, older than `before`. */
   def timeline(authorIds: Seq[String], mentioning: Option[String], before: Option[Long], limit: Int): Future[Seq[Grunt]]
   /** Number of grunts each user has written. Users with none are left out. */

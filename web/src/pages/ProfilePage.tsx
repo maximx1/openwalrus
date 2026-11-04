@@ -45,7 +45,7 @@ export function ProfilePage({ tab }: { tab: Tab }) {
           <NavLink to={`/${user.handle}/followers`}>Followers</NavLink>
         </div>
         {tab === "grunts" ? (
-          <ProfileGrunts user={user} onPosted={() => setUser((u) => u && (u.id === session.user?.id ? { ...u, gruntCount: u.gruntCount + 1 } : u))} />
+          <ProfileGrunts user={user} onCountChange={(by) => setUser((u) => u && { ...u, gruntCount: u.gruntCount + by })} />
         ) : (
           <People user={user} tab={tab} />
         )}
@@ -54,10 +54,11 @@ export function ProfilePage({ tab }: { tab: Tab }) {
   );
 }
 
-function ProfileGrunts({ user, onPosted }: { user: User; onPosted: () => void }) {
+/** The profile's grunts. onCountChange adjusts the card's count when its owner posts or deletes. */
+function ProfileGrunts({ user, onCountChange }: { user: User; onCountChange: (by: number) => void }) {
   const session = useSession();
   const load = useCallback((before?: number) => api.userGrunts(user.handle, before), [user.handle]);
-  const { grunts, more, error, loadMore, prepend } = usePagedGrunts(load);
+  const { grunts, more, error, loadMore, prepend, remove } = usePagedGrunts(load);
   const mine = session.user?.id === user.id;
 
   return (
@@ -68,12 +69,21 @@ function ProfileGrunts({ user, onPosted }: { user: User; onPosted: () => void })
           prefill={mine ? "" : `@${user.handle} `}
           onPosted={(g) => {
             prepend(g);
-            onPosted();
+            if (mine) onCountChange(1);
           }}
         />
       )}
       {error && <div className="error">{error}</div>}
-      <GruntList grunts={grunts} more={more} onMore={loadMore} />
+      <GruntList
+        grunts={grunts}
+        more={more}
+        onMore={loadMore}
+        onDeleted={(g) => {
+          remove(g.id);
+          if (g.author.id === user.id) onCountChange(-1);
+          void session.refresh();
+        }}
+      />
     </>
   );
 }

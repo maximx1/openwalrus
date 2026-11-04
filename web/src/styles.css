@@ -423,6 +423,32 @@ main {
   padding: 0.5em;
 }
 
+.grunt-delete {
+  background: none;
+  color: var(--muted);
+  font-weight: normal;
+  font-size: 0.8em;
+  padding: 0;
+  float: right;
+  visibility: hidden;
+}
+
+.grunt:hover .grunt-delete,
+.grunt-delete:focus-visible {
+  visibility: visible;
+}
+
+.grunt-delete:hover:not(:disabled) {
+  background: none;
+  color: #c0392b;
+}
+
+@media (hover: none) {
+  .grunt-delete {
+    visibility: visible;
+  }
+}
+
 .end-of-grunts {
   display: block;
   width: 100%;

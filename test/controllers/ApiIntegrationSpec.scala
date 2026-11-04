@@ -89,9 +89,40 @@ class ApiIntegrationSpec extends PlaySpec with BeforeAndAfterAll {
       // bob's home feed has alice's grunt
       contentAsJson(call(GET, "/api/feed", None, Some(bob))).as[JsArray].value must have size 1
 
+      // only the author can delete it
+      val gruntId = (contentAsJson(posted) \ "id").as[String]
+      status(call(DELETE, s"/api/grunts/$gruntId", None, Some(bob))) mustBe FORBIDDEN
+      status(call(DELETE, s"/api/grunts/$gruntId", None, Some(alice))) mustBe NO_CONTENT
+      contentAsJson(call(GET, "/api/users/alice/grunts")).as[JsArray].value mustBe empty
+      status(call(POST, "/api/grunts", Some(Json.obj("message" -> "back again")), Some(alice))) mustBe CREATED
+
       // sign in with the password; wrong password refused
       status(call(POST, "/api/session", Some(Json.obj("handle" -> "Alice", "password" -> "password123")))) mustBe OK
       status(call(POST, "/api/session", Some(Json.obj("handle" -> "alice", "password" -> "wrong-one")))) mustBe UNAUTHORIZED
+    }
+
+    "show grunts the 2015 version recorded as mentions on the mentioned user's profile" in {
+      assume(mongoUri.isDefined, "TEST_MONGO_URI is not set")
+      import org.bson.Document
+      import org.bson.types.ObjectId
+      import org.mongodb.scala.SingleObservableFuture
+      import org.mongodb.scala.model.Filters
+      import org.mongodb.scala.model.Updates.push
+      val mongo = app.injector.instanceOf[repositories.mongo.MongoDatabaseProvider]
+      val alice = await(mongo.users.find(Filters.equal("handle", "alice")).head())
+      val oldGrunt = new ObjectId()
+      // As the 2015 version wrote it: no "mentions"; the id pushed onto bob's "grunts" instead.
+      await(mongo.grunts.insertOne(new Document("_id", oldGrunt).append("userId", alice.getObjectId("_id"))
+        .append("message", "an old @bob grunt").append("timestamp", 1000L)).toFuture())
+      await(mongo.users.updateOne(Filters.equal("handle", "bob"), push("grunts", oldGrunt)).toFuture())
+      contentAsJson(call(GET, "/api/users/bob/grunts")).as[JsArray].value.map(g => (g \ "id").as[String]) must contain(oldGrunt.toHexString)
+    }
+
+    "refuse sign-in for a while after too many wrong passwords" in {
+      assume(mongoUri.isDefined, "TEST_MONGO_URI is not set")
+      val wrong = Some(Json.obj("handle" -> "bob", "password" -> "not-it-at-all"))
+      (1 to services.LoginThrottle.MaxFailures).foreach(_ => status(call(POST, "/api/session", wrong)) mustBe UNAUTHORIZED)
+      status(call(POST, "/api/session", Some(Json.obj("handle" -> "bob", "password" -> "password123")))) mustBe TOO_MANY_REQUESTS
     }
 
     "over real HTTP, accept the web client's requests and refuse ones forged by another site" in {

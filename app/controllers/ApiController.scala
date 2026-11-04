@@ -3,11 +3,11 @@ package controllers
 import javax.inject.{Inject, Singleton}
 
 import models.{GruntView, User, UserView}
-import play.api.Configuration
+import play.api.{Configuration, Logging}
 import play.api.libs.json.*
 import play.api.mvc.*
 import repositories.DatabaseHealth
-import services.{AccountService, GruntService, ImageService, SignUp}
+import services.{AccountService, GruntService, ImageService, LoginThrottle, SignUp}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -19,9 +19,10 @@ class ApiController @Inject() (
     accounts: AccountService,
     gruntService: GruntService,
     images: ImageService,
+    throttle: LoginThrottle,
     health: DatabaseHealth,
     config: Configuration
-)(using ec: ExecutionContext) extends AbstractController(cc) {
+)(using ec: ExecutionContext) extends AbstractController(cc) with Logging {
   import auth.{SessionKey, SignedIn, Viewer}
 
   private val allowRegistration = config.get[Boolean]("openwalrus.allowRegistration")
@@ -55,8 +56,11 @@ class ApiController @Inject() (
   // ---- health and session ----
 
   def healthCheck: Action[AnyContent] = Action.async {
-    health.ping().map(_ => Ok(Json.obj("status" -> "ok")))
-      .recover { case e => ServiceUnavailable(Json.obj("status" -> "database unreachable", "detail" -> e.getMessage)) }
+    health.ping().map(_ => Ok(Json.obj("status" -> "ok"))).recover { case e =>
+      // The detail goes to the log only: this endpoint is public.
+      logger.warn(s"Health check: database unreachable: ${e.getMessage}")
+      ServiceUnavailable(Json.obj("status" -> "database unreachable"))
+    }
   }
 
   def session: Action[AnyContent] = Viewer.async { implicit request =>
@@ -66,9 +70,15 @@ class ApiController @Inject() (
 
   def signIn: Action[AnyContent] = Action.async { implicit request =>
     withJson[SignIn](request) { form =>
-      accounts.signIn(form.handle, form.password).flatMap {
-        case Some(user) => accounts.view(user, Some(user.id)).map(v => signedInAs(user, Ok(Json.toJson(v))))
-        case None => Future.successful(Unauthorized(error("That handle and password don't match.")))
+      if (throttle.blocked(form.handle))
+        Future.successful(TooManyRequests(error("Too many wrong passwords for that handle. Try again in a few minutes.")))
+      else accounts.signIn(form.handle, form.password).flatMap {
+        case Some(user) =>
+          throttle.succeeded(form.handle)
+          accounts.view(user, Some(user.id)).map(v => signedInAs(user, Ok(Json.toJson(v))))
+        case None =>
+          throttle.failed(form.handle)
+          Future.successful(Unauthorized(error("That handle and password don't match.")))
       }
     }
   }
@@ -135,6 +145,14 @@ class ApiController @Inject() (
         case Left(problem) => BadRequest(error(problem))
         case Right(view) => Created(Json.toJson(view))
       }
+    }
+  }
+
+  def deleteGrunt(id: String): Action[AnyContent] = SignedIn.async { request =>
+    gruntService.delete(request.user, id).map {
+      case GruntService.Deletion.Deleted => NoContent
+      case GruntService.Deletion.NotFound => NotFound(error("That grunt is gone already."))
+      case GruntService.Deletion.NotYours => Forbidden(error("You can only delete your own grunts."))
     }
   }
 

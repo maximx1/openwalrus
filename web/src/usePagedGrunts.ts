@@ -34,6 +34,7 @@ export function usePagedGrunts(load: ((before?: number) => Promise<Grunt[]>) | n
   }, [grunts, load]);
 
   const prepend = useCallback((g: Grunt) => setGrunts((list) => [g, ...list]), []);
+  const remove = useCallback((id: string) => setGrunts((list) => list.filter((g) => g.id !== id)), []);
 
-  return { grunts, more, error, loadMore, prepend };
+  return { grunts, more, error, loadMore, prepend, remove };
 }

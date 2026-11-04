@@ -3,6 +3,10 @@
 This runs OpenWalrus on your own server: one container for the app (the JSON API and the
 web client) and, unless you point it at a MongoDB you already have, one for MongoDB.
 
+If an AI assistant is doing the deployment for you, give it
+[deploy-agent.md](deploy-agent.md) instead: the same steps as a checklist, each with a
+check to pass before moving on.
+
 ## What you get
 
 - **The app container** on port 9000, built from this repository.
@@ -129,9 +133,9 @@ compose.yaml`) and remove `MONGO_URI` from `.env`. Moving data between the two i
 
 The collection names (`persons`, `grunts`, `imageset`, and the `owimages` GridFS bucket)
 and their fields are the old ones, so an old database reads as it is: point `MONGO_URI`
-at it, or `mongorestore` a dump of it into the bundled MongoDB. Two things don't carry
-over: the "phone or email" each account was made with (no longer asked for or shown), and
-which old grunts mentioned whom (new ones record it).
+at it, or `mongorestore` a dump of it into the bundled MongoDB. Old mentions still show on
+the mentioned person's profile. The one thing that doesn't carry over is the "phone or
+email" each account was made with, which is no longer asked for or shown.
 
 ## Reverse proxy and HTTPS
 
@@ -296,6 +300,7 @@ docker compose ps
 | `Set APP_URL in .env …` or `Set APP_SECRET …` when starting | `.env` is missing or lacks that line |
 | Every page is a bare 400 "Host not allowed" | The address in the browser isn't the host in `APP_URL`, or the proxy rewrites `Host` |
 | You sign in and are signed straight back out | `APP_URL` is `https://` but you opened plain `http://` |
+| "Too many wrong passwords for that handle" | Ten wrong passwords for that handle in 15 minutes. It clears by itself after that, or at once with `docker compose restart app` |
 | `app` stays `unhealthy` | `docker compose logs app`. A timeout talking to MongoDB means `MONGO_URI` is wrong or the database is unreachable |
 | Port 9000 already in use | Another app (LeCarton is also a Play app) has it. Set `APP_PORT` to a free one |
 | `compose build requires buildx` | Install `docker-buildx` |
