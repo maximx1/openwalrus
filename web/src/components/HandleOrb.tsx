@@ -7,8 +7,9 @@ const LABELS: Record<OrbState, string> = {
 };
 
 /**
- * A little lava lamp: two fluids slowly mixing, green and blue when the handle is free,
- * orange and red when it isn't. Always moving; the colours blend across when it changes.
+ * A little glass ball with two fluids slowly flowing through each other: green and blue
+ * when the handle is free, orange and red when it isn't. Always moving; the colours blend
+ * across when the answer changes.
  */
 export function HandleOrb({ state }: { state: OrbState }) {
   return (
@@ -19,10 +20,8 @@ export function HandleOrb({ state }: { state: OrbState }) {
       aria-label={LABELS[state] || undefined}
       title={LABELS[state] || undefined}
     >
-      <span className="orb-swirl" />
-      <span className="orb-blob orb-blob-1" />
-      <span className="orb-blob orb-blob-2" />
-      <span className="orb-blob orb-blob-3" />
+      <span className="orb-fluid orb-fluid-1" />
+      <span className="orb-fluid orb-fluid-2" />
       <span className="orb-glass" />
     </span>
   );

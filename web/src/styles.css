@@ -490,7 +490,7 @@ button.end-of-grunts:hover:not(:disabled) {
   padding: calc(0.5em - 1px);
 }
 
-/* ---- the handle orb: two fluids slowly mixing, like a lava lamp ---- */
+/* ---- the handle orb: two fluids slowly flowing through each other ---- */
 
 @property --orb-a {
   syntax: "<color>";
@@ -527,8 +527,8 @@ button.end-of-grunts:hover:not(:disabled) {
   overflow: hidden;
   isolation: isolate;
   background: var(--orb-b);
-  /* no glow outside; a little shade inside so it reads as round */
-  box-shadow: inset 0 -0.12em 0.25em rgb(0 0 0 / 0.22);
+  /* no glow outside; an even rim of shade inside, so it reads as round without a crescent */
+  box-shadow: inset 0 0 0.18em rgb(0 0 0 / 0.18);
   /* a change of state blends the fluids from one pair of colours to the other */
   transition:
     --orb-a 1.4s ease,
@@ -556,65 +556,121 @@ button.end-of-grunts:hover:not(:disabled) {
   pointer-events: none;
 }
 
-/* the slow swirl underneath: bands of the two fluids, turning */
-.orb-swirl {
-  inset: -35%;
-  background: conic-gradient(
-    from 0deg,
-    var(--orb-a) 0 12%,
-    var(--orb-b) 24% 38%,
-    var(--orb-a) 50% 58%,
-    var(--orb-b) 72% 88%,
-    var(--orb-a) 100%
-  );
-  filter: blur(0.07em);
-  animation: orb-turn 10s linear infinite;
+/* A cloud: a few overlapping puffs, softened at the edges. Each crosses the orb from left to
+   right and comes back round; the two are half a crossing apart, so there's always one
+   passing through. A slower bob and swell keeps them from moving in a straight line. */
+/* Each fluid is an unbroken, wavy band laid around a ring much bigger than the ball, turning
+   slowly about a centre outside it. The ball only ever sees a stretch of band sliding past,
+   so the colour never starts or ends; it just flows, its edge shifting as the band wobbles.
+   A band of the other fluid turns the other way on another ring, so the two keep mixing.
+   One turn takes minutes, and a whole turn lands where it began, so it loops without a seam.
+   (The bands' circles were laid out by a script: evenly round the ring, radius and size
+   wobbling.) */
+.orb-fluid {
+  width: 500%;
+  height: 500%;
+  filter: blur(0.1em);
+  will-change: rotate, scale;
 }
 
-/* blobs of each fluid drifting through the other, wobbling as they go. Different periods,
-   so the pattern never quite repeats */
-.orb-blob {
-  width: 62%;
-  height: 62%;
-  filter: blur(0.04em);
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: infinite;
-  animation-direction: alternate;
+/* turns about a point 1.5 balls below the ball, so the band (30% out) runs through it */
+.orb-fluid-1 {
+  left: -200%;
+  top: -50%;
+  background:
+    radial-gradient(circle at 50.0% 20.0%, var(--orb-a) 0 4.2%, transparent 6.3%),
+    radial-gradient(circle at 55.5% 15.6%, var(--orb-a) 0 5.1%, transparent 7.7%),
+    radial-gradient(circle at 61.4% 15.0%, var(--orb-a) 0 5.5%, transparent 8.2%),
+    radial-gradient(circle at 66.1% 18.3%, var(--orb-a) 0 5.1%, transparent 7.7%),
+    radial-gradient(circle at 69.6% 23.0%, var(--orb-a) 0 4.2%, transparent 6.3%),
+    radial-gradient(circle at 73.0% 27.0%, var(--orb-a) 0 3.3%, transparent 4.9%),
+    radial-gradient(circle at 76.4% 30.8%, var(--orb-a) 0 2.9%, transparent 4.4%),
+    radial-gradient(circle at 78.0% 35.7%, var(--orb-a) 0 3.3%, transparent 4.9%),
+    radial-gradient(circle at 76.5% 41.4%, var(--orb-a) 0 4.2%, transparent 6.3%),
+    radial-gradient(circle at 73.3% 46.3%, var(--orb-a) 0 5.1%, transparent 7.7%),
+    radial-gradient(circle at 71.6% 50.0%, var(--orb-a) 0 5.5%, transparent 8.2%),
+    radial-gradient(circle at 73.3% 53.7%, var(--orb-a) 0 5.1%, transparent 7.7%),
+    radial-gradient(circle at 76.5% 58.6%, var(--orb-a) 0 4.2%, transparent 6.3%),
+    radial-gradient(circle at 78.0% 64.3%, var(--orb-a) 0 3.3%, transparent 4.9%),
+    radial-gradient(circle at 76.4% 69.2%, var(--orb-a) 0 2.9%, transparent 4.4%),
+    radial-gradient(circle at 73.0% 73.0%, var(--orb-a) 0 3.3%, transparent 4.9%),
+    radial-gradient(circle at 69.6% 77.0%, var(--orb-a) 0 4.2%, transparent 6.3%),
+    radial-gradient(circle at 66.1% 81.7%, var(--orb-a) 0 5.1%, transparent 7.7%),
+    radial-gradient(circle at 61.4% 85.0%, var(--orb-a) 0 5.5%, transparent 8.2%),
+    radial-gradient(circle at 55.5% 84.4%, var(--orb-a) 0 5.1%, transparent 7.7%),
+    radial-gradient(circle at 50.0% 80.0%, var(--orb-a) 0 4.2%, transparent 6.3%),
+    radial-gradient(circle at 46.1% 74.8%, var(--orb-a) 0 3.3%, transparent 4.9%),
+    radial-gradient(circle at 42.8% 72.1%, var(--orb-a) 0 2.9%, transparent 4.4%),
+    radial-gradient(circle at 38.9% 71.8%, var(--orb-a) 0 3.3%, transparent 4.9%),
+    radial-gradient(circle at 34.4% 71.5%, var(--orb-a) 0 4.2%, transparent 6.3%),
+    radial-gradient(circle at 30.6% 69.4%, var(--orb-a) 0 5.1%, transparent 7.7%),
+    radial-gradient(circle at 27.8% 66.1%, var(--orb-a) 0 5.5%, transparent 8.2%),
+    radial-gradient(circle at 24.5% 63.0%, var(--orb-a) 0 5.1%, transparent 7.7%),
+    radial-gradient(circle at 19.5% 59.9%, var(--orb-a) 0 4.2%, transparent 6.3%),
+    radial-gradient(circle at 14.0% 55.7%, var(--orb-a) 0 3.3%, transparent 4.9%),
+    radial-gradient(circle at 11.6% 50.0%, var(--orb-a) 0 2.9%, transparent 4.4%),
+    radial-gradient(circle at 14.0% 44.3%, var(--orb-a) 0 3.3%, transparent 4.9%),
+    radial-gradient(circle at 19.5% 40.1%, var(--orb-a) 0 4.2%, transparent 6.3%),
+    radial-gradient(circle at 24.5% 37.0%, var(--orb-a) 0 5.1%, transparent 7.7%),
+    radial-gradient(circle at 27.8% 33.9%, var(--orb-a) 0 5.5%, transparent 8.2%),
+    radial-gradient(circle at 30.6% 30.6%, var(--orb-a) 0 5.1%, transparent 7.7%),
+    radial-gradient(circle at 34.4% 28.5%, var(--orb-a) 0 4.2%, transparent 6.3%),
+    radial-gradient(circle at 38.9% 28.2%, var(--orb-a) 0 3.3%, transparent 4.9%),
+    radial-gradient(circle at 42.8% 27.9%, var(--orb-a) 0 2.9%, transparent 4.4%),
+    radial-gradient(circle at 46.1% 25.2%, var(--orb-a) 0 3.3%, transparent 4.9%);
+  animation:
+    orb-turn 150s linear infinite,
+    orb-breathe 37s ease-in-out infinite alternate;
 }
 
-.orb-blob-1 {
-  left: 0;
-  top: 35%;
-  background: radial-gradient(circle at 45% 45%, var(--orb-a) 0 52%, transparent 70%);
-  animation-name: orb-rise, orb-wobble;
-  animation-duration: 6.5s, 4.2s;
+/* turns the other way about a point 1.3 balls to the right */
+.orb-fluid-2 {
+  left: -70%;
+  top: -200%;
+  opacity: 0.85;
+  background:
+    radial-gradient(circle at 50.0% 18.2%, var(--orb-b) 0 4.6%, transparent 7.1%),
+    radial-gradient(circle at 55.6% 21.7%, var(--orb-b) 0 4.3%, transparent 6.7%),
+    radial-gradient(circle at 59.8% 26.2%, var(--orb-b) 0 3.3%, transparent 5.0%),
+    radial-gradient(circle at 63.6% 29.7%, var(--orb-b) 0 2.3%, transparent 3.6%),
+    radial-gradient(circle at 66.4% 33.6%, var(--orb-b) 0 2.4%, transparent 3.7%),
+    radial-gradient(circle at 67.9% 38.0%, var(--orb-b) 0 3.3%, transparent 5.1%),
+    radial-gradient(circle at 71.0% 41.3%, var(--orb-b) 0 4.3%, transparent 6.7%),
+    radial-gradient(circle at 77.3% 44.6%, var(--orb-b) 0 4.5%, transparent 7.0%),
+    radial-gradient(circle at 82.5% 50.0%, var(--orb-b) 0 3.7%, transparent 5.8%),
+    radial-gradient(circle at 81.1% 56.2%, var(--orb-b) 0 2.6%, transparent 4.1%),
+    radial-gradient(circle at 74.2% 60.0%, var(--orb-b) 0 2.2%, transparent 3.4%),
+    radial-gradient(circle at 68.1% 62.1%, var(--orb-b) 0 2.9%, transparent 4.4%),
+    radial-gradient(circle at 65.3% 65.3%, var(--orb-b) 0 4.0%, transparent 6.2%),
+    radial-gradient(circle at 63.1% 69.7%, var(--orb-b) 0 4.6%, transparent 7.1%),
+    radial-gradient(circle at 59.6% 73.1%, var(--orb-b) 0 4.1%, transparent 6.4%),
+    radial-gradient(circle at 55.2% 76.1%, var(--orb-b) 0 3.0%, transparent 4.7%),
+    radial-gradient(circle at 50.0% 79.8%, var(--orb-b) 0 2.2%, transparent 3.5%),
+    radial-gradient(circle at 43.8% 81.2%, var(--orb-b) 0 2.5%, transparent 3.9%),
+    radial-gradient(circle at 38.9% 76.7%, var(--orb-b) 0 3.5%, transparent 5.5%),
+    radial-gradient(circle at 37.4% 68.9%, var(--orb-b) 0 4.5%, transparent 6.9%),
+    radial-gradient(circle at 36.4% 63.6%, var(--orb-b) 0 4.4%, transparent 6.9%),
+    radial-gradient(circle at 31.9% 62.1%, var(--orb-b) 0 3.5%, transparent 5.4%),
+    radial-gradient(circle at 25.4% 60.2%, var(--orb-b) 0 2.5%, transparent 3.8%),
+    radial-gradient(circle at 21.4% 55.7%, var(--orb-b) 0 2.3%, transparent 3.5%),
+    radial-gradient(circle at 20.9% 50.0%, var(--orb-b) 0 3.1%, transparent 4.8%),
+    radial-gradient(circle at 21.6% 44.3%, var(--orb-b) 0 4.2%, transparent 6.5%),
+    radial-gradient(circle at 23.6% 39.1%, var(--orb-b) 0 4.6%, transparent 7.1%),
+    radial-gradient(circle at 28.9% 35.9%, var(--orb-b) 0 3.9%, transparent 6.1%),
+    radial-gradient(circle at 35.4% 35.4%, var(--orb-b) 0 2.8%, transparent 4.4%),
+    radial-gradient(circle at 39.1% 33.7%, var(--orb-b) 0 2.2%, transparent 3.4%),
+    radial-gradient(circle at 40.7% 27.5%, var(--orb-b) 0 2.7%, transparent 4.1%),
+    radial-gradient(circle at 44.1% 20.2%, var(--orb-b) 0 3.8%, transparent 5.9%);
+  animation:
+    orb-turn 210s linear infinite reverse,
+    orb-breathe 29s ease-in-out infinite alternate-reverse;
 }
 
-.orb-blob-2 {
-  right: -5%;
-  top: -5%;
-  background: radial-gradient(circle at 50% 50%, var(--orb-b) 0 50%, transparent 70%);
-  animation-name: orb-sink, orb-wobble;
-  animation-duration: 8.5s, 5.3s;
-  animation-delay: 0s, -2s;
-}
-
-.orb-blob-3 {
-  left: 30%;
-  top: 20%;
-  width: 40%;
-  height: 40%;
-  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--orb-a) 70%, white) 0 45%, transparent 70%);
-  animation-name: orb-wander, orb-wobble;
-  animation-duration: 11s, 3.7s;
-  animation-delay: -4s, -1s;
-}
-
-/* a highlight, so it reads as a glass ball */
+/* a faint highlight, so it reads as glass */
 .orb-glass {
   inset: 0;
   border-radius: 50%;
-  background: radial-gradient(circle at 32% 26%, rgb(255 255 255 / 0.65) 0, rgb(255 255 255 / 0.12) 28%, transparent 45%);
+  background: radial-gradient(circle at 34% 30%, rgb(255 255 255 / 0.4) 0, rgb(255 255 255 / 0.08) 22%, transparent 34%);
 }
 
 @keyframes orb-turn {
@@ -623,46 +679,13 @@ button.end-of-grunts:hover:not(:disabled) {
   }
 }
 
-@keyframes orb-rise {
+/* the ring grows and shrinks a little, so the band drifts up and down through the ball */
+@keyframes orb-breathe {
   from {
-    translate: -10% 30%;
-    scale: 0.8;
+    scale: 0.94;
   }
   to {
-    translate: 45% -55%;
-    scale: 1.2;
-  }
-}
-
-@keyframes orb-sink {
-  from {
-    translate: 0 -10%;
-    scale: 1.15;
-  }
-  to {
-    translate: -55% 70%;
-    scale: 0.75;
-  }
-}
-
-@keyframes orb-wander {
-  0% {
-    translate: -60% 40%;
-  }
-  50% {
-    translate: 50% 80%;
-  }
-  100% {
-    translate: 30% -70%;
-  }
-}
-
-@keyframes orb-wobble {
-  from {
-    border-radius: 42% 58% 63% 37% / 48% 41% 59% 52%;
-  }
-  to {
-    border-radius: 61% 39% 38% 62% / 57% 62% 38% 43%;
+    scale: 1.06;
   }
 }
 
