@@ -74,7 +74,12 @@ trait ImageRepository {
   /** Stores an image and its thumbnail together, and returns the id that finds either. */
   def store(original: StoredImage, thumb: StoredImage, fileName: String): Future[String]
   def find(id: String, thumb: Boolean): Future[Option[StoredImage]]
+  /** The original's size and type, without reading it. */
+  def describe(id: String): Future[Option[MediaFile]]
 }
+
+/** How big a stored picture or video is, and what kind of file. */
+case class MediaFile(length: Long, contentType: String)
 
 /**
  * A stored video, read as a stream so a large one never sits in memory whole. readFrom

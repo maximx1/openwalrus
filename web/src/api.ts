@@ -36,6 +36,18 @@ export type Grunt = {
   feedAt: number;
 };
 
+/** A picture or video in a grunt, and how big a file it is. */
+export type MediaStats = { kind: "image" | "video"; url: string; bytes: number; contentType: string };
+
+/** The numbers behind a grunt, for its Stats dialog. */
+export type GruntStats = {
+  views: number;
+  replies: number;
+  regrunts: number;
+  characters: number;
+  media: MediaStats[];
+};
+
 /** One page of a feed; `next` fetches the page after, if there is one. */
 export type FeedPage = { grunts: Grunt[]; next?: number };
 
@@ -143,6 +155,7 @@ export const api = {
 
   feed: (before?: number) => request<FeedPage>("GET", `/feed${before ? `?before=${before}` : ""}`),
   grunt: (id: string) => request<Grunt>("GET", `/grunts/${enc(id)}`),
+  gruntStats: (id: string) => request<GruntStats>("GET", `/grunts/${enc(id)}/stats`),
   replies: (id: string) => request<Grunt[]>("GET", `/grunts/${enc(id)}/replies`),
   reply: (id: string, message: string) => request<Grunt>("POST", `/grunts/${enc(id)}/replies`, { message }),
   regrunt: (id: string) => request<Grunt>("PUT", `/grunts/${enc(id)}/regrunt`),

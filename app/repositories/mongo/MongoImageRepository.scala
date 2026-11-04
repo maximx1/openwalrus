@@ -2,14 +2,14 @@ package repositories.mongo
 
 import javax.inject.{Inject, Singleton}
 
-import com.mongodb.client.gridfs.model.GridFSUploadOptions
+import com.mongodb.client.gridfs.model.{GridFSFile, GridFSUploadOptions}
 import models.StoredImage
 import org.bson.Document
 import org.bson.types.ObjectId
 import org.mongodb.scala.{Observable, ObservableFuture, SingleObservableFuture}
 import org.mongodb.scala.gridfs.GridFSBucket
 import org.mongodb.scala.model.Filters.equal
-import repositories.ImageRepository
+import repositories.{ImageRepository, MediaFile}
 
 import java.nio.ByteBuffer
 import scala.concurrent.{ExecutionContext, Future}
@@ -44,6 +44,23 @@ class MongoImageRepository @Inject() (mongo: MongoDatabaseProvider)(using ec: Ex
       }
     }
 
+  def describe(id: String): Future[Option[MediaFile]] =
+    Ids.parse(id).fold(Future.successful(None)) { oid =>
+      sets.find(equal("_id", oid)).headOption().flatMap {
+        case None => Future.successful(None)
+        case Some(set) =>
+          Option(set.getObjectId("original")).fold(Future.successful(None)) { fileId =>
+            bucket.find(equal("_id", fileId)).headOption().map(_.map(file => MediaFile(file.getLength, contentTypeOf(file))))
+          }
+      }
+    }
+
+  // The 2015 version stored the type as a top-level field, which this driver no longer
+  // reads, so fall back to the file name for those.
+  private def contentTypeOf(file: GridFSFile): String =
+    Option(file.getMetadata).flatMap(m => Option(m.getString("contentType")))
+      .getOrElse(services.ImageService.typeForName(file.getFilename))
+
   private def upload(image: StoredImage, fileName: String): Future[ObjectId] = {
     val options = new GridFSUploadOptions().metadata(new Document("contentType", image.contentType))
     bucket.uploadFromObservable(fileName, Observable(Seq(ByteBuffer.wrap(image.bytes))), options).head()
@@ -53,10 +70,7 @@ class MongoImageRepository @Inject() (mongo: MongoDatabaseProvider)(using ec: Ex
     bucket.find(equal("_id", fileId)).headOption().flatMap {
       case None => Future.successful(None)
       case Some(file) =>
-        // The 2015 version stored the type as a top-level field, which this driver no longer
-        // reads, so fall back to the file name for those.
-        val contentType = Option(file.getMetadata).flatMap(m => Option(m.getString("contentType")))
-          .getOrElse(services.ImageService.typeForName(file.getFilename))
+        val contentType = contentTypeOf(file)
         bucket.downloadToObservable(fileId).toFuture().map { chunks =>
           val out = new java.io.ByteArrayOutputStream()
           chunks.foreach { b =>

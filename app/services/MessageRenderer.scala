@@ -37,6 +37,14 @@ object MessageRenderer {
     body.html()
   }
 
+  private val uploadedMedia = """^/api/(images|videos)/([0-9a-f]{24})(?:#.*)?$""".r
+
+  /** The app's own pictures and videos a message shows, in order, as ("image" or "video", id). */
+  def media(message: String): Seq[(String, String)] =
+    Jsoup.parseBodyFragment(toHtml(message)).select("img[src], video[src]").asScala.toSeq.flatMap { e =>
+      uploadedMedia.findFirstMatchIn(e.attr("src")).map(m => (if (m.group(1) == "images") "image" else "video", m.group(2)))
+    }.distinct
+
   // Built here, after cleaning, from nothing but the checked address, so no attribute of
   // the user's survives onto the element. "#t=0.1" makes Safari show the first frame.
   private def showVideos(root: Element): Unit =

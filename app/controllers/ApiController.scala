@@ -239,6 +239,13 @@ class ApiController @Inject() (
     }
   }
 
+  def gruntStats(id: String): Action[AnyContent] = Viewer.async { request =>
+    gruntService.stats(id, request.viewer).map {
+      case Some(stats) => Ok(Json.toJson(stats))
+      case None => NotFound(error(GruntGone))
+    }
+  }
+
   def replies(id: String): Action[AnyContent] = Viewer.async { request =>
     gruntService.replies(id, request.viewer).map {
       case Some(list) => Ok(Json.toJson(list))

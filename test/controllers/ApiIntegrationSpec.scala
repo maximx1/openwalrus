@@ -332,6 +332,22 @@ class ApiIntegrationSpec extends PlaySpec with BeforeAndAfterAll {
       contentAsBytes(part).toArray mustBe body.slice(from, from + 100)
 
       status(call(GET, "/api/videos/6aeb3377726319dc659be286")) mustBe NOT_FOUND
+
+      // A grunt's stats say how big each picture and video in it is.
+      val png = java.nio.file.Files.createTempFile("pic", ".png")
+      javax.imageio.ImageIO.write(new java.awt.image.BufferedImage(40, 30, java.awt.image.BufferedImage.TYPE_INT_RGB), "png", png.toFile)
+      val imageId = await(app.injector.instanceOf[services.ImageService].store(png, "pic.png")).toOption.get
+      val vic = signUp("vic")
+      val message = s"look\n![image](/api/images/$imageId)\n![video](/api/videos/$id)\n![gone](/api/videos/6aeb3377726319dc659be286)"
+      val g = (contentAsJson(call(POST, "/api/grunts", Some(Json.obj("message" -> message)), Some(vic))) \ "id").as[String]
+      val stats = contentAsJson(call(GET, s"/api/grunts/$g/stats"))
+      (stats \ "views").as[Int] mustBe 0
+      (stats \ "characters").as[Int] mustBe message.length
+      (stats \ "media").as[Seq[JsObject]] mustBe Seq(
+        Json.obj("kind" -> "image", "url" -> s"/api/images/$imageId", "bytes" -> java.nio.file.Files.size(png), "contentType" -> "image/png"),
+        Json.obj("kind" -> "video", "url" -> s"/api/videos/$id", "bytes" -> body.length, "contentType" -> "video/mp4")
+      )
+      status(call(GET, "/api/grunts/6aeb3377726319dc659be286/stats")) mustBe NOT_FOUND
     }
 
     "over real HTTP, accept the web client's requests and refuse ones forged by another site" in {

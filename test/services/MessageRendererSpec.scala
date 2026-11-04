@@ -39,6 +39,14 @@ class MessageRendererSpec extends PlaySpec {
       MessageRenderer.toHtml("""<video src="/api/videos/x" autoplay></video>""") must not include "<video"
     }
 
+    "list the app's own pictures and videos a message shows" in {
+      val image = "6aeb3377726319dc659be285"
+      val video = "6aeb3377726319dc659be286"
+      MessageRenderer.media(s"![a](/api/images/$image) ![b](/api/videos/$video) ![a](/api/images/$image)") mustBe
+        Seq("image" -> image, "video" -> video)
+      MessageRenderer.media(s"`![a](/api/images/$image)` ![c](https://elsewhere.example/api/images/$image)") mustBe empty
+    }
+
     "link @mentions to profiles, but not inside code" in {
       val html = MessageRenderer.toHtml("hey @bob\n\n`@notalink`")
       html must include("""<a href="/bob">@bob</a>""")

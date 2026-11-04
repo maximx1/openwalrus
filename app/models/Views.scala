@@ -59,3 +59,17 @@ case class FeedPage(grunts: Seq[GruntView], next: Option[Long])
 object FeedPage {
   given OWrites[FeedPage] = Json.writes[FeedPage]
 }
+
+/** A picture or video in a grunt: where it's served, and how big a file it is. */
+case class MediaView(kind: String, url: String, bytes: Long, contentType: String)
+
+object MediaView {
+  given OWrites[MediaView] = Json.writes[MediaView]
+}
+
+/** The numbers behind a grunt, for its Stats dialog. */
+case class GruntStats(views: Int, replies: Int, regrunts: Int, characters: Int, media: Seq[MediaView])
+
+object GruntStats {
+  given OWrites[GruntStats] = Json.writes[GruntStats]
+}

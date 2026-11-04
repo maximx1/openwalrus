@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { api, gruntPath, imageUrl, videoUrl, type Grunt } from "../api.ts";
+import { api, gruntPath, imageUrl, videoUrl, type Grunt, type GruntStats, type MediaStats } from "../api.ts";
 import { useSession } from "../session.tsx";
 import { watchForView } from "../views.ts";
-import { DotsIcon, RegruntIcon, ReplyIcon, ShareIcon, Switch } from "./Icons.tsx";
+import { CloseIcon, DotsIcon, RegruntIcon, ReplyIcon, ShareIcon, Switch } from "./Icons.tsx";
 
 const MAX_LENGTH = 1000;
 const MB = 1024 * 1024;
@@ -78,7 +78,7 @@ export function GruntItem({ grunt, onChanged, onDeleted, focused = false, onRepl
   function open(e: React.MouseEvent) {
     if (focused) return;
     const target = e.target as HTMLElement;
-    if (target.closest("a, button, video, input, textarea, [role=menu], .grunt-replies")) return;
+    if (target.closest("a, button, video, input, textarea, dialog, [role=menu], .grunt-replies")) return;
     if (window.getSelection()?.toString()) return; // selecting text, not clicking
     navigate(gruntPath(grunt));
   }
@@ -142,7 +142,7 @@ export function ReplyItem({ reply, onDeleted, highlight = false }: { reply: Grun
   );
 }
 
-/** Name and handle; on the right, the time (always) and the ⋯ menu (on hover). */
+/** Name and handle; at the right edge the time (always), with the ⋯ menu (on hover) just before it. */
 function GruntMeta({ grunt, onChanged, onDeleted }: { grunt: Grunt; onChanged: (g: Grunt) => void; onDeleted: () => void }) {
   const { author } = grunt;
   return (
@@ -152,18 +152,18 @@ function GruntMeta({ grunt, onChanged, onDeleted }: { grunt: Grunt; onChanged: (
       </Link>
       <span className="handle">@{author.handle}</span>
       <span className="grunt-corner">
+        <GruntMenu grunt={grunt} onChanged={onChanged} onDeleted={onDeleted} />
         <Link to={gruntPath(grunt)} className="grunt-time">
           <time dateTime={new Date(grunt.createdAt).toISOString()} title={new Date(grunt.createdAt).toLocaleString()}>
             {formatTime(grunt.createdAt)}
           </time>
         </Link>
-        <GruntMenu grunt={grunt} onChanged={onChanged} onDeleted={onDeleted} />
       </span>
     </div>
   );
 }
 
-/** Reply, regrunt and share; views and who can see it on the right. */
+/** Reply, regrunt and share; on the right, whether it's friends only. (Views are under ⋯ → Stats.) */
 function GruntActions({ grunt, onChanged, onReply }: { grunt: Grunt; onChanged: (g: Grunt) => void; onReply: () => void }) {
   const { user } = useSession();
   const navigate = useNavigate();
@@ -224,16 +224,11 @@ function GruntActions({ grunt, onChanged, onReply }: { grunt: Grunt; onChanged: 
         <ShareIcon />
         <span aria-live="polite">{shared ?? "Share"}</span>
       </button>
-      <span className="grunt-stats">
-        {grunt.friendsOnly && (
-          <span className="grunt-friends" title={`Only @${grunt.author.handle} and the people they follow can see this`}>
-            Friends only
-          </span>
-        )}
-        <span title="People who have seen it">
-          {grunt.views} {grunt.views === 1 ? "view" : "views"}
+      {grunt.friendsOnly && (
+        <span className="grunt-friends" title={`Only @${grunt.author.handle} and the people they follow can see this`}>
+          Friends only
         </span>
-      </span>
+      )}
     </div>
   );
 }
@@ -258,12 +253,13 @@ async function shareGrunt(grunt: Grunt): Promise<string | null> {
   }
 }
 
-/** The ⋯ menu: who can see it (the author's switch), the link, and Delete for the author. */
+/** The ⋯ menu: who can see it (the author's switch), its stats, the link, and Delete for the author. */
 function GruntMenu({ grunt, onChanged, onDeleted }: { grunt: Grunt; onChanged: (g: Grunt) => void; onDeleted: () => void }) {
   const { user } = useSession();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showStats, setShowStats] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   const mine = user?.id === grunt.author.id;
 
@@ -350,6 +346,16 @@ function GruntMenu({ grunt, onChanged, onDeleted }: { grunt: Grunt; onChanged: (
               <Switch on={grunt.friendsOnly} />
             </button>
           )}
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              setShowStats(true);
+            }}
+          >
+            Stats
+          </button>
           <button type="button" role="menuitem" onClick={() => void copyLink()}>
             {copied ? "Link copied" : "Copy link"}
           </button>
@@ -360,8 +366,147 @@ function GruntMenu({ grunt, onChanged, onDeleted }: { grunt: Grunt; onChanged: (
           )}
         </div>
       )}
+      {showStats && <StatsDialog grunt={grunt} onClose={() => setShowStats(false)} />}
     </div>
   );
+}
+
+/** A grunt's numbers, and the size of each picture and video in it. Closes with ×, Escape, or a click outside. */
+function StatsDialog({ grunt, onClose }: { grunt: Grunt; onClose: () => void }) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const [stats, setStats] = useState<GruntStats | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    dialog.current?.showModal();
+    api.gruntStats(grunt.id).then(setStats, (e: unknown) => setError(e instanceof Error ? e.message : "Could not get the stats."));
+  }, [grunt.id]);
+
+  const posted = new Date(grunt.createdAt);
+  return (
+    <dialog
+      ref={dialog}
+      className="stats-dialog"
+      aria-labelledby={`stats-${grunt.id}`}
+      onClose={onClose}
+      onClick={(e) => {
+        if (e.target === dialog.current) dialog.current.close(); // the backdrop, outside the box
+      }}
+    >
+      <div className="stats-box">
+        <header>
+          <h2 id={`stats-${grunt.id}`}>{grunt.replyTo ? "Reply stats" : "Grunt stats"}</h2>
+          <button type="button" className="close" aria-label="Close" onClick={() => dialog.current?.close()}>
+            <CloseIcon />
+          </button>
+        </header>
+        {error ? (
+          <div className="error">{error}</div>
+        ) : !stats ? (
+          <div className="hint">Counting…</div>
+        ) : (
+          <>
+            <dl>
+              {!grunt.replyTo && (
+                <>
+                  <dt>Views</dt>
+                  <dd>{stats.views.toLocaleString()}</dd>
+                  <dt>Replies</dt>
+                  <dd>{stats.replies.toLocaleString()}</dd>
+                  <dt>Regrunts</dt>
+                  <dd>{stats.regrunts.toLocaleString()}</dd>
+                </>
+              )}
+              <dt>Length</dt>
+              <dd>
+                {stats.characters.toLocaleString()} of {MAX_LENGTH.toLocaleString()} characters
+              </dd>
+              <dt>Posted</dt>
+              <dd>
+                <time dateTime={posted.toISOString()}>
+                  {posted.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
+                </time>
+              </dd>
+            </dl>
+            {stats.media.length > 0 && (
+              <>
+                <h3>
+                  {stats.media.length === 1 ? "Attached" : `Attached (${formatBytes(stats.media.reduce((n, m) => n + m.bytes, 0))} in all)`}
+                </h3>
+                <ul className="stats-media">
+                  {stats.media.map((m) => (
+                    <MediaRow key={m.url} media={m} />
+                  ))}
+                </ul>
+              </>
+            )}
+          </>
+        )}
+      </div>
+    </dialog>
+  );
+}
+
+/** One picture or video: its type and file size from the server, its dimensions (and length) read by the browser. */
+function MediaRow({ media }: { media: MediaStats }) {
+  const [shape, setShape] = useState<string | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    if (media.kind === "image") {
+      const img = new Image();
+      img.onload = () => live && setShape(`${img.naturalWidth} × ${img.naturalHeight}`);
+      img.src = media.url;
+    } else {
+      const video = document.createElement("video");
+      video.preload = "metadata";
+      video.onloadedmetadata = () =>
+        live && setShape(`${video.videoWidth} × ${video.videoHeight}, ${formatDuration(video.duration)}`);
+      video.src = media.url;
+      return () => {
+        live = false;
+        video.removeAttribute("src"); // stop fetching
+        video.load();
+      };
+    }
+    return () => {
+      live = false;
+    };
+  }, [media.kind, media.url]);
+
+  const type = media.contentType.split("/")[1]?.replace("quicktime", "mov").toUpperCase() ?? media.contentType;
+  return (
+    <li>
+      {media.kind === "image" ? (
+        <img src={media.url} alt="" />
+      ) : (
+        <span className="stats-video-mark" aria-hidden="true">
+          ▶
+        </span>
+      )}
+      <div>
+        <strong>
+          {media.kind === "image" ? "Picture" : "Video"} · {type}
+        </strong>
+        <span className="hint">
+          {formatBytes(media.bytes)}
+          {shape && ` · ${shape}`}
+        </span>
+      </div>
+    </li>
+  );
+}
+
+function formatBytes(n: number): string {
+  if (n < 1024) return `${n} bytes`;
+  if (n < MB) return `${(n / 1024).toFixed(n < 10 * 1024 ? 1 : 0)} KB`;
+  return `${(n / MB).toFixed(1)} MB`;
+}
+
+function formatDuration(seconds: number): string {
+  if (!Number.isFinite(seconds)) return "streaming";
+  const s = Math.round(seconds);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
 function formatTime(ms: number): string {

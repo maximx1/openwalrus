@@ -40,3 +40,9 @@ export const DotsIcon = () => (
 
 /** An on/off switch drawing, for inside a button that carries the state (role="switch"). */
 export const Switch = ({ on }: { on: boolean }) => <span className={`switch${on ? " on" : ""}`} aria-hidden="true" />;
+
+export const CloseIcon = () => (
+  <svg {...props}>
+    <path d="M4 4l8 8M12 4l-8 8" />
+  </svg>
+);

@@ -2,14 +2,16 @@ package services
 
 import javax.inject.{Inject, Singleton}
 
-import models.{AuthorView, FeedPage, Grunt, GruntView, NewGrunt, Reader, User}
-import repositories.{GruntRepository, UserRepository}
+import models.{AuthorView, FeedPage, Grunt, GruntStats, GruntView, MediaView, NewGrunt, Reader, User}
+import repositories.{GruntRepository, ImageRepository, MediaFile, UserRepository, VideoRepository}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 /** Posting, replying and regrunting, and putting together the lists of grunts people read. */
 @Singleton
-class GruntService @Inject() (grunts: GruntRepository, users: UserRepository)(using ec: ExecutionContext) {
+class GruntService @Inject() (grunts: GruntRepository, users: UserRepository, images: ImageRepository, videos: VideoRepository)(
+    using ec: ExecutionContext
+) {
   import GruntService.*
 
   /** Left is a message for the author. */
@@ -49,6 +51,22 @@ class GruntService @Inject() (grunts: GruntRepository, users: UserRepository)(us
   /** One grunt or reply, for its own page. */
   def one(id: String, viewer: Option[User]): Future[Option[GruntView]] =
     findVisible(id, viewer).flatMap(_.fold(Future.successful(None))(g => present(Seq(g), viewer).map(_.headOption)))
+
+  /** A grunt's numbers, and how big each picture and video in it is. Media no longer stored is left out. */
+  def stats(id: String, viewer: Option[User]): Future[Option[GruntStats]] =
+    findVisible(id, viewer).flatMap {
+      case None => Future.successful(None)
+      case Some(g) =>
+        val found = MessageRenderer.media(g.message).map { (kind, mediaId) =>
+          val file =
+            if (kind == "image") images.describe(mediaId)
+            else videos.open(mediaId).map(_.map(v => MediaFile(v.length, v.contentType)))
+          file.map(_.map(f => MediaView(kind, s"/api/${kind}s/$mediaId", f.length, f.contentType)))
+        }
+        Future.sequence(found).map { media =>
+          Some(GruntStats(g.views, g.replyCount, g.regruntCount, g.message.length, media.flatten))
+        }
+    }
 
   /** A grunt's replies, oldest first. None if the grunt isn't there for the viewer. */
   def replies(id: String, viewer: Option[User]): Future[Option[Seq[GruntView]]] =

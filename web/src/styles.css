@@ -427,6 +427,7 @@ main {
 
 .composer-actions .hint {
   margin-right: auto;
+  user-select: none;
 }
 
 .composer-actions button {
@@ -543,7 +544,9 @@ main {
   white-space: nowrap;
 }
 
+/* The time sits flush right; the ⋯ menu just before it, its list dropping from the corner. */
 .grunt-corner {
+  position: relative;
   margin-left: auto;
   display: flex;
   align-items: center;
@@ -602,6 +605,7 @@ main {
   margin-top: 0.45em;
   font-size: 0.8em;
   color: var(--muted);
+  user-select: none;
 }
 
 button.action {
@@ -629,15 +633,9 @@ button.action:disabled {
   opacity: 0.45;
 }
 
-.grunt-stats {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 0.8em;
-  white-space: nowrap;
-}
-
 .grunt-friends {
+  margin-left: auto;
+  white-space: nowrap;
   color: var(--teal);
   border: 1px solid currentColor;
   border-radius: 999px;
@@ -648,7 +646,7 @@ button.action:disabled {
   .grunt-actions {
     gap: 1em;
   }
-  .grunt-stats .grunt-friends {
+  .grunt-actions .grunt-friends {
     display: none; /* the ⋯ menu still says so */
   }
 }
@@ -656,7 +654,6 @@ button.action:disabled {
 /* ---- the ⋯ menu: shown on hover (always on touch screens), the time always ---- */
 
 .grunt-menu {
-  position: relative;
   display: flex;
 }
 
@@ -723,6 +720,114 @@ button.dots[aria-expanded="true"] {
 
 .menu button.danger {
   color: #c0392b;
+}
+
+/* ---- a grunt's Stats dialog ---- */
+
+dialog.stats-dialog {
+  width: min(24em, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--text);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 0.2);
+  cursor: auto;
+}
+
+dialog.stats-dialog::backdrop {
+  background: rgb(0 0 0 / 0.35);
+}
+
+.stats-box {
+  padding: 0.9em 1.1em 1.1em;
+}
+
+.stats-box header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6em;
+}
+
+.stats-box h2 {
+  margin: 0;
+  font-size: 1.05em;
+}
+
+.stats-box h3 {
+  margin: 1em 0 0.4em;
+  font-size: 0.9em;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.stats-box button.close {
+  display: inline-flex;
+  padding: 0.3em;
+  background: none;
+  color: var(--muted);
+}
+
+.stats-box button.close:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.stats-box dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35em 1.2em;
+  margin: 0;
+}
+
+.stats-box dt {
+  color: var(--muted);
+}
+
+.stats-box dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.stats-media {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5em;
+}
+
+.stats-media li {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+}
+
+.stats-media li > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.stats-media img,
+.stats-video-mark {
+  flex: none;
+  width: 2.6em;
+  height: 2.6em;
+  border-radius: var(--radius);
+  object-fit: cover;
+  background: var(--bg);
+}
+
+.stats-video-mark {
+  display: grid;
+  place-items: center;
+  background: #222;
+  color: white;
+  font-size: 0.9em;
 }
 
 /* ---- an on/off switch, in the header's colours when on ---- */
@@ -830,6 +935,7 @@ button.switch-button[aria-checked="true"] {
 .end-of-grunts {
   display: block;
   width: 100%;
+  user-select: none;
   text-align: center;
   color: var(--border);
   font-style: italic;
