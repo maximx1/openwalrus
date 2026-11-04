@@ -24,7 +24,13 @@ GET     /api/feed                           controllers.ApiController.feed(befor
 GET     /api/hot                            controllers.ApiController.hot
 POST    /api/views                          controllers.ApiController.recordViews
 POST    /api/grunts                         controllers.ApiController.postGrunt
+GET     /api/grunts/:id                     controllers.ApiController.grunt(id: String)
+PATCH   /api/grunts/:id                     controllers.ApiController.changeGrunt(id: String)
 DELETE  /api/grunts/:id                     controllers.ApiController.deleteGrunt(id: String)
+GET     /api/grunts/:id/replies             controllers.ApiController.replies(id: String)
+POST    /api/grunts/:id/replies             controllers.ApiController.postReply(id: String)
+PUT     /api/grunts/:id/regrunt             controllers.ApiController.regrunt(id: String)
+DELETE  /api/grunts/:id/regrunt             controllers.ApiController.unregrunt(id: String)
 
 POST    /api/images                         controllers.ApiController.uploadImage
 GET     /api/images/:id                     controllers.ApiController.image(id: String)

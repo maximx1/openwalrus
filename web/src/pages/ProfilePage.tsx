@@ -58,7 +58,7 @@ export function ProfilePage({ tab }: { tab: Tab }) {
 function ProfileGrunts({ user, onCountChange }: { user: User; onCountChange: (by: number) => void }) {
   const session = useSession();
   const load = useCallback((before?: number) => api.userGrunts(user.handle, before), [user.handle]);
-  const { grunts, more, error, loadMore, prepend, remove } = usePagedGrunts(load);
+  const { grunts, more, error, loadMore, prepend, remove, replace } = usePagedGrunts(load);
   const mine = session.user?.id === user.id;
 
   return (
@@ -78,6 +78,7 @@ function ProfileGrunts({ user, onCountChange }: { user: User; onCountChange: (by
         grunts={grunts}
         more={more}
         onMore={loadMore}
+        onChanged={replace}
         onDeleted={(g) => {
           remove(g.id);
           if (g.author.id === user.id) onCountChange(-1);

@@ -1,9 +1,11 @@
 OpenWalrus
 ==========
 
-A small, self-hosted Twitter for a group of friends: sign up, post short messages
-("grunts", in Markdown, with pictures), mention people with `@handle`, follow each other,
-and read a feed of the people you follow.
+A small, self-hosted Twitter for a group of friends, in the spirit of the early one: sign
+up, post short messages ("grunts", in Markdown, with pictures and videos), mention people
+with `@handle`, follow each other, and read a feed of the people you follow. Grunts can be
+replied to and regrunted, kept to your friends (the people you follow), and the ones
+getting the most attention this week are on the Hot page.
 
 Started in 2015 on Play 2.4; brought up to date in 2026.
 
@@ -13,8 +15,8 @@ Started in 2015 on Play 2.4; brought up to date in 2026.
   through the traits in `app/repositories/Repositories.scala`; the MongoDB versions are in
   `app/repositories/mongo/` and are chosen in `app/Module.scala`. Another database would
   be another set of implementations and a change to that binding.
-- **Database**: MongoDB, connected with the official Scala driver. Images are stored in
-  GridFS. The connection comes from `MONGO_URI`.
+- **Database**: MongoDB, connected with the official Scala driver. Pictures and videos
+  are stored in GridFS. The connection comes from `MONGO_URI`.
 - **Web client**: React + TypeScript, built with Vite, in `web/`. It builds into
   `public/`, which Play serves; every path that isn't the API gets `index.html`.
 

@@ -38,6 +38,10 @@ class ApiController @Inject() (
   private given Reads[ImageRef] = Json.reads[ImageRef]
   private case class PasswordChange(current: String, next: String)
   private given Reads[PasswordChange] = Json.reads[PasswordChange]
+  private case class Reply(message: String)
+  private given Reads[Reply] = Json.reads[Reply]
+  private case class GruntChange(friendsOnly: Boolean)
+  private given Reads[GruntChange] = Json.reads[GruntChange]
   private case class Viewed(ids: Seq[String])
   private given Reads[Viewed] = Json.reads[Viewed]
 
@@ -226,6 +230,46 @@ class ApiController @Inject() (
         case Right(view) => Created(Json.toJson(view))
       }
     }
+  }
+
+  def grunt(id: String): Action[AnyContent] = Viewer.async { request =>
+    gruntService.one(id, request.viewer).map {
+      case Some(view) => Ok(Json.toJson(view))
+      case None => NotFound(error(GruntGone))
+    }
+  }
+
+  def replies(id: String): Action[AnyContent] = Viewer.async { request =>
+    gruntService.replies(id, request.viewer).map {
+      case Some(list) => Ok(Json.toJson(list))
+      case None => NotFound(error(GruntGone))
+    }
+  }
+
+  def postReply(id: String): Action[AnyContent] = SignedIn.async { request =>
+    withJson[Reply](request)(form => gruntService.reply(request.user, id, form.message).map(answer(_, Created)))
+  }
+
+  def regrunt(id: String): Action[AnyContent] = SignedIn.async { request =>
+    gruntService.setRegrunt(request.user, id, on = true).map(answer(_, Ok))
+  }
+
+  def unregrunt(id: String): Action[AnyContent] = SignedIn.async { request =>
+    gruntService.setRegrunt(request.user, id, on = false).map(answer(_, Ok))
+  }
+
+  /** For now the one thing to change after posting: who can see it. */
+  def changeGrunt(id: String): Action[AnyContent] = SignedIn.async { request =>
+    withJson[GruntChange](request)(form => gruntService.setFriendsOnly(request.user, id, form.friendsOnly).map(answer(_, Ok)))
+  }
+
+  private val GruntGone = "That grunt is gone, or isn't shared with you."
+
+  private def answer(result: Either[GruntService.Problem, GruntView], status: Status): Result = result match {
+    case Right(view) => status(Json.toJson(view))
+    case Left(GruntService.Problem.NotFound) => NotFound(error(GruntGone))
+    case Left(GruntService.Problem.NotAllowed(message)) => Forbidden(error(message))
+    case Left(GruntService.Problem.Invalid(message)) => BadRequest(error(message))
   }
 
   def hot: Action[AnyContent] = Viewer.async { request =>

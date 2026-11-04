@@ -25,7 +25,19 @@ export type Grunt = {
   friendsOnly: boolean;
   /** How many people other than the author have seen it. */
   views: number;
+  /** Set on a reply: the grunt it answers. */
+  replyTo?: string;
+  replyCount: number;
+  regruntCount: number;
+  regruntedByMe: boolean;
+  /** In a feed: who regrunted it into the feed. */
+  regruntedBy?: Author;
+  /** When it arrived in the feed: posted, or regrunted. */
+  feedAt: number;
 };
+
+/** One page of a feed; `next` fetches the page after, if there is one. */
+export type FeedPage = { grunts: Grunt[]; next?: number };
 
 export type Session = { user: User | null; allowRegistration: boolean };
 
@@ -117,7 +129,7 @@ export const api = {
   users: () => request<User[]>("GET", "/users"),
   user: (handle: string) => request<User>("GET", `/users/${enc(handle)}`),
   userGrunts: (handle: string, before?: number) =>
-    request<Grunt[]>("GET", `/users/${enc(handle)}/grunts${before ? `?before=${before}` : ""}`),
+    request<FeedPage>("GET", `/users/${enc(handle)}/grunts${before ? `?before=${before}` : ""}`),
   followers: (handle: string) => request<User[]>("GET", `/users/${enc(handle)}/followers`),
   following: (handle: string) => request<User[]>("GET", `/users/${enc(handle)}/following`),
   follow: (handle: string) => request<User>("PUT", `/users/${enc(handle)}/follow`),
@@ -129,7 +141,13 @@ export const api = {
   endSession: (id: string) => request<void>("DELETE", `/me/sessions/${enc(id)}`),
   endOtherSessions: () => request<void>("DELETE", "/me/sessions"),
 
-  feed: (before?: number) => request<Grunt[]>("GET", `/feed${before ? `?before=${before}` : ""}`),
+  feed: (before?: number) => request<FeedPage>("GET", `/feed${before ? `?before=${before}` : ""}`),
+  grunt: (id: string) => request<Grunt>("GET", `/grunts/${enc(id)}`),
+  replies: (id: string) => request<Grunt[]>("GET", `/grunts/${enc(id)}/replies`),
+  reply: (id: string, message: string) => request<Grunt>("POST", `/grunts/${enc(id)}/replies`, { message }),
+  regrunt: (id: string) => request<Grunt>("PUT", `/grunts/${enc(id)}/regrunt`),
+  unregrunt: (id: string) => request<Grunt>("DELETE", `/grunts/${enc(id)}/regrunt`),
+  setFriendsOnly: (id: string, friendsOnly: boolean) => request<Grunt>("PATCH", `/grunts/${enc(id)}`, { friendsOnly }),
   hot: () => request<Grunt[]>("GET", "/hot"),
   postGrunt: (message: string, friendsOnly: boolean) => request<Grunt>("POST", "/grunts", { message, friendsOnly }),
   /** keepalive, so the last batch still goes out as the page closes. */
@@ -141,6 +159,9 @@ export const api = {
 };
 
 export const videoUrl = (id: string) => `/api/videos/${id}`;
+
+/** A grunt's own page. (A reply's sends you on to the grunt it answers.) */
+export const gruntPath = (g: Grunt) => `/${g.author.handle}/grunts/${g.id}`;
 
 export const imageUrl = (id: string | undefined, thumb = false) =>
   id ? `/api/images/${id}${thumb ? "/thumb" : ""}` : "/noimage.svg";

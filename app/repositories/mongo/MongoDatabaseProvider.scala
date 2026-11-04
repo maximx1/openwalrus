@@ -38,6 +38,13 @@ class MongoDatabaseProvider @Inject() (config: Configuration, lifecycle: Applica
     grunts.createIndex(Indexes.descending("userId", "timestamp")).toFuture(),
     grunts.createIndex(Indexes.ascending("mentions")).toFuture(),
     grunts.createIndex(Indexes.descending("timestamp")).toFuture(),
+    grunts.createIndex(Indexes.ascending("replyTo", "timestamp")).toFuture(),
+    grunts.createIndex(Indexes.ascending("regruntOf"), IndexOptions().sparse(true)).toFuture(),
+    // one regrunt per person and grunt
+    grunts.createIndex(
+      Indexes.ascending("userId", "regruntOf"),
+      IndexOptions().unique(true).partialFilterExpression(org.mongodb.scala.model.Filters.exists("regruntOf")).name("one_regrunt_each")
+    ).toFuture(),
     sessions.createIndex(Indexes.ascending("tokenHash"), IndexOptions().unique(true)).toFuture(),
     sessions.createIndex(Indexes.ascending("userId")).toFuture(),
     // Mongo deletes a session about a minute after it ends; SessionService ignores it before then.

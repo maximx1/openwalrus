@@ -23,6 +23,11 @@ case class NewUser(handle: String, fullName: String, passwordHash: String, creat
  * the way out. Mentions are the ids of the users it @-mentions, so it shows on their
  * profiles as well. A friends-only grunt is seen by its author and the people they follow.
  * Views is how many people (other than the author) have seen it.
+ *
+ * Two other kinds are stored the same way. A reply has `replyTo`, the grunt it answers;
+ * it's shown under that grunt, not in feeds, and whoever can see that grunt can see it.
+ * A regrunt has `regruntOf` and no message: it puts that grunt into the feeds of the
+ * regrunter's followers, as of when it was regrunted.
  */
 case class Grunt(
     id: String,
@@ -31,10 +36,21 @@ case class Grunt(
     mentions: Seq[String],
     createdAt: Long,
     friendsOnly: Boolean,
-    views: Int
+    views: Int,
+    replyTo: Option[String] = None,
+    regruntOf: Option[String] = None,
+    replyCount: Int = 0,
+    regruntCount: Int = 0
 )
 
-case class NewGrunt(authorId: String, message: String, mentions: Seq[String], createdAt: Long, friendsOnly: Boolean)
+case class NewGrunt(
+    authorId: String,
+    message: String,
+    mentions: Seq[String],
+    createdAt: Long,
+    friendsOnly: Boolean,
+    replyTo: Option[String] = None
+)
 
 /**
  * Someone reading grunts, as far as friends-only ones go: the authors whose friends-only

@@ -52,6 +52,12 @@ class ApiIntegrationSpec extends PlaySpec with BeforeAndAfterAll {
   private def signedIn[A](req: FakeRequest[A], s: Session): FakeRequest[A] =
     req.withSession(s.data.toSeq*).withCookies(app.injector.instanceOf[SessionCookieBaker].encodeAsCookie(s))
 
+  /** The grunts in a response: a feed page's, or a plain list's (Hot, replies). */
+  private def listOf(res: Future[Result]): Seq[JsValue] = contentAsJson(res) match {
+    case JsArray(list) => list.toSeq
+    case page => (page \ "grunts").as[JsArray].value.toSeq
+  }
+
   private def availability(h: String) = contentAsJson(call(GET, s"/api/handles/$h"))
 
   private def signUp(handle: String): Session = {
@@ -87,8 +93,8 @@ class ApiIntegrationSpec extends PlaySpec with BeforeAndAfterAll {
       status(call(POST, "/api/grunts", Some(Json.obj("message" -> "nope")))) mustBe UNAUTHORIZED
 
       // alice's profile has the grunt; bob's has it too, as a mention
-      contentAsJson(call(GET, "/api/users/alice/grunts")).as[JsArray].value must have size 1
-      contentAsJson(call(GET, "/api/users/bob/grunts")).as[JsArray].value must have size 1
+      listOf(call(GET, "/api/users/alice/grunts")) must have size 1
+      listOf(call(GET, "/api/users/bob/grunts")) must have size 1
       (contentAsJson(call(GET, "/api/users/alice")) \ "gruntCount").as[Int] mustBe 1
 
       // bob follows alice
@@ -99,13 +105,13 @@ class ApiIntegrationSpec extends PlaySpec with BeforeAndAfterAll {
       contentAsJson(call(GET, "/api/users/bob/following")).as[JsArray].value.map(u => (u \ "handle").as[String]) mustBe Seq("alice")
 
       // bob's home feed has alice's grunt
-      contentAsJson(call(GET, "/api/feed", None, Some(bob))).as[JsArray].value must have size 1
+      listOf(call(GET, "/api/feed", None, Some(bob))) must have size 1
 
       // only the author can delete it
       val gruntId = (contentAsJson(posted) \ "id").as[String]
       status(call(DELETE, s"/api/grunts/$gruntId", None, Some(bob))) mustBe FORBIDDEN
       status(call(DELETE, s"/api/grunts/$gruntId", None, Some(alice))) mustBe NO_CONTENT
-      contentAsJson(call(GET, "/api/users/alice/grunts")).as[JsArray].value mustBe empty
+      listOf(call(GET, "/api/users/alice/grunts")) mustBe empty
       status(call(POST, "/api/grunts", Some(Json.obj("message" -> "back again")), Some(alice))) mustBe CREATED
 
       // sign in with the password; wrong password refused
@@ -127,7 +133,7 @@ class ApiIntegrationSpec extends PlaySpec with BeforeAndAfterAll {
       await(mongo.grunts.insertOne(new Document("_id", oldGrunt).append("userId", alice.getObjectId("_id"))
         .append("message", "an old @bob grunt").append("timestamp", 1000L)).toFuture())
       await(mongo.users.updateOne(Filters.equal("handle", "bob"), push("grunts", oldGrunt)).toFuture())
-      contentAsJson(call(GET, "/api/users/bob/grunts")).as[JsArray].value.map(g => (g \ "id").as[String]) must contain(oldGrunt.toHexString)
+      listOf(call(GET, "/api/users/bob/grunts")).map(g => (g \ "id").as[String]) must contain(oldGrunt.toHexString)
     }
 
     "refuse sign-in for a while after too many wrong passwords" in {
@@ -150,7 +156,7 @@ class ApiIntegrationSpec extends PlaySpec with BeforeAndAfterAll {
       status(call(PUT, "/api/users/erin/follow", None, Some(dave))) mustBe OK
       status(call(PUT, "/api/users/dave/follow", None, Some(frank))) mustBe OK
 
-      def ids(res: Future[Result]) = contentAsJson(res).as[JsArray].value.map(g => (g \ "id").as[String]).toSeq
+      def ids(res: Future[Result]) = listOf(res).map(g => (g \ "id").as[String])
       ids(call(GET, "/api/users/dave/grunts", None, Some(dave))) must contain allOf (open, closed)
       ids(call(GET, "/api/users/dave/grunts", None, Some(erin))) must contain allOf (open, closed)
       ids(call(GET, "/api/users/dave/grunts", None, Some(frank))) mustBe Seq(open)
@@ -159,7 +165,7 @@ class ApiIntegrationSpec extends PlaySpec with BeforeAndAfterAll {
 
       def view(who: Session, gruntIds: String*) =
         status(call(POST, "/api/views", Some(Json.obj("ids" -> gruntIds)), Some(who))) mustBe NO_CONTENT
-      def views = contentAsJson(call(GET, "/api/users/dave/grunts", None, Some(dave))).as[JsArray].value
+      def views = listOf(call(GET, "/api/users/dave/grunts", None, Some(dave)))
         .map(g => (g \ "id").as[String] -> (g \ "views").as[Int]).toMap
       view(frank, open, closed) // frank can't see the friends-only one, so it isn't counted
       view(frank, open)         // a second look isn't another view
@@ -174,6 +180,72 @@ class ApiIntegrationSpec extends PlaySpec with BeforeAndAfterAll {
       ids(call(GET, "/api/hot", None, Some(erin))) must contain allOf (open, closed)
       ids(call(GET, "/api/hot", None, Some(erin))) must not contain unseen
       (availability("hot") \ "available").as[Boolean] mustBe false
+    }
+
+    "reply, regrunt, and change who sees a grunt after posting it" in {
+      assume(mongoUri.isDefined, "TEST_MONGO_URI is not set")
+      val ivy = signUp("ivy")
+      val jack = signUp("jack")
+      val kim = signUp("kim")
+      status(call(PUT, "/api/users/ivy/follow", None, Some(jack))) mustBe OK
+      status(call(PUT, "/api/users/jack/follow", None, Some(kim))) mustBe OK // kim follows jack, not ivy
+      def post(as: Session, message: String) =
+        (contentAsJson(call(POST, "/api/grunts", Some(Json.obj("message" -> message)), Some(as))) \ "id").as[String]
+      def grunt(id: String, as: Option[Session] = None) = call(GET, s"/api/grunts/$id", None, as)
+      def ids(res: Future[Result]) = listOf(res).map(g => (g \ "id").as[String])
+      val g = post(ivy, "the original")
+
+      // Replies: under the grunt, counted on it, never in feeds.
+      val r1 = call(POST, s"/api/grunts/$g/replies", Some(Json.obj("message" -> "first! @ivy")), Some(jack))
+      status(r1) mustBe CREATED
+      (contentAsJson(r1) \ "replyTo").as[String] mustBe g
+      status(call(POST, s"/api/grunts/$g/replies", Some(Json.obj("message" -> "second")), Some(kim))) mustBe CREATED
+      status(call(POST, s"/api/grunts/$g/replies", Some(Json.obj("message" -> "  ")), Some(kim))) mustBe BAD_REQUEST
+      status(call(POST, s"/api/grunts/${(contentAsJson(r1) \ "id").as[String]}/replies", Some(Json.obj("message" -> "deeper")), Some(kim))) mustBe BAD_REQUEST
+      listOf(call(GET, s"/api/grunts/$g/replies")).map(r => (r \ "html").as[String]) mustBe Seq(
+        """<p>first! <a href="/ivy">@ivy</a></p>""", "<p>second</p>")
+      (contentAsJson(grunt(g)) \ "replyCount").as[Int] mustBe 2
+      ids(call(GET, "/api/users/ivy/grunts")) mustBe Seq(g)
+      ids(call(GET, "/api/feed", None, Some(jack))) mustBe Seq(g)
+
+      // Regrunts: jack's puts ivy's grunt in kim's feed, marked as his; once each; not your own.
+      val rg = call(PUT, s"/api/grunts/$g/regrunt", None, Some(jack))
+      status(rg) mustBe OK
+      (contentAsJson(rg) \ "regruntedByMe").as[Boolean] mustBe true
+      status(call(PUT, s"/api/grunts/$g/regrunt", None, Some(jack))) mustBe OK
+      (contentAsJson(grunt(g)) \ "regruntCount").as[Int] mustBe 1
+      status(call(PUT, s"/api/grunts/$g/regrunt", None, Some(ivy))) mustBe BAD_REQUEST
+      val kimsFeed = listOf(call(GET, "/api/feed", None, Some(kim)))
+      kimsFeed.map(e => (e \ "id").as[String]) mustBe Seq(g)
+      (kimsFeed.head \ "regruntedBy" \ "handle").as[String] mustBe "jack"
+      ids(call(GET, "/api/users/jack/grunts")) mustBe Seq(g)
+      // jack follows ivy and regrunted her: it's in his feed once
+      ids(call(GET, "/api/feed", None, Some(jack))) mustBe Seq(g)
+      (contentAsJson(grunt(g, Some(kim))) \ "regruntedByMe").as[Boolean] mustBe false
+
+      // Friends only, after the fact: undoes the regrunts, and hides it and its replies from kim.
+      status(call(PATCH, s"/api/grunts/$g", Some(Json.obj("friendsOnly" -> true)), Some(jack))) mustBe FORBIDDEN
+      status(call(PUT, s"/api/users/jack/follow", None, Some(ivy))) mustBe OK // jack is ivy's friend
+      val closed = call(PATCH, s"/api/grunts/$g", Some(Json.obj("friendsOnly" -> true)), Some(ivy))
+      status(closed) mustBe OK
+      (contentAsJson(closed) \ "regruntCount").as[Int] mustBe 0
+      ids(call(GET, "/api/feed", None, Some(kim))) mustBe empty
+      status(grunt(g, Some(kim))) mustBe NOT_FOUND
+      status(call(GET, s"/api/grunts/$g/replies", None, Some(kim))) mustBe NOT_FOUND
+      status(call(POST, s"/api/grunts/$g/replies", Some(Json.obj("message" -> "hello?")), Some(kim))) mustBe NOT_FOUND
+      status(grunt(g, Some(jack))) mustBe OK
+      status(call(PUT, s"/api/grunts/$g/regrunt", None, Some(jack))) mustBe FORBIDDEN
+      status(call(PATCH, s"/api/grunts/$g", Some(Json.obj("friendsOnly" -> false)), Some(ivy))) mustBe OK
+      status(grunt(g, Some(kim))) mustBe OK
+
+      // Deleting a reply lowers the count; deleting the grunt takes its replies and regrunts with it.
+      val second = listOf(call(GET, s"/api/grunts/$g/replies")).last
+      status(call(DELETE, s"/api/grunts/${(second \ "id").as[String]}", None, Some(kim))) mustBe NO_CONTENT
+      (contentAsJson(grunt(g)) \ "replyCount").as[Int] mustBe 1
+      status(call(PUT, s"/api/grunts/$g/regrunt", None, Some(kim))) mustBe OK
+      status(call(DELETE, s"/api/grunts/$g", None, Some(ivy))) mustBe NO_CONTENT
+      status(grunt((contentAsJson(r1) \ "id").as[String])) mustBe NOT_FOUND
+      ids(call(GET, "/api/users/kim/grunts")) mustBe empty
     }
 
     "keep sessions on the server: sign-out, password changes and the session list end them" in {

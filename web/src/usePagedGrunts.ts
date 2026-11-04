@@ -1,23 +1,22 @@
 import { useCallback, useEffect, useState } from "react";
-import type { Grunt } from "./api.ts";
+import type { FeedPage, Grunt } from "./api.ts";
 
-const PAGE_SIZE = 50; // GruntService.PageSize
-
-/** A list of grunts that loads more on request and takes new ones at the top. */
-export function usePagedGrunts(load: ((before?: number) => Promise<Grunt[]>) | null) {
+/** A feed that loads more on request, takes new grunts at the top, and updates grunts in place. */
+export function usePagedGrunts(load: ((before?: number) => Promise<FeedPage>) | null) {
   const [grunts, setGrunts] = useState<Grunt[]>([]);
-  const [more, setMore] = useState(false);
+  const [next, setNext] = useState<number | undefined>();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!load) return;
     let live = true;
     setGrunts([]);
+    setNext(undefined);
     load()
       .then((page) => {
         if (!live) return;
-        setGrunts(page);
-        setMore(page.length === PAGE_SIZE);
+        setGrunts(page.grunts);
+        setNext(page.next);
       })
       .catch((e: unknown) => live && setError(e instanceof Error ? e.message : "Could not load grunts."));
     return () => {
@@ -26,15 +25,21 @@ export function usePagedGrunts(load: ((before?: number) => Promise<Grunt[]>) | n
   }, [load]);
 
   const loadMore = useCallback(async () => {
-    const last = grunts[grunts.length - 1];
-    if (!load || !last) return;
-    const page = await load(last.createdAt);
-    setGrunts((g) => [...g, ...page]);
-    setMore(page.length === PAGE_SIZE);
-  }, [grunts, load]);
+    if (!load || next === undefined) return;
+    const page = await load(next);
+    // A grunt regrunted again later can turn up on two pages; show it once.
+    setGrunts((list) => [...list, ...page.grunts.filter((g) => !list.some((x) => x.id === g.id))]);
+    setNext(page.next);
+  }, [load, next]);
 
   const prepend = useCallback((g: Grunt) => setGrunts((list) => [g, ...list]), []);
   const remove = useCallback((id: string) => setGrunts((list) => list.filter((g) => g.id !== id)), []);
+  /** A grunt changed (regrunted, replied to, made friends-only): keep how it came into this feed. */
+  const replace = useCallback(
+    (g: Grunt) =>
+      setGrunts((list) => list.map((x) => (x.id === g.id ? { ...g, regruntedBy: x.regruntedBy, feedAt: x.feedAt } : x))),
+    [],
+  );
 
-  return { grunts, more, error, loadMore, prepend, remove };
+  return { grunts, more: next !== undefined, error, loadMore, prepend, remove, replace };
 }

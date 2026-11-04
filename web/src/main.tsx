@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router";
 import { Layout } from "./components/Layout.tsx";
 import { HomePage } from "./pages/HomePage.tsx";
+import { GruntPage } from "./pages/GruntPage.tsx";
 import { HotPage } from "./pages/HotPage.tsx";
 import { SettingsPage } from "./pages/SettingsPage.tsx";
 import { SignInPage } from "./pages/SignInPage.tsx";
@@ -27,6 +28,7 @@ createRoot(document.getElementById("root")!).render(
             <Route path=":handle" element={<ProfilePage tab="grunts" />} />
             <Route path=":handle/following" element={<ProfilePage tab="following" />} />
             <Route path=":handle/followers" element={<ProfilePage tab="followers" />} />
+            <Route path=":handle/grunts/:id" element={<GruntPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

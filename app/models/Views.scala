@@ -30,9 +30,32 @@ object AuthorView {
   given OWrites[AuthorView] = Json.writes[AuthorView]
 }
 
-/** A grunt ready to show: the message already rendered to safe HTML. */
-case class GruntView(id: String, author: AuthorView, html: String, createdAt: Long, friendsOnly: Boolean, views: Int)
+/**
+ * A grunt ready to show: the message already rendered to safe HTML. In a feed, regruntedBy
+ * is who put it there, and feedAt is when it arrived there (posted, or regrunted).
+ */
+case class GruntView(
+    id: String,
+    author: AuthorView,
+    html: String,
+    createdAt: Long,
+    friendsOnly: Boolean,
+    views: Int,
+    replyTo: Option[String],
+    replyCount: Int,
+    regruntCount: Int,
+    regruntedByMe: Boolean,
+    regruntedBy: Option[AuthorView],
+    feedAt: Long
+)
 
 object GruntView {
   given OWrites[GruntView] = Json.writes[GruntView]
+}
+
+/** One page of a feed. next is the `before` that fetches the page after, if there is one. */
+case class FeedPage(grunts: Seq[GruntView], next: Option[Long])
+
+object FeedPage {
+  given OWrites[FeedPage] = Json.writes[FeedPage]
 }

@@ -31,14 +31,27 @@ trait UserRepository {
 trait GruntRepository {
   def create(grunt: NewGrunt): Future[Grunt]
   def findById(id: String): Future[Option[Grunt]]
+  /** Any order; leaves out the ones the reader may not see. */
+  def findByIds(ids: Seq[String], reader: Reader): Future[Seq[Grunt]]
+  /** Deletes the grunt, and with it its replies and regrunts. */
   def delete(id: String): Future[Unit]
   /**
-   * Newest first: grunts by any of the authors or mentioning the user, older than `before`.
-   * Like every list here, it leaves out friends-only grunts the reader may not see.
+   * Newest first, older than `before`: grunts and regrunts by any of the authors, and
+   * grunts mentioning the user. No replies. Like every list here, it leaves out
+   * friends-only grunts the reader may not see.
    */
   def timeline(authorIds: Seq[String], mentioning: Option[String], before: Option[Long], limit: Int, reader: Reader): Future[Seq[Grunt]]
-  /** Newest first: grunts posted after `since` that at least one person has viewed. */
-  def viewedSince(since: Long, limit: Int, reader: Reader): Future[Seq[Grunt]]
+  /** Newest first: grunts (not replies) posted after `since` that someone has seen, answered or regrunted. */
+  def activeSince(since: Long, limit: Int, reader: Reader): Future[Seq[Grunt]]
+  /** Oldest first. */
+  def replies(gruntId: String, limit: Int): Future[Seq[Grunt]]
+  /** Once per person; regrunting again changes nothing. */
+  def regrunt(userId: String, gruntId: String, at: Long): Future[Unit]
+  def unregrunt(userId: String, gruntId: String): Future[Unit]
+  /** Which of the grunts the user has regrunted. */
+  def regruntedBy(userId: String, gruntIds: Seq[String]): Future[Set[String]]
+  /** Making a grunt friends-only also undoes its regrunts, which would show it to others. */
+  def setFriendsOnly(gruntId: String, friendsOnly: Boolean): Future[Unit]
   /** Counts a view of each grunt by the viewer: once per person, and never by the author. */
   def recordViews(ids: Seq[String], viewerId: String, reader: Reader): Future[Unit]
   /** Number of grunts each user has written. Users with none are left out. */

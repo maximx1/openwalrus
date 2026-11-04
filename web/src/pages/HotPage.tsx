@@ -26,6 +26,7 @@ export function HotPage() {
             grunts={grunts}
             more={false}
             onMore={() => {}}
+            onChanged={(g) => setGrunts((list) => list && list.map((x) => (x.id === g.id ? g : x)))}
             onDeleted={(g) => setGrunts((list) => list && list.filter((x) => x.id !== g.id))}
           />
         ))}

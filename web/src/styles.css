@@ -433,13 +433,6 @@ main {
   white-space: nowrap;
 }
 
-button.friends-toggle.on,
-button.friends-toggle.on:hover:not(:disabled) {
-  color: white;
-  border-color: transparent;
-  background: linear-gradient(to right, var(--blue), var(--teal));
-}
-
 @media (max-width: 480px) {
   .composer-actions {
     flex-wrap: wrap;
@@ -449,22 +442,68 @@ button.friends-toggle.on:hover:not(:disabled) {
   }
 }
 
+/* No overflow clipping here (a grunt's ⋯ menu hangs over the edge); the ends are rounded instead. */
 .grunts {
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  overflow: hidden;
   background: var(--card);
 }
 
+.grunts > :first-child {
+  border-top-left-radius: var(--radius);
+  border-top-right-radius: var(--radius);
+}
+
+.grunts > :last-child {
+  border-bottom-left-radius: var(--radius);
+  border-bottom-right-radius: var(--radius);
+  border-bottom: 0;
+}
+
 .grunt {
-  display: flex;
-  gap: 0.6em;
   padding: 0.7em;
   border-bottom: 1px solid var(--border);
+  cursor: pointer;
 }
 
 .grunt:hover {
-  background: #f7f7f7;
+  background: #f9f9f9;
+}
+
+.grunt.focused {
+  cursor: auto;
+}
+
+.grunt.focused:hover {
+  background: none;
+}
+
+.grunt.focused .grunt-message {
+  font-size: 1.15em;
+}
+
+.grunt-row {
+  display: flex;
+  gap: 0.6em;
+}
+
+.regrunted-by {
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+  margin: 0 0 0.35em 3.8em;
+  font-size: 0.8em;
+  color: var(--muted);
+}
+
+.regrunted-by a {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.regrunted-by a:hover {
+  text-decoration: underline;
 }
 
 .avatar {
@@ -476,15 +515,50 @@ button.friends-toggle.on:hover:not(:disabled) {
   object-fit: cover;
 }
 
+.avatar.small {
+  width: 2.4em;
+  height: 2.4em;
+}
+
 .grunt-body {
   min-width: 0;
   flex: 1;
 }
 
-.grunt-meta time {
-  float: right;
+.grunt-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35em;
+  min-width: 0;
+}
+
+.grunt-meta .name {
+  white-space: nowrap;
+}
+
+.grunt-meta .handle {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.grunt-corner {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.15em;
+  flex: none;
+}
+
+.grunt-time {
   color: var(--muted);
   font-size: 0.85em;
+  text-decoration: none;
+}
+
+.grunt-time:hover {
+  text-decoration: underline;
 }
 
 .grunt-message {
@@ -519,13 +593,48 @@ button.friends-toggle.on:hover:not(:disabled) {
   padding: 0.5em;
 }
 
-.grunt-foot {
+/* ---- reply, regrunt, share ---- */
+
+.grunt-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.4em;
+  margin-top: 0.45em;
+  font-size: 0.8em;
+  color: var(--muted);
+}
+
+button.action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0;
+  background: none;
+  color: var(--muted);
+  font-weight: normal;
+  transition: color 0.2s ease;
+}
+
+button.action:hover:not(:disabled) {
+  color: var(--blue);
+}
+
+button.action.regrunt.on,
+button.action.regrunt.on:hover:not(:disabled) {
+  color: var(--teal);
+  font-weight: 600;
+}
+
+button.action:disabled {
+  opacity: 0.45;
+}
+
+.grunt-stats {
+  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 0.8em;
-  margin-top: 0.3em;
-  font-size: 0.8em;
-  color: var(--muted);
+  white-space: nowrap;
 }
 
 .grunt-friends {
@@ -535,30 +644,187 @@ button.friends-toggle.on:hover:not(:disabled) {
   padding: 0 0.6em;
 }
 
-.grunt-delete {
+@media (max-width: 480px) {
+  .grunt-actions {
+    gap: 1em;
+  }
+  .grunt-stats .grunt-friends {
+    display: none; /* the ⋯ menu still says so */
+  }
+}
+
+/* ---- the ⋯ menu: shown on hover (always on touch screens), the time always ---- */
+
+.grunt-menu {
+  position: relative;
+  display: flex;
+}
+
+button.dots {
+  display: inline-flex;
+  padding: 0.1em 0.25em;
   background: none;
   color: var(--muted);
-  font-weight: normal;
-  font-size: inherit;
-  padding: 0;
-  margin-left: auto;
-  visibility: hidden;
+  border-radius: var(--radius);
+  /* Faded out rather than hidden, so it still takes a click (or a tap) where it sits. */
+  opacity: 0;
+  transition: opacity 0.15s ease;
 }
 
-.grunt:hover .grunt-delete,
-.grunt-delete:focus-visible {
-  visibility: visible;
+.grunt-row:hover button.dots,
+button.dots:focus-visible,
+button.dots[aria-expanded="true"] {
+  opacity: 1;
 }
 
-.grunt-delete:hover:not(:disabled) {
-  background: none;
-  color: #c0392b;
+button.dots:hover:not(:disabled),
+button.dots[aria-expanded="true"] {
+  background: var(--bg);
+  color: var(--text);
 }
 
 @media (hover: none) {
-  .grunt-delete {
-    visibility: visible;
+  button.dots {
+    opacity: 1;
   }
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 0.3em);
+  right: 0;
+  z-index: 10;
+  min-width: 12em;
+  padding: 0.3em 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.12);
+  font-size: 0.9rem;
+}
+
+.menu button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+  width: 100%;
+  padding: 0.55em 0.9em;
+  background: none;
+  color: var(--text);
+  font-weight: normal;
+  text-align: left;
+  border-radius: 0;
+}
+
+.menu button:hover:not(:disabled) {
+  background: var(--bg);
+}
+
+.menu button.danger {
+  color: #c0392b;
+}
+
+/* ---- an on/off switch, in the header's colours when on ---- */
+
+.switch {
+  position: relative;
+  flex: none;
+  display: inline-block;
+  width: 2.1em;
+  height: 1.2em;
+  border-radius: 999px;
+  background: #c9ced6;
+  transition: background-color 0.25s ease;
+}
+
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 0.15em;
+  left: 0.15em;
+  width: 0.9em;
+  height: 0.9em;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
+  transition: translate 0.25s ease;
+}
+
+.switch.on {
+  background: linear-gradient(to right, var(--blue), var(--teal));
+}
+
+.switch.on::after {
+  translate: 0.9em 0;
+}
+
+button.switch-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  padding: 0.5em 0.4em;
+  background: none;
+  color: var(--muted);
+  font-weight: normal;
+}
+
+button.switch-button[aria-checked="true"] {
+  color: var(--text);
+}
+
+/* ---- replies ---- */
+
+.grunt-replies {
+  margin: 0.6em 0 0 3.8em;
+  cursor: auto;
+}
+
+.grunt-replies .reply {
+  padding: 0.5em 0;
+  border-top: 1px solid var(--border);
+}
+
+.see-conversation {
+  display: block;
+  margin: 0.3em 0 0.6em;
+  font-size: 0.85em;
+}
+
+.reply {
+  padding: 0.6em 0.7em;
+  border-bottom: 1px solid var(--border);
+  scroll-margin: 4em;
+  transition: background-color 1s ease;
+}
+
+.reply.highlight {
+  background: color-mix(in srgb, var(--teal) 10%, white);
+}
+
+.composer.compact {
+  padding: 0.6em;
+  margin: 0.4em 0;
+}
+
+.composer.compact textarea {
+  min-height: 3.2em;
+}
+
+.grunt-page .back {
+  color: var(--blue);
+  margin-bottom: 0.8em;
+}
+
+.replies-title {
+  margin: 1.2em 0 0.6em;
+  font-size: 1em;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.grunt-page .composer {
+  margin-bottom: 0.8em;
 }
 
 .end-of-grunts {
