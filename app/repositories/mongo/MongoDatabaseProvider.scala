@@ -4,7 +4,7 @@ import javax.inject.{Inject, Singleton}
 
 import com.mongodb.ConnectionString
 import org.bson.Document
-import org.mongodb.scala.{MongoClient, MongoCollection, MongoDatabase, ObservableFuture, SingleObservableFuture}
+import org.mongodb.scala.{MongoClient, MongoCollection, MongoDatabase, SingleObservableFuture}
 import org.mongodb.scala.model.Indexes
 import play.api.inject.ApplicationLifecycle
 import play.api.{Configuration, Logging}

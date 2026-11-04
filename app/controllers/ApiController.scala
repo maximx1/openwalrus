@@ -50,7 +50,7 @@ class ApiController @Inject() (
       case None => Future.successful(NotFound(error(s"There is no @$handle here.")))
     }
 
-  private def signedInAs(user: User, result: Result)(using RequestHeader): Result =
+  private def signedInAs(user: User, result: Result): Result =
     result.withSession(SessionKey -> user.id)
 
   // ---- health and session ----
@@ -63,12 +63,12 @@ class ApiController @Inject() (
     }
   }
 
-  def session: Action[AnyContent] = Viewer.async { implicit request =>
+  def session: Action[AnyContent] = Viewer.async { request =>
     val me = request.viewer.fold(Future.successful(JsNull: JsValue))(u => accounts.view(u, Some(u.id)).map(Json.toJson(_)))
     me.map(user => Ok(Json.obj("user" -> user, "allowRegistration" -> allowRegistration)))
   }
 
-  def signIn: Action[AnyContent] = Action.async { implicit request =>
+  def signIn: Action[AnyContent] = Action.async { request =>
     withJson[SignIn](request) { form =>
       if (throttle.blocked(form.handle))
         Future.successful(TooManyRequests(error("Too many wrong passwords for that handle. Try again in a few minutes.")))
@@ -85,7 +85,7 @@ class ApiController @Inject() (
 
   def signOut: Action[AnyContent] = Action { NoContent.withNewSession }
 
-  def signUp: Action[AnyContent] = Action.async { implicit request =>
+  def signUp: Action[AnyContent] = Action.async { request =>
     if (!allowRegistration) Future.successful(Forbidden(error("Sign-ups are closed here.")))
     else withJson[SignUp](request) { form =>
       accounts.signUp(form).flatMap {
