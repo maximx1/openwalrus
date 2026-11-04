@@ -521,10 +521,12 @@ button.end-of-grunts:hover:not(:disabled) {
   --orb-b: #8a97a6;
   position: relative;
   flex: none;
-  width: 1.6em;
-  height: 1.6em;
+  /* Whole pixels, and clipped with an exact circle: a clip box rounded to whole pixels
+     while the corners were drawn at a fractional size flattened the ball on all four sides. */
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  overflow: hidden;
+  clip-path: circle(50%);
   isolation: isolate;
   background: var(--orb-b);
   /* no glow outside; an even rim of shade inside, so it reads as round without a crescent */
@@ -621,8 +623,8 @@ button.end-of-grunts:hover:not(:disabled) {
     radial-gradient(circle at 42.8% 27.9%, var(--orb-a) 0 4.0%, transparent 5.8%),
     radial-gradient(circle at 46.1% 25.2%, var(--orb-a) 0 4.4%, transparent 6.4%);
   animation:
-    orb-turn 150s linear infinite,
-    orb-breathe 37s ease-in-out infinite alternate;
+    orb-turn 110s linear infinite,
+    orb-breathe 28s ease-in-out infinite alternate;
 }
 
 /* turns the other way about a point 1.3 balls to the right */
@@ -662,8 +664,8 @@ button.end-of-grunts:hover:not(:disabled) {
     radial-gradient(circle at 40.4% 28.5%, color-mix(in srgb, var(--orb-a) 70%, white) 0 3.5%, transparent 5.3%),
     radial-gradient(circle at 43.8% 20.6%, color-mix(in srgb, var(--orb-a) 70%, white) 0 4.9%, transparent 7.3%);
   animation:
-    orb-turn 210s linear infinite reverse,
-    orb-breathe 29s ease-in-out infinite alternate-reverse;
+    orb-turn 155s linear infinite reverse,
+    orb-breathe 22s ease-in-out infinite alternate-reverse;
 }
 
 /* a faint highlight, so it reads as glass */
