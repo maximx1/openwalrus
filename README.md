@@ -4,8 +4,10 @@ OpenWalrus
 A small, self-hosted Twitter for a group of friends, in the spirit of the early one: sign
 up, post short messages ("grunts", in Markdown, with pictures and videos), mention people
 with `@handle`, follow each other, and read a feed of the people you follow. Grunts can be
-replied to and regrunted, kept to your friends (the people you follow), and the ones
-getting the most attention this week are on the Hot page.
+replied to and regrunted, kept to your friends (the people you follow), and embedded on
+other web pages. Each grunt's Stats show its views (signed in, not signed in, and from
+which sites it's embedded on), and the ones getting the most attention this week are on
+the Hot page.
 
 Started in 2015 on Play 2.4; brought up to date in 2026.
 

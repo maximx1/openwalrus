@@ -5,6 +5,7 @@ import org.scalatestplus.play.PlaySpec
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.*
+import play.api.libs.json.Json.JsValueWrapper
 import play.api.mvc.{Result, Session, SessionCookieBaker}
 import play.api.test.{FakeRequest, TestServer}
 import play.api.test.Helpers.*
@@ -173,7 +174,27 @@ class ApiIntegrationSpec extends PlaySpec with BeforeAndAfterAll {
       views mustBe Map(open -> 1, closed -> 0)
       view(erin, closed)
       views mustBe Map(open -> 1, closed -> 1)
-      status(call(POST, "/api/views", Some(Json.obj("ids" -> Seq(open))))) mustBe UNAUTHORIZED
+      status(call(POST, "/api/views", Some(Json.obj("ids" -> Seq(open))))) mustBe BAD_REQUEST // signed out, no visitor id
+
+      // Signed out, by visitor id: once each, and only grunts anyone may see. Embeds say where.
+      def seenBy(visitor: String, more: (String, JsValueWrapper)*) = {
+        val fields = Seq[(String, JsValueWrapper)]("ids" -> Seq(open, closed), "visitor" -> visitor) ++ more
+        status(call(POST, "/api/views", Some(Json.obj(fields*)))) mustBe NO_CONTENT
+      }
+      seenBy("visitor-one-0123456789")
+      seenBy("visitor-one-0123456789")
+      seenBy("visitor-two-0123456789", "embed" -> true, "site" -> "WWW.Example.com")
+      seenBy("visitor-three-012345678", "embed" -> true, "site" -> "<script>")
+      seenBy("visitor-four-0123456789", "embed" -> true, "site" -> "example.com")
+      status(call(POST, "/api/views", Some(Json.obj("ids" -> Seq(open), "visitor" -> "short")))) mustBe BAD_REQUEST
+      // an embed is counted by visitor even when the session comes along, but never the author's
+      status(call(POST, "/api/views", Some(Json.obj("ids" -> Seq(open), "visitor" -> "dave-himself-0123456", "embed" -> true)), Some(dave))) mustBe NO_CONTENT
+      views mustBe Map(open -> 5, closed -> 1)
+      val stats = contentAsJson(call(GET, s"/api/grunts/$open/stats"))
+      (stats \ "signedInViews").as[Int] mustBe 1
+      (stats \ "anonymousViews").as[Int] mustBe 4
+      (stats \ "embedViews").as[Int] mustBe 3
+      (stats \ "embeds").as[JsArray] mustBe Json.arr(Json.obj("site" -> "example.com", "views" -> 2), Json.obj("site" -> "", "views" -> 1))
 
       val unseen = post("nobody has looked", friendsOnly = false)
       ids(call(GET, "/api/hot")) mustBe Seq(open)
@@ -309,6 +330,16 @@ class ApiIntegrationSpec extends PlaySpec with BeforeAndAfterAll {
       status(call(POST, "/api/session", Some(Json.obj("handle" -> "oldtimer", "password" -> "short1")))) mustBe OK
       await(mongo.users.find(Filters.equal("handle", "oldtimer")).head()).getString("password") must startWith("$argon2id$")
       status(call(POST, "/api/session", Some(Json.obj("handle" -> "oldtimer", "password" -> "short1")))) mustBe OK
+    }
+
+    "let other sites frame /embed, and nothing else" in {
+      assume(mongoUri.isDefined, "TEST_MONGO_URI is not set")
+      val embed = route(app, FakeRequest(GET, "/embed/6aeb3377726319dc659be286")).get
+      header("Content-Security-Policy", embed).get must include("frame-ancestors *")
+      header("Content-Security-Policy", embed).get must include("script-src 'self'")
+      val page = route(app, FakeRequest(GET, "/someone")).get
+      header("Content-Security-Policy", page).get must include("frame-ancestors 'none'")
+      header("X-Frame-Options", page) mustBe None
     }
 
     "store a video and serve it in byte ranges, from any chunk" in {

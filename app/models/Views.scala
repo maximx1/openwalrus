@@ -67,8 +67,25 @@ object MediaView {
   given OWrites[MediaView] = Json.writes[MediaView]
 }
 
+/** A site a grunt is embedded on ("" when the browser didn't say), and the views from there. */
+case class EmbedSite(site: String, views: Int)
+
+object EmbedSite {
+  given OWrites[EmbedSite] = Json.writes[EmbedSite]
+}
+
 /** The numbers behind a grunt, for its Stats dialog. */
-case class GruntStats(views: Int, replies: Int, regrunts: Int, characters: Int, media: Seq[MediaView])
+case class GruntStats(
+    views: Int,
+    signedInViews: Int,
+    anonymousViews: Int,
+    embedViews: Int,
+    embeds: Seq[EmbedSite],
+    replies: Int,
+    regrunts: Int,
+    characters: Int,
+    media: Seq[MediaView]
+)
 
 object GruntStats {
   given OWrites[GruntStats] = Json.writes[GruntStats]

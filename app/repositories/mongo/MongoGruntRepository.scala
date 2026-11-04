@@ -17,6 +17,9 @@ import org.mongodb.scala.model.UpdateOptions
 import org.mongodb.scala.model.Updates.{addToSet, combine, inc, set, setOnInsert}
 import repositories.GruntRepository
 
+import java.nio.charset.StandardCharsets.UTF_8
+import java.security.MessageDigest
+
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters.*
 
@@ -29,6 +32,7 @@ class MongoGruntRepository @Inject() (mongo: MongoDatabaseProvider)(using ec: Ex
   import MongoGruntRepository.*
 
   private val coll = mongo.grunts
+  private val anonymousViews = mongo.anonymousViews
 
   def create(grunt: NewGrunt): Future[Grunt] = {
     val parent = grunt.replyTo.flatMap(Ids.parse)
@@ -61,6 +65,8 @@ class MongoGruntRepository @Inject() (mongo: MongoDatabaseProvider)(using ec: Ex
         case None => Future.unit
         case Some(d) =>
           for {
+            replies <- coll.find(equal("replyTo", oid)).projection(include("_id")).toFuture()
+            _ <- anonymousViews.deleteMany(in("gruntId", (oid +: replies.map(_.getObjectId("_id")))*)).toFuture()
             _ <- coll.deleteMany(or(equal("_id", oid), equal("replyTo", oid), equal("regruntOf", oid))).toFuture()
             _ <- Option(d.getObjectId("replyTo")).fold(Future.unit)(bump(_, "replyCount", -1))
             _ <- Option(d.getObjectId("regruntOf")).fold(Future.unit)(bump(_, "regruntCount", -1))
@@ -81,7 +87,7 @@ class MongoGruntRepository @Inject() (mongo: MongoDatabaseProvider)(using ec: Ex
   }
 
   def activeSince(since: Long, limit: Int, reader: Reader): Future[Seq[Grunt]] = {
-    val noticed = or(exists("viewedBy.0"), gt("replyCount", 0), gt("regruntCount", 0))
+    val noticed = or(exists("viewedBy.0"), gt("anonViews", 0), gt("replyCount", 0), gt("regruntCount", 0))
     coll.find(and(gt("timestamp", since), exists("replyTo", false), exists("regruntOf", false), noticed, visibleTo(reader)))
       .projection(Fields).sort(descending("timestamp")).limit(limit).toFuture().map(_.map(fromDocument))
   }
@@ -138,6 +144,37 @@ class MongoGruntRepository @Inject() (mongo: MongoDatabaseProvider)(using ec: Ex
       coll.updateMany(filter, addToSet("viewedBy", viewer)).toFuture().map(_ => ())
     }
 
+  // Each anonymous view is a document whose id is a hash of the grunt and the visitor's id,
+  // so inserting it again fails and nothing is counted twice; the grunt keeps the counts.
+  def recordAnonymousViews(ids: Seq[String], visitor: String, site: Option[String], exceptAuthor: Option[String], at: Long): Future[Unit] = {
+    val oids = ids.flatMap(Ids.parse)
+    val notTheAuthor = exceptAuthor.flatMap(Ids.parse).map(notEqual("userId", _)).toSeq
+    if (oids.isEmpty) Future.unit
+    else
+      coll.find(and((Seq(in("_id", oids*), exists("regruntOf", false), visibleTo(Reader.SignedOut)) ++ notTheAuthor)*))
+        .projection(include("_id")).toFuture().flatMap { found =>
+          Future.sequence(found.map(_.getObjectId("_id")).map { g =>
+            val view = new Document("_id", viewKey(g, visitor)).append("gruntId", g).append("at", at)
+            site.foreach(view.append("site", _))
+            val counts = inc("anonViews", 1) +: site.map(_ => inc("embedViews", 1)).toSeq
+            anonymousViews.insertOne(view).toFuture()
+              .flatMap(_ => coll.updateOne(equal("_id", g), combine(counts*)).toFuture())
+              .map(_ => ())
+              .recover { case e: MongoWriteException if e.getError.getCategory == DUPLICATE_KEY => () }
+          }).map(_ => ())
+        }
+  }
+
+  def embedSites(gruntId: String, limit: Int): Future[Seq[(String, Int)]] =
+    Ids.parse(gruntId).fold(Future.successful(Seq.empty[(String, Int)])) { oid =>
+      anonymousViews.aggregate(Seq(
+        Aggregates.filter(and(equal("gruntId", oid), exists("site"))),
+        Aggregates.group("$site", sum("views", 1)),
+        Aggregates.sort(descending("views")),
+        Aggregates.limit(limit)
+      )).toFuture().map(_.map(d => d.getString("_id") -> d.getInteger("views").intValue))
+    }
+
   /** Grunts and replies; a regrunt isn't something its regrunter wrote. */
   def countByAuthor(): Future[Map[String, Int]] =
     coll.aggregate(Seq(Aggregates.filter(exists("regruntOf", false)), Aggregates.group("$userId", sum("count", 1)))).toFuture().map { docs =>
@@ -178,6 +215,12 @@ object MongoGruntRepository {
     .append("replyCount", 1)
     .append("regruntCount", 1)
     .append("views", new Document("$size", new Document("$ifNull", java.util.List.of[Object]("$viewedBy", java.util.List.of()))))
+    .append("anonViews", 1)
+    .append("embedViews", 1)
+
+  /** Not the visitor's id itself, which stays in their browser. */
+  def viewKey(gruntId: ObjectId, visitor: String): String =
+    MessageDigest.getInstance("SHA-256").digest(s"${gruntId.toHexString}:$visitor".getBytes(UTF_8)).map("%02x".format(_)).mkString
 
   def fromDocument(d: Document): Grunt = Grunt(
     id = d.getObjectId("_id").toHexString,
@@ -186,10 +229,12 @@ object MongoGruntRepository {
     mentions = Ids.list(d, "mentions"),
     createdAt = Ids.long(d, "timestamp"),
     friendsOnly = d.getBoolean("friendsOnly", false),
-    views = Ids.long(d, "views").toInt,
+    signedInViews = Ids.long(d, "views").toInt,
     replyTo = Option(d.getObjectId("replyTo")).map(_.toHexString),
     regruntOf = Option(d.getObjectId("regruntOf")).map(_.toHexString),
     replyCount = math.max(0L, Ids.long(d, "replyCount")).toInt,
-    regruntCount = math.max(0L, Ids.long(d, "regruntCount")).toInt
+    regruntCount = math.max(0L, Ids.long(d, "regruntCount")).toInt,
+    anonymousViews = Ids.long(d, "anonViews").toInt,
+    embedViews = Ids.long(d, "embedViews").toInt
   )
 }

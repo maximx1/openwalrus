@@ -722,9 +722,14 @@ button.dots[aria-expanded="true"] {
   color: #c0392b;
 }
 
-/* ---- a grunt's Stats dialog ---- */
+.menu button:disabled {
+  color: var(--muted);
+  opacity: 0.6;
+}
 
-dialog.stats-dialog {
+/* ---- dialogs: a grunt's Stats and Embed ---- */
+
+dialog.dialog {
   width: min(24em, calc(100vw - 32px));
   max-height: calc(100vh - 32px);
   padding: 0;
@@ -736,60 +741,109 @@ dialog.stats-dialog {
   cursor: auto;
 }
 
-dialog.stats-dialog::backdrop {
+dialog.dialog.wide {
+  width: min(36em, calc(100vw - 32px));
+}
+
+dialog.dialog::backdrop {
   background: rgb(0 0 0 / 0.35);
 }
 
-.stats-box {
+.dialog-box {
   padding: 0.9em 1.1em 1.1em;
 }
 
-.stats-box header {
+.dialog-box header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 0.6em;
 }
 
-.stats-box h2 {
+.dialog-box h2 {
   margin: 0;
   font-size: 1.05em;
 }
 
-.stats-box h3 {
+.dialog-box h3 {
   margin: 1em 0 0.4em;
   font-size: 0.9em;
   color: var(--muted);
   font-weight: 600;
 }
 
-.stats-box button.close {
+.dialog-box button.close {
   display: inline-flex;
   padding: 0.3em;
   background: none;
   color: var(--muted);
 }
 
-.stats-box button.close:hover {
+.dialog-box button.close:hover {
   background: var(--bg);
   color: var(--text);
 }
 
-.stats-box dl {
+.dialog-box dl {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 0.35em 1.2em;
   margin: 0;
 }
 
-.stats-box dt {
+.dialog-box dt {
   color: var(--muted);
 }
 
-.stats-box dd {
+.dialog-box dd {
   margin: 0;
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+
+/* the breakdown under Views */
+.dialog-box .sub {
+  font-size: 0.88em;
+}
+
+.dialog-box dt.sub {
+  padding-left: 1em;
+}
+
+.dialog-box dd.sub {
+  color: var(--muted);
+}
+
+.dialog-box dt.site {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.dialog-box p.hint {
+  margin: 0 0 0.6em;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5em;
+}
+
+textarea.embed-code {
+  width: 100%;
+  resize: none;
+  padding: 0.5em;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font: 0.8em/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--text);
+  background: var(--bg);
+}
+
+.embed-preview {
+  display: block;
+  width: 100%;
+  border: 0;
 }
 
 .stats-media {

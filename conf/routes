@@ -41,5 +41,8 @@ GET     /api/videos/:id                     controllers.ApiController.video(id: 
 
 # The built web client: its hashed bundles, then everything else falls through to index.html.
 GET     /assets/*file                       controllers.Assets.at(path="/public/assets", file)
+# A grunt for other sites to put in an iframe; it sets its own CSP, which allows that.
++ nocsp
+GET     /embed/:id                          controllers.FrontendController.embed(id: String)
 GET     /                                   controllers.FrontendController.index
 GET     /*path                              controllers.FrontendController.route(path)

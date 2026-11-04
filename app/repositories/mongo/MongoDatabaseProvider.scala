@@ -31,6 +31,7 @@ class MongoDatabaseProvider @Inject() (config: Configuration, lifecycle: Applica
   val grunts: MongoCollection[Document] = collection("grunts")
   val imageSets: MongoCollection[Document] = collection("imageset")
   val sessions: MongoCollection[Document] = collection("sessions")
+  val anonymousViews: MongoCollection[Document] = collection("anonviews")
 
   // Idempotent, and Mongo builds them in the background. A failure is logged rather than
   // stopping the app, so it still starts while the database is briefly unreachable.
@@ -45,6 +46,7 @@ class MongoDatabaseProvider @Inject() (config: Configuration, lifecycle: Applica
       Indexes.ascending("userId", "regruntOf"),
       IndexOptions().unique(true).partialFilterExpression(org.mongodb.scala.model.Filters.exists("regruntOf")).name("one_regrunt_each")
     ).toFuture(),
+    anonymousViews.createIndex(Indexes.ascending("gruntId", "site")).toFuture(),
     sessions.createIndex(Indexes.ascending("tokenHash"), IndexOptions().unique(true)).toFuture(),
     sessions.createIndex(Indexes.ascending("userId")).toFuture(),
     // Mongo deletes a session about a minute after it ends; SessionService ignores it before then.

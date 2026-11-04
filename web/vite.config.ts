@@ -8,6 +8,10 @@ export default defineConfig({
   build: {
     outDir: "../public",
     emptyOutDir: true,
+    rollupOptions: {
+      // The app, and the small page other sites embed (served at /embed/:id).
+      input: { main: "index.html", embed: "embed.html" },
+    },
   },
   server: {
     port: 5173,

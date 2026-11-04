@@ -24,6 +24,9 @@ class HotScoreSpec extends PlaySpec {
       score(grunt(5, 0, replies = 1)) must be > score(grunt(5, 1))
       score(grunt(5, 0, regrunts = 1)) must be > score(grunt(5, 0, replies = 1))
     }
+    "count views by people who weren't signed in like any other" in {
+      score(grunt(5, 0).copy(anonymousViews = 3)) mustBe score(grunt(5, 3))
+    }
     "be nothing without views" in {
       score(grunt(0, 0)) mustBe 0.0
     }

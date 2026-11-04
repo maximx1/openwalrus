@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { api, gruntPath, imageUrl, videoUrl, type Grunt, type GruntStats, type MediaStats } from "../api.ts";
+import { api, embedPath, gruntPath, imageUrl, videoUrl, type Grunt, type GruntStats, type MediaStats } from "../api.ts";
 import { useSession } from "../session.tsx";
 import { watchForView } from "../views.ts";
-import { CloseIcon, DotsIcon, RegruntIcon, ReplyIcon, ShareIcon, Switch } from "./Icons.tsx";
+import { Dialog } from "./Dialog.tsx";
+import { DotsIcon, RegruntIcon, ReplyIcon, ShareIcon, Switch } from "./Icons.tsx";
 
 const MAX_LENGTH = 1000;
 const MB = 1024 * 1024;
@@ -71,8 +72,8 @@ export function GruntItem({ grunt, onChanged, onDeleted, focused = false, onRepl
   const mine = user?.id === author.id;
   const element = useRef<HTMLElement>(null);
 
-  // Signed-in readers' views count; your own don't.
-  const watch = user !== null && !mine;
+  // Everyone's views count (signed out, by a visitor id); your own don't.
+  const watch = !mine;
   useEffect(() => (watch && element.current ? watchForView(element.current, grunt.id) : undefined), [watch, grunt.id]);
 
   function open(e: React.MouseEvent) {
@@ -253,13 +254,13 @@ async function shareGrunt(grunt: Grunt): Promise<string | null> {
   }
 }
 
-/** The ⋯ menu: who can see it (the author's switch), its stats, the link, and Delete for the author. */
+/** The ⋯ menu: who can see it (the author's switch), its stats, the link, embedding, and Delete for the author. */
 function GruntMenu({ grunt, onChanged, onDeleted }: { grunt: Grunt; onChanged: (g: Grunt) => void; onDeleted: () => void }) {
   const { user } = useSession();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [showStats, setShowStats] = useState(false);
+  const [dialog, setDialog] = useState<"stats" | "embed" | null>(null);
   const box = useRef<HTMLDivElement>(null);
   const mine = user?.id === grunt.author.id;
 
@@ -351,7 +352,7 @@ function GruntMenu({ grunt, onChanged, onDeleted }: { grunt: Grunt; onChanged: (
             role="menuitem"
             onClick={() => {
               setOpen(false);
-              setShowStats(true);
+              setDialog("stats");
             }}
           >
             Stats
@@ -359,6 +360,20 @@ function GruntMenu({ grunt, onChanged, onDeleted }: { grunt: Grunt; onChanged: (
           <button type="button" role="menuitem" onClick={() => void copyLink()}>
             {copied ? "Link copied" : "Copy link"}
           </button>
+          {!grunt.replyTo && (
+            <button
+              type="button"
+              role="menuitem"
+              disabled={grunt.friendsOnly}
+              title={grunt.friendsOnly ? "Friends-only grunts can't be embedded" : "Show it on another web page"}
+              onClick={() => {
+                setOpen(false);
+                setDialog("embed");
+              }}
+            >
+              Embed
+            </button>
+          )}
           {mine && (
             <button type="button" role="menuitem" className="danger" onClick={() => void remove()}>
               Delete
@@ -366,84 +381,147 @@ function GruntMenu({ grunt, onChanged, onDeleted }: { grunt: Grunt; onChanged: (
           )}
         </div>
       )}
-      {showStats && <StatsDialog grunt={grunt} onClose={() => setShowStats(false)} />}
+      {dialog === "stats" && <StatsDialog grunt={grunt} onClose={() => setDialog(null)} />}
+      {dialog === "embed" && <EmbedDialog grunt={grunt} onClose={() => setDialog(null)} />}
     </div>
   );
 }
 
-/** A grunt's numbers, and the size of each picture and video in it. Closes with ×, Escape, or a click outside. */
+/** A grunt's numbers: views (who by, and where it's embedded), and the size of each picture and video in it. */
 function StatsDialog({ grunt, onClose }: { grunt: Grunt; onClose: () => void }) {
-  const dialog = useRef<HTMLDialogElement>(null);
   const [stats, setStats] = useState<GruntStats | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    dialog.current?.showModal();
     api.gruntStats(grunt.id).then(setStats, (e: unknown) => setError(e instanceof Error ? e.message : "Could not get the stats."));
   }, [grunt.id]);
 
   const posted = new Date(grunt.createdAt);
   return (
-    <dialog
-      ref={dialog}
-      className="stats-dialog"
-      aria-labelledby={`stats-${grunt.id}`}
-      onClose={onClose}
-      onClick={(e) => {
-        if (e.target === dialog.current) dialog.current.close(); // the backdrop, outside the box
-      }}
-    >
-      <div className="stats-box">
-        <header>
-          <h2 id={`stats-${grunt.id}`}>{grunt.replyTo ? "Reply stats" : "Grunt stats"}</h2>
-          <button type="button" className="close" aria-label="Close" onClick={() => dialog.current?.close()}>
-            <CloseIcon />
-          </button>
-        </header>
-        {error ? (
-          <div className="error">{error}</div>
-        ) : !stats ? (
-          <div className="hint">Counting…</div>
-        ) : (
-          <>
-            <dl>
-              {!grunt.replyTo && (
-                <>
-                  <dt>Views</dt>
-                  <dd>{stats.views.toLocaleString()}</dd>
-                  <dt>Replies</dt>
-                  <dd>{stats.replies.toLocaleString()}</dd>
-                  <dt>Regrunts</dt>
-                  <dd>{stats.regrunts.toLocaleString()}</dd>
-                </>
-              )}
-              <dt>Length</dt>
-              <dd>
-                {stats.characters.toLocaleString()} of {MAX_LENGTH.toLocaleString()} characters
-              </dd>
-              <dt>Posted</dt>
-              <dd>
-                <time dateTime={posted.toISOString()}>
-                  {posted.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
-                </time>
-              </dd>
-            </dl>
-            {stats.media.length > 0 && (
+    <Dialog title={grunt.replyTo ? "Reply stats" : "Grunt stats"} onClose={onClose}>
+      {error ? (
+        <div className="error">{error}</div>
+      ) : !stats ? (
+        <div className="hint">Counting…</div>
+      ) : (
+        <>
+          <dl>
+            {!grunt.replyTo && (
               <>
-                <h3>
-                  {stats.media.length === 1 ? "Attached" : `Attached (${formatBytes(stats.media.reduce((n, m) => n + m.bytes, 0))} in all)`}
-                </h3>
-                <ul className="stats-media">
-                  {stats.media.map((m) => (
-                    <MediaRow key={m.url} media={m} />
-                  ))}
-                </ul>
+                <dt>Views</dt>
+                <dd>{stats.views.toLocaleString()}</dd>
+                <dt className="sub">Signed in</dt>
+                <dd className="sub">{stats.signedInViews.toLocaleString()}</dd>
+                <dt className="sub">Not signed in</dt>
+                <dd className="sub">{stats.anonymousViews.toLocaleString()}</dd>
+                {stats.embedViews > 0 && (
+                  <>
+                    <dt className="sub">Through embeds</dt>
+                    <dd className="sub">{stats.embedViews.toLocaleString()}</dd>
+                  </>
+                )}
+                <dt>Replies</dt>
+                <dd>{stats.replies.toLocaleString()}</dd>
+                <dt>Regrunts</dt>
+                <dd>{stats.regrunts.toLocaleString()}</dd>
               </>
             )}
-          </>
-        )}
+            <dt>Length</dt>
+            <dd>
+              {stats.characters.toLocaleString()} of {MAX_LENGTH.toLocaleString()} characters
+            </dd>
+            <dt>Posted</dt>
+            <dd>
+              <time dateTime={posted.toISOString()}>
+                {posted.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
+              </time>
+            </dd>
+          </dl>
+          {stats.embeds.length > 0 && (
+            <>
+              <h3>Embedded on</h3>
+              <dl>
+                {stats.embeds.map((e) => (
+                  <Fragment key={e.site}>
+                    <dt className="site">{e.site || "Sites that didn't say"}</dt>
+                    <dd>
+                      {e.views.toLocaleString()} {e.views === 1 ? "view" : "views"}
+                    </dd>
+                  </Fragment>
+                ))}
+              </dl>
+            </>
+          )}
+          {stats.media.length > 0 && (
+            <>
+              <h3>
+                {stats.media.length === 1 ? "Attached" : `Attached (${formatBytes(stats.media.reduce((n, m) => n + m.bytes, 0))} in all)`}
+              </h3>
+              <ul className="stats-media">
+                {stats.media.map((m) => (
+                  <MediaRow key={m.url} media={m} />
+                ))}
+              </ul>
+            </>
+          )}
+        </>
+      )}
+    </Dialog>
+  );
+}
+
+/** The code that puts the grunt on another web page, with a preview of how it looks there. */
+function EmbedDialog({ grunt, onClose }: { grunt: Grunt; onClose: () => void }) {
+  const [copied, setCopied] = useState(false);
+  const [height, setHeight] = useState(260);
+  const preview = useRef<HTMLIFrameElement>(null);
+  const origin = window.location.origin;
+  const code =
+    `<iframe src="${origin}${embedPath(grunt.id)}" title="Grunt by @${grunt.author.handle}" width="550" height="${height}" ` +
+    `style="border:0;max-width:100%" loading="lazy"></iframe>\n<script async src="${origin}/embed.js"></script>`;
+
+  // The preview reports its height the way it would to embed.js on another site.
+  useEffect(() => {
+    const resize = (e: MessageEvent) => {
+      const data = e.data as { type?: string; height?: unknown };
+      if (e.source === preview.current?.contentWindow && data?.type === "openwalrus:height" && typeof data.height === "number") {
+        setHeight(Math.ceil(data.height));
+      }
+    };
+    window.addEventListener("message", resize);
+    return () => window.removeEventListener("message", resize);
+  }, []);
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      window.prompt("Copy this code:", code);
+    }
+  }
+
+  return (
+    <Dialog title="Embed this grunt" onClose={onClose} wide>
+      <p className="hint">
+        Paste this into a web page to show the grunt there. Views on that page count toward its stats, by site.
+      </p>
+      <textarea className="embed-code" readOnly value={code} rows={4} onFocus={(e) => e.target.select()} />
+      <div className="dialog-actions">
+        <button type="button" onClick={() => void copy()}>
+          {copied ? "Copied" : "Copy code"}
+        </button>
       </div>
-    </dialog>
+      <h3>Preview</h3>
+      <iframe
+        ref={preview}
+        className="embed-preview"
+        src={embedPath(grunt.id)}
+        title="Preview of the embedded grunt"
+        style={{ height }}
+      />
+    </Dialog>
   );
 }
 

@@ -54,6 +54,14 @@ trait GruntRepository {
   def setFriendsOnly(gruntId: String, friendsOnly: Boolean): Future[Unit]
   /** Counts a view of each grunt by the viewer: once per person, and never by the author. */
   def recordViews(ids: Seq[String], viewerId: String, reader: Reader): Future[Unit]
+  /**
+   * Counts a view of each grunt by someone not signed in, known only by an id their browser
+   * made up: once per id and grunt. Only grunts anyone may see, and none by `exceptAuthor`.
+   * Through an embed, `site` is where it's embedded ("" when that isn't known).
+   */
+  def recordAnonymousViews(ids: Seq[String], visitor: String, site: Option[String], exceptAuthor: Option[String], at: Long): Future[Unit]
+  /** The sites a grunt is embedded on, with the views from each, most first. */
+  def embedSites(gruntId: String, limit: Int): Future[Seq[(String, Int)]]
   /** Number of grunts each user has written. Users with none are left out. */
   def countByAuthor(): Future[Map[String, Int]]
 }

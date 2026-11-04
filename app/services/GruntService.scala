@@ -2,7 +2,7 @@ package services
 
 import javax.inject.{Inject, Singleton}
 
-import models.{AuthorView, FeedPage, Grunt, GruntStats, GruntView, MediaView, NewGrunt, Reader, User}
+import models.{AuthorView, EmbedSite, FeedPage, Grunt, GruntStats, GruntView, MediaView, NewGrunt, Reader, User}
 import repositories.{GruntRepository, ImageRepository, MediaFile, UserRepository, VideoRepository}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -63,9 +63,13 @@ class GruntService @Inject() (grunts: GruntRepository, users: UserRepository, im
             else videos.open(mediaId).map(_.map(v => MediaFile(v.length, v.contentType)))
           file.map(_.map(f => MediaView(kind, s"/api/${kind}s/$mediaId", f.length, f.contentType)))
         }
-        Future.sequence(found).map { media =>
-          Some(GruntStats(g.views, g.replyCount, g.regruntCount, g.message.length, media.flatten))
-        }
+        for {
+          media <- Future.sequence(found)
+          sites <- if (g.embedViews > 0) grunts.embedSites(g.id, MaxEmbedSites) else Future.successful(Seq.empty)
+        } yield Some(GruntStats(
+          g.views, g.signedInViews, g.anonymousViews, g.embedViews, sites.map(EmbedSite.apply.tupled),
+          g.replyCount, g.regruntCount, g.message.length, media.flatten
+        ))
     }
 
   /** A grunt's replies, oldest first. None if the grunt isn't there for the viewer. */
@@ -125,6 +129,15 @@ class GruntService @Inject() (grunts: GruntRepository, users: UserRepository, im
     if (ids.isEmpty) Future.unit
     else grunts.recordViews(ids.distinct.take(MaxViewBatch), viewer.id, Reader(viewer))
 
+  /**
+   * Someone not signed in has seen these grunts (or anyone, through an embed, where the
+   * browser doesn't send the session). Each visitor id counts once per grunt. An author
+   * whose session did come along isn't counted on their own grunts.
+   */
+  def recordAnonymousViews(ids: Seq[String], visitor: String, embeddedOn: Option[String], viewer: Option[User]): Future[Unit] =
+    if (ids.isEmpty) Future.unit
+    else grunts.recordAnonymousViews(ids.distinct.take(MaxViewBatch), visitor, embeddedOn.map(site), viewer.map(_.id), System.currentTimeMillis())
+
   private def page(entries: Future[Seq[Grunt]], viewer: Option[User]): Future[FeedPage] =
     entries.flatMap { list =>
       // The next page starts below the last entry fetched, whether or not it was shown.
@@ -183,6 +196,19 @@ object GruntService {
   val PageSize = 50
   val MaxReplies = 500
   val MaxViewBatch = 100
+  val MaxEmbedSites = 20
+
+  private val VisitorPattern = "^[A-Za-z0-9-]{16,64}$".r
+  private val SitePattern = """^[a-z0-9.-]{1,253}(:[0-9]{1,5})?$""".r
+
+  /** The id a browser made up for itself, if it looks like one. */
+  def validVisitor(id: String): Boolean = VisitorPattern.matches(id)
+
+  /** An embedding page's host, as the embed reported it; "" when missing or not a host name. */
+  def site(reported: String): String = {
+    val host = reported.trim.toLowerCase.stripPrefix("www.")
+    if (SitePattern.matches(host)) host else ""
+  }
 
   val HotWindowMillis: Long = 7L * 24 * 60 * 60 * 1000
   /** The most recent noticed grunts that are ranked; plenty for a small group's week. */

@@ -3,7 +3,8 @@ import { api } from "./api.ts";
 // A grunt counts as seen once at least half of it (or, for a tall one, half the screen's
 // worth of it) has been on screen for a second. Seen ids
 // are sent in batches; the server counts each person once, so resending is harmless, but
-// each id goes only once per page load anyway.
+// each id goes only once per page load anyway. Someone signed in is counted as themselves;
+// anyone else by a random visitor id this browser keeps.
 
 const DWELL_MS = 1000;
 const FLUSH_MS = 3000;
@@ -13,6 +14,35 @@ const queued = new Set<string>();
 const timers = new Map<Element, number>();
 const ids = new WeakMap<Element, string>();
 let flushTimer: number | undefined;
+let embeddedOn: string | null = null;
+
+const VISITOR_KEY = "openwalrus.visitor";
+let visitor: string | undefined;
+
+/** Made up once and kept, so the same browser counts once per grunt. Never tied to an account. */
+function visitorId(): string {
+  if (visitor) return visitor;
+  try {
+    visitor = localStorage.getItem(VISITOR_KEY) ?? undefined;
+  } catch {
+    // storage blocked: a new id each page load
+  }
+  if (!visitor) {
+    // getRandomValues, not randomUUID, which plain-http pages don't have
+    visitor = [...crypto.getRandomValues(new Uint8Array(16))].map((b) => b.toString(16).padStart(2, "0")).join("");
+    try {
+      localStorage.setItem(VISITOR_KEY, visitor);
+    } catch {
+      // see above
+    }
+  }
+  return visitor;
+}
+
+/** On an embed: the views are counted as seen there, on that site ("" if unknown). */
+export function countViewsAsEmbeddedOn(site: string) {
+  embeddedOn = site;
+}
 
 function flush() {
   flushTimer = undefined;
@@ -20,7 +50,8 @@ function flush() {
   const batch = [...queued];
   queued.clear();
   batch.forEach((id) => sent.add(id));
-  api.recordViews(batch).catch(() => batch.forEach((id) => sent.delete(id)));
+  const where = embeddedOn === null ? {} : { embed: true, site: embeddedOn };
+  api.recordViews({ ids: batch, visitor: visitorId(), ...where }).catch(() => batch.forEach((id) => sent.delete(id)));
 }
 
 function seen(id: string) {

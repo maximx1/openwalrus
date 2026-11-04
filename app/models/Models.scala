@@ -36,12 +36,18 @@ case class Grunt(
     mentions: Seq[String],
     createdAt: Long,
     friendsOnly: Boolean,
-    views: Int,
+    signedInViews: Int,
     replyTo: Option[String] = None,
     regruntOf: Option[String] = None,
     replyCount: Int = 0,
-    regruntCount: Int = 0
-)
+    regruntCount: Int = 0,
+    /** Views by people who weren't signed in, embeds included. */
+    anonymousViews: Int = 0,
+    /** Of the anonymous views, those through an embed on another site. */
+    embedViews: Int = 0
+) {
+  def views: Int = signedInViews + anonymousViews
+}
 
 case class NewGrunt(
     authorId: String,

@@ -23,7 +23,7 @@ export type Grunt = {
   createdAt: number;
   /** Seen only by the author and the people they follow. */
   friendsOnly: boolean;
-  /** How many people other than the author have seen it. */
+  /** How many people other than the author have seen it, signed in or not. */
   views: number;
   /** Set on a reply: the grunt it answers. */
   replyTo?: string;
@@ -42,6 +42,12 @@ export type MediaStats = { kind: "image" | "video"; url: string; bytes: number; 
 /** The numbers behind a grunt, for its Stats dialog. */
 export type GruntStats = {
   views: number;
+  signedInViews: number;
+  anonymousViews: number;
+  /** Of the anonymous views, those through an embed on another site. */
+  embedViews: number;
+  /** Where it's embedded, most views first; site is "" when the browser didn't say. */
+  embeds: { site: string; views: number }[];
   replies: number;
   regrunts: number;
   characters: number;
@@ -164,7 +170,8 @@ export const api = {
   hot: () => request<Grunt[]>("GET", "/hot"),
   postGrunt: (message: string, friendsOnly: boolean) => request<Grunt>("POST", "/grunts", { message, friendsOnly }),
   /** keepalive, so the last batch still goes out as the page closes. */
-  recordViews: (ids: string[]) => request<void>("POST", "/views", { ids }, true),
+  recordViews: (seen: { ids: string[]; visitor: string; embed?: boolean; site?: string }) =>
+    request<void>("POST", "/views", seen, true),
   deleteGrunt: (id: string) => request<void>("DELETE", `/grunts/${enc(id)}`),
 
   uploadImage: (file: File, onProgress?: (fraction: number) => void) => upload("/images", "picture", file, onProgress),
@@ -172,6 +179,9 @@ export const api = {
 };
 
 export const videoUrl = (id: string) => `/api/videos/${id}`;
+
+/** The page other sites put in an iframe to show a grunt. */
+export const embedPath = (id: string) => `/embed/${id}`;
 
 /** A grunt's own page. (A reply's sends you on to the grunt it answers.) */
 export const gruntPath = (g: Grunt) => `/${g.author.handle}/grunts/${g.id}`;

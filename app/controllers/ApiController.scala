@@ -7,7 +7,7 @@ import play.api.{Configuration, Logging}
 import play.api.libs.json.*
 import play.api.mvc.*
 import repositories.DatabaseHealth
-import services.{AccountService, AuthThrottle, GruntService, ImageService, SessionService, SignUp, VideoService}
+import services.{AccountService, AuthThrottle, GruntService, ImageService, SessionService, SignUp, VideoService, ViewThrottle}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -21,6 +21,7 @@ class ApiController @Inject() (
     images: ImageService,
     videos: VideoService,
     throttle: AuthThrottle,
+    viewThrottle: ViewThrottle,
     sessions: SessionService,
     health: DatabaseHealth,
     config: Configuration
@@ -42,7 +43,8 @@ class ApiController @Inject() (
   private given Reads[Reply] = Json.reads[Reply]
   private case class GruntChange(friendsOnly: Boolean)
   private given Reads[GruntChange] = Json.reads[GruntChange]
-  private case class Viewed(ids: Seq[String])
+  /** visitor: the id the browser made up for itself. embed: seen in an embed, on `site`. */
+  private case class Viewed(ids: Seq[String], visitor: Option[String], embed: Option[Boolean], site: Option[String])
   private given Reads[Viewed] = Json.reads[Viewed]
 
   private def error(message: String) = Json.obj("error" -> message)
@@ -283,9 +285,23 @@ class ApiController @Inject() (
     gruntService.hot(request.viewer).map(list => Ok(Json.toJson(list)))
   }
 
-  /** The web client reports the grunts that were on screen long enough to count as seen. */
-  def recordViews: Action[AnyContent] = SignedIn.async { request =>
-    withJson[Viewed](request)(v => gruntService.recordViews(request.user, v.ids).map(_ => NoContent))
+  /**
+   * The web client reports the grunts that were on screen long enough to count as seen:
+   * by the signed-in person, or else by the browser's visitor id. An embed's views are
+   * always counted by visitor id, along with the site it's on.
+   */
+  def recordViews: Action[AnyContent] = Viewer.async { request =>
+    withJson[Viewed](request) { v =>
+      val embed = v.embed.contains(true)
+      (request.viewer, v.visitor) match {
+        case (Some(user), _) if !embed => gruntService.recordViews(user, v.ids).map(_ => NoContent)
+        case (_, Some(visitor)) if GruntService.validVisitor(visitor) =>
+          val allowed = v.ids.distinct.take(viewThrottle.allow(request.remoteAddress, v.ids.distinct.size))
+          val site = if (embed) Some(v.site.getOrElse("")) else None
+          gruntService.recordAnonymousViews(allowed, visitor, site, request.viewer).map(_ => NoContent)
+        case _ => Future.successful(BadRequest(error("Say who saw them: sign in, or send a visitor id.")))
+      }
+    }
   }
 
   def deleteGrunt(id: String): Action[AnyContent] = SignedIn.async { request =>

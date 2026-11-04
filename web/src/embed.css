@@ -1,0 +1,205 @@
+/* The embed: a card in the app's colours that fits whatever width the iframe gives it. */
+:root {
+  --blue: #557ebf;
+  --teal: #48b9a6;
+  --border: #d6d9de;
+  --text: #222222;
+  --muted: #6f7378;
+  --radius: 10px;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: transparent;
+}
+
+/* Room for the card's border; padding, not the card's margin, so the measured height includes it. */
+#root {
+  padding: 1px;
+}
+
+a {
+  color: var(--blue);
+}
+
+.embed {
+  position: relative;
+  overflow: hidden;
+  padding: 1em 1.1em 0.9em;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/* The header's gradient, as a thin bar along the top. */
+.embed::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(to right, var(--blue), var(--teal));
+}
+
+.embed header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+}
+
+.who {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  min-width: 0;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.who img {
+  flex: none;
+  width: 2.6em;
+  height: 2.6em;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.who > span {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.who strong:hover {
+  text-decoration: underline;
+}
+
+.who .handle {
+  color: var(--muted);
+  font-size: 0.9em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.brand {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2em;
+  height: 2em;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), var(--teal));
+}
+
+.brand-dot {
+  width: 0.8em;
+  height: 0.8em;
+  border-radius: 50%;
+  background: white;
+}
+
+.message {
+  margin: 0.6em 0;
+  font-size: 1.05em;
+  overflow-wrap: anywhere;
+}
+
+.message p {
+  margin: 0.3em 0;
+}
+
+.message img,
+.message video,
+.message pre {
+  max-width: 100%;
+}
+
+.message img,
+.message video {
+  display: block;
+  border-radius: 6px;
+  margin: 0.4em 0;
+}
+
+.message video {
+  max-height: 28em;
+  background: black;
+}
+
+.message pre {
+  overflow-x: auto;
+  background: #f3f4f6;
+  padding: 0.5em;
+}
+
+.embed footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4em 1em;
+  color: var(--muted);
+  font-size: 0.85em;
+}
+
+.embed footer a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.embed footer a:hover {
+  text-decoration: underline;
+}
+
+.counts {
+  display: flex;
+  gap: 1em;
+}
+
+.counts span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+}
+
+.counts svg {
+  width: 1.05em;
+  height: 1.05em;
+}
+
+.open {
+  display: block;
+  margin-top: 0.8em;
+  padding: 0.45em;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.9em;
+  text-decoration: none;
+}
+
+.open:hover {
+  background: #f3f6fb;
+}
+
+.embed-loading {
+  height: 8em;
+}
+
+.embed-missing {
+  padding: 1em;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: white;
+  color: var(--muted);
+}
