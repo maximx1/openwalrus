@@ -149,15 +149,10 @@
      sodipodi:insensitive="true">
     <path
        style="fill:#b3b3b3;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 0,139.32738 c 44.194174,-13.08147 73.892658,-57.982754 90.863221,-66.821589 16.970559,-8.838835 58.336309,-27.577164 80.963729,2.121321 22.62742,29.698488 7.38115,27.719078 8.48528,42.072848 1.06066,13.78858 12.21097,11.23013 15.55635,57.98276 4.3786,61.19209 60.10407,79.90307 60.10407,79.90307 l 0,0"
+       d="m 0,139.32738 c 44.194174,-13.08147 73.892658,-57.982754 90.863221,-66.821589 16.970559,-8.838835 58.336309,-27.577164 80.963729,2.121321 22.62742,29.698488 7.38115,27.719078 8.48528,42.072848 1.06066,13.78858 12.21097,11.23013 15.55635,57.98276 4.3786,61.19209 60.10407,79.90307 60.10407,79.90307 L 256,256 L 0,256 Z"
        id="path5877"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="csssscc" />
-    <path
-       style="fill:#b3b3b3;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="M 0,138.97383 255.6191,254.23223 256.32621,256 -0.70710678,255.64645 Z"
-       id="path5879"
-       inkscape:connector-curvature="0" />
   </g>
   <g
      inkscape:groupmode="layer"
