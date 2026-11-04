@@ -30,10 +30,12 @@ class ApiController @Inject() (
   private given Reads[SignUp] = Json.reads[SignUp]
   private case class SignIn(handle: String, password: String)
   private given Reads[SignIn] = Json.reads[SignIn]
-  private case class PostGrunt(message: String)
+  private case class PostGrunt(message: String, friendsOnly: Option[Boolean])
   private given Reads[PostGrunt] = Json.reads[PostGrunt]
   private case class ImageRef(imageId: String)
   private given Reads[ImageRef] = Json.reads[ImageRef]
+  private case class Viewed(ids: Seq[String])
+  private given Reads[Viewed] = Json.reads[Viewed]
 
   private def error(message: String) = Json.obj("error" -> message)
 
@@ -113,8 +115,8 @@ class ApiController @Inject() (
     withUser(handle)(u => accounts.view(u, request.viewerId).map(v => Ok(Json.toJson(v))))
   }
 
-  def userGrunts(handle: String, before: Option[Long]): Action[AnyContent] = Action.async {
-    withUser(handle)(u => gruntService.profileFeed(u, before).map(list => Ok(Json.toJson(list))))
+  def userGrunts(handle: String, before: Option[Long]): Action[AnyContent] = Viewer.async { request =>
+    withUser(handle)(u => gruntService.profileFeed(u, before, request.viewer).map(list => Ok(Json.toJson(list))))
   }
 
   def followers(handle: String): Action[AnyContent] = Viewer.async { request =>
@@ -149,11 +151,20 @@ class ApiController @Inject() (
 
   def postGrunt: Action[AnyContent] = SignedIn.async { request =>
     withJson[PostGrunt](request) { form =>
-      gruntService.post(request.user, form.message).map {
+      gruntService.post(request.user, form.message, form.friendsOnly.getOrElse(false)).map {
         case Left(problem) => BadRequest(error(problem))
         case Right(view) => Created(Json.toJson(view))
       }
     }
+  }
+
+  def hot: Action[AnyContent] = Viewer.async { request =>
+    gruntService.hot(request.viewer).map(list => Ok(Json.toJson(list)))
+  }
+
+  /** The web client reports the grunts that were on screen long enough to count as seen. */
+  def recordViews: Action[AnyContent] = SignedIn.async { request =>
+    withJson[Viewed](request)(v => gruntService.recordViews(request.user, v.ids).map(_ => NoContent))
   }
 
   def deleteGrunt(id: String): Action[AnyContent] = SignedIn.async { request =>

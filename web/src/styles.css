@@ -34,7 +34,11 @@ button,
   border: 0;
   border-radius: var(--radius);
   padding: 0.5em 1.1em;
-  background: var(--blue);
+  /* The header's gradient, three times the button's width with solid ends. At rest the
+     button shows the blue end; on hover it slides across to the teal end, so the colour
+     passes through the whole gradient on the way. */
+  background: linear-gradient(to right, var(--blue) 0 33.34%, var(--teal) 66.66% 100%) 0 0 / 300% 100%;
+  transition: background-position 0.6s ease;
   color: white;
   font-weight: 600;
   cursor: pointer;
@@ -44,7 +48,7 @@ button,
 
 button:hover:not(:disabled),
 .button:hover {
-  background: var(--teal);
+  background-position: 100% 0;
 }
 
 button:disabled {
@@ -57,6 +61,15 @@ button.secondary,
   background: white;
   color: var(--blue);
   border: 1px solid var(--border);
+  transition:
+    color 0.4s ease,
+    border-color 0.4s ease;
+}
+
+button.secondary:hover:not(:disabled),
+.button.secondary:hover {
+  color: var(--teal);
+  border-color: var(--teal);
 }
 
 .link-button {
@@ -167,11 +180,39 @@ main {
   margin: 0.5em 0 1em;
 }
 
+.page-subtitle {
+  text-align: center;
+  color: var(--muted);
+  margin: -0.6em 0 1.4em;
+}
+
+.narrow {
+  max-width: 40em;
+  margin: 0 auto;
+}
+
 .card {
+  position: relative;
   background: var(--card);
-  border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
+}
+
+/* The card's outline is drawn on top of it rather than round it, so a banner or a full-width
+   button can sit over the outline and reach the card's very edge. As a real border it showed
+   as a grey line down each side of every banner. */
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--border);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.card .banner,
+.card .follow-button {
+  z-index: 1;
 }
 
 .card-grid {
@@ -226,6 +267,7 @@ main {
   background: var(--orange);
   overflow: hidden;
   position: relative;
+  z-index: 2;
 }
 
 .avatar-large img {
@@ -244,6 +286,7 @@ main {
   outline: 2px solid var(--orange);
   outline-offset: -2px;
   background-color: var(--orange);
+  background-position: center;
 }
 
 .image-status {
@@ -298,6 +341,7 @@ main {
 }
 
 .follow-button {
+  position: relative;
   width: 100%;
   border-radius: 0;
   padding: 0.7em;
@@ -344,7 +388,7 @@ main {
   padding: 0.5em;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  background: var(--bg);
+  background: var(--field-fill);
 }
 
 .composer-actions {
@@ -360,6 +404,22 @@ main {
 
 .composer-actions button {
   white-space: nowrap;
+}
+
+button.friends-toggle.on,
+button.friends-toggle.on:hover:not(:disabled) {
+  color: white;
+  border-color: transparent;
+  background: linear-gradient(to right, var(--blue), var(--teal));
+}
+
+@media (max-width: 480px) {
+  .composer-actions {
+    flex-wrap: wrap;
+  }
+  .composer-actions .hint {
+    flex-basis: 100%;
+  }
 }
 
 .grunts {
@@ -423,13 +483,29 @@ main {
   padding: 0.5em;
 }
 
+.grunt-foot {
+  display: flex;
+  align-items: center;
+  gap: 0.8em;
+  margin-top: 0.3em;
+  font-size: 0.8em;
+  color: var(--muted);
+}
+
+.grunt-friends {
+  color: var(--teal);
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 0 0.6em;
+}
+
 .grunt-delete {
   background: none;
   color: var(--muted);
   font-weight: normal;
-  font-size: 0.8em;
+  font-size: inherit;
   padding: 0;
-  float: right;
+  margin-left: auto;
   visibility: hidden;
 }
 
@@ -478,12 +554,17 @@ button.end-of-grunts:hover:not(:disabled) {
   /* one pixel thicker than at rest, so take a pixel off the padding to keep the text still */
   padding: calc(0.6em - 1px);
   background:
-    linear-gradient(var(--field-bg, white), var(--field-bg, white)) padding-box,
+    var(--field-fill, linear-gradient(white, white)) padding-box,
     linear-gradient(to right, var(--blue), var(--teal)) border-box;
 }
 
+/* The writing box: the header's gradient, faded nearly to white, so it's there if you look. */
 .composer textarea {
-  --field-bg: var(--bg);
+  --field-fill: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--blue) 7%, white),
+    color-mix(in srgb, var(--teal) 7%, white)
+  );
 }
 
 .composer textarea:focus {

@@ -17,6 +17,7 @@ export function Layout() {
       <nav className="navbar">
         <div className="nav-side">
           <NavLink to="/team">Team</NavLink>
+          <NavLink to="/hot">Hot</NavLink>
         </div>
         <Link to="/" className="brand" aria-label="OpenWalrus home">
           <span className="brand-dot" />

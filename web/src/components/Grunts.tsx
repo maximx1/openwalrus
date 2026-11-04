@@ -1,7 +1,8 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { api, imageUrl, type Grunt } from "../api.ts";
 import { useSession } from "../session.tsx";
+import { watchForView } from "../views.ts";
 
 const MAX_LENGTH = 1000;
 
@@ -34,6 +35,12 @@ function GruntItem({ grunt, onDeleted }: { grunt: Grunt; onDeleted: () => void }
   const { author } = grunt;
   const { user } = useSession();
   const [busy, setBusy] = useState(false);
+  const mine = user?.id === author.id;
+  const element = useRef<HTMLElement>(null);
+
+  // Signed-in readers' views count; your own don't.
+  const watch = user !== null && !mine;
+  useEffect(() => (watch && element.current ? watchForView(element.current, grunt.id) : undefined), [watch, grunt.id]);
 
   async function remove() {
     if (!window.confirm("Delete this grunt?")) return;
@@ -48,7 +55,7 @@ function GruntItem({ grunt, onDeleted }: { grunt: Grunt; onDeleted: () => void }
   }
 
   return (
-    <article className="grunt">
+    <article className="grunt" ref={element}>
       <img className="avatar" src={imageUrl(author.profileImage, true)} alt="" />
       <div className="grunt-body">
         <div className="grunt-meta">
@@ -60,11 +67,21 @@ function GruntItem({ grunt, onDeleted }: { grunt: Grunt; onDeleted: () => void }
         </div>
         {/* Rendered from Markdown and cleaned on the server (MessageRenderer). */}
         <div className="grunt-message" dangerouslySetInnerHTML={{ __html: grunt.html }} />
-        {user?.id === author.id && (
-          <button type="button" className="grunt-delete" disabled={busy} onClick={() => void remove()}>
-            Delete
-          </button>
-        )}
+        <div className="grunt-foot">
+          <span className="grunt-views" title="People who have seen it">
+            {grunt.views} {grunt.views === 1 ? "view" : "views"}
+          </span>
+          {grunt.friendsOnly && (
+            <span className="grunt-friends" title={`Only @${author.handle} and the people they follow can see this`}>
+              Friends only
+            </span>
+          )}
+          {mine && (
+            <button type="button" className="grunt-delete" disabled={busy} onClick={() => void remove()}>
+              Delete
+            </button>
+          )}
+        </div>
       </div>
     </article>
   );
@@ -81,6 +98,7 @@ function formatTime(ms: number): string {
 /** Where a signed-in user writes a grunt. Markdown works; images are uploaded and linked in. */
 export function Composer({ prefill = "", onPosted }: { prefill?: string; onPosted: (grunt: Grunt) => void }) {
   const [text, setText] = useState(prefill);
+  const [friendsOnly, setFriendsOnly] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -90,7 +108,7 @@ export function Composer({ prefill = "", onPosted }: { prefill?: string; onPoste
     setBusy(true);
     setError(null);
     try {
-      onPosted(await api.postGrunt(text));
+      onPosted(await api.postGrunt(text, friendsOnly));
       setText(prefill);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not post that.");
@@ -136,6 +154,15 @@ export function Composer({ prefill = "", onPosted }: { prefill?: string; onPoste
         <span className="hint">
           {text.length > MAX_LENGTH - 100 ? `${MAX_LENGTH - text.length} left` : "Markdown works"}
         </span>
+        <button
+          type="button"
+          className={`secondary friends-toggle${friendsOnly ? " on" : ""}`}
+          aria-pressed={friendsOnly}
+          title="Only you and the people you follow will see it"
+          onClick={() => setFriendsOnly((f) => !f)}
+        >
+          Friends only
+        </button>
         <button type="button" className="secondary" disabled={busy} onClick={() => fileInput.current?.click()}>
           Add image
         </button>

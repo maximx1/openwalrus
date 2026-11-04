@@ -86,7 +86,7 @@ object AccountService {
   val MinPasswordLength = 8
 
   /** Handles that would collide with the web app's own pages. */
-  val ReservedHandles = Set("api", "assets", "team", "login", "signup", "logout", "settings", "favicon")
+  val ReservedHandles = Set("api", "assets", "team", "hot", "login", "signup", "logout", "settings", "favicon")
 
   def validate(fullName: String, handle: String, password: String): Option[String] =
     if (fullName.isEmpty) Some("Enter your name.")

@@ -31,7 +31,7 @@ object AuthorView {
 }
 
 /** A grunt ready to show: the message already rendered to safe HTML. */
-case class GruntView(id: String, author: AuthorView, html: String, createdAt: Long)
+case class GruntView(id: String, author: AuthorView, html: String, createdAt: Long, friendsOnly: Boolean, views: Int)
 
 object GruntView {
   given OWrites[GruntView] = Json.writes[GruntView]

@@ -27,8 +27,15 @@ trait GruntRepository {
   def create(grunt: NewGrunt): Future[Grunt]
   def findById(id: String): Future[Option[Grunt]]
   def delete(id: String): Future[Unit]
-  /** Newest first: grunts by any of the authors or mentioning the user, older than `before`. */
-  def timeline(authorIds: Seq[String], mentioning: Option[String], before: Option[Long], limit: Int): Future[Seq[Grunt]]
+  /**
+   * Newest first: grunts by any of the authors or mentioning the user, older than `before`.
+   * Like every list here, it leaves out friends-only grunts the reader may not see.
+   */
+  def timeline(authorIds: Seq[String], mentioning: Option[String], before: Option[Long], limit: Int, reader: Reader): Future[Seq[Grunt]]
+  /** Newest first: grunts posted after `since` that at least one person has viewed. */
+  def viewedSince(since: Long, limit: Int, reader: Reader): Future[Seq[Grunt]]
+  /** Counts a view of each grunt by the viewer: once per person, and never by the author. */
+  def recordViews(ids: Seq[String], viewerId: String, reader: Reader): Future[Unit]
   /** Number of grunts each user has written. Users with none are left out. */
   def countByAuthor(): Future[Map[String, Int]]
 }

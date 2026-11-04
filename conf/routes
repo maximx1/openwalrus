@@ -17,6 +17,8 @@ PUT     /api/me/profile-image               controllers.ApiController.setProfile
 PUT     /api/me/banner-image                controllers.ApiController.setBannerImage
 
 GET     /api/feed                           controllers.ApiController.feed(before: Option[Long])
+GET     /api/hot                            controllers.ApiController.hot
+POST    /api/views                          controllers.ApiController.recordViews
 POST    /api/grunts                         controllers.ApiController.postGrunt
 DELETE  /api/grunts/:id                     controllers.ApiController.deleteGrunt(id: String)
 

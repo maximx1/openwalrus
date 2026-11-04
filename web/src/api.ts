@@ -21,6 +21,10 @@ export type Grunt = {
   /** Already rendered and cleaned by the server. */
   html: string;
   createdAt: number;
+  /** Seen only by the author and the people they follow. */
+  friendsOnly: boolean;
+  /** How many people other than the author have seen it. */
+  views: number;
 };
 
 export type Session = { user: User | null; allowRegistration: boolean };
@@ -34,7 +38,7 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+async function request<T>(method: string, path: string, body?: unknown, keepalive = false): Promise<T> {
   const headers: Record<string, string> = {
     // Lets the request past Play's CSRF filter; a page on another site cannot add it.
     "X-Requested-With": "openwalrus",
@@ -47,7 +51,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     headers["Content-Type"] = "application/json";
     payload = JSON.stringify(body);
   }
-  const res = await fetch(`/api${path}`, { method, headers, body: payload, credentials: "same-origin" });
+  const res = await fetch(`/api${path}`, { method, headers, body: payload, credentials: "same-origin", keepalive });
   if (res.status === 204) return undefined as T;
   const data: unknown = await res.json().catch(() => null);
   if (!res.ok) {
@@ -83,7 +87,10 @@ export const api = {
   setBannerImage: (imageId: string) => request<void>("PUT", "/me/banner-image", { imageId }),
 
   feed: (before?: number) => request<Grunt[]>("GET", `/feed${before ? `?before=${before}` : ""}`),
-  postGrunt: (message: string) => request<Grunt>("POST", "/grunts", { message }),
+  hot: () => request<Grunt[]>("GET", "/hot"),
+  postGrunt: (message: string, friendsOnly: boolean) => request<Grunt>("POST", "/grunts", { message, friendsOnly }),
+  /** keepalive, so the last batch still goes out as the page closes. */
+  recordViews: (ids: string[]) => request<void>("POST", "/views", { ids }, true),
   deleteGrunt: (id: string) => request<void>("DELETE", `/grunts/${enc(id)}`),
 
   uploadImage: (file: File) => {

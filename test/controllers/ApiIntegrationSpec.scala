@@ -49,6 +49,8 @@ class ApiIntegrationSpec extends PlaySpec with BeforeAndAfterAll {
   private def signedIn[A](req: FakeRequest[A], s: Session): FakeRequest[A] =
     req.withSession(s.data.toSeq*).withCookies(app.injector.instanceOf[SessionCookieBaker].encodeAsCookie(s))
 
+  private def availability(h: String) = contentAsJson(call(GET, s"/api/handles/$h"))
+
   private def signUp(handle: String): Session = {
     val res = call(POST, "/api/users", Some(Json.obj("fullName" -> s"$handle Walrus", "handle" -> handle, "password" -> "password123")))
     status(res) mustBe CREATED
@@ -65,7 +67,6 @@ class ApiIntegrationSpec extends PlaySpec with BeforeAndAfterAll {
       val bob = signUp("bob")
 
       // the sign-up form's live check
-      def availability(h: String) = contentAsJson(call(GET, s"/api/handles/$h"))
       (availability("ALICE") \ "available").as[Boolean] mustBe false
       (availability("ALICE") \ "reason").as[String] must include("taken")
       (availability("carol") \ "available").as[Boolean] mustBe true
@@ -131,6 +132,45 @@ class ApiIntegrationSpec extends PlaySpec with BeforeAndAfterAll {
       val wrong = Some(Json.obj("handle" -> "bob", "password" -> "not-it-at-all"))
       (1 to services.LoginThrottle.MaxFailures).foreach(_ => status(call(POST, "/api/session", wrong)) mustBe UNAUTHORIZED)
       status(call(POST, "/api/session", Some(Json.obj("handle" -> "bob", "password" -> "password123")))) mustBe TOO_MANY_REQUESTS
+    }
+
+    "keep friends-only grunts to the author's friends, count views once per person, and rank what's hot" in {
+      assume(mongoUri.isDefined, "TEST_MONGO_URI is not set")
+      val dave = signUp("dave")
+      val erin = signUp("erin")
+      val frank = signUp("frank")
+      def post(message: String, friendsOnly: Boolean) =
+        (contentAsJson(call(POST, "/api/grunts", Some(Json.obj("message" -> message, "friendsOnly" -> friendsOnly)), Some(dave))) \ "id").as[String]
+      val open = post("for everyone", friendsOnly = false)
+      val closed = post("for friends", friendsOnly = true)
+      // dave's friends are the people he follows: erin, not frank
+      status(call(PUT, "/api/users/erin/follow", None, Some(dave))) mustBe OK
+      status(call(PUT, "/api/users/dave/follow", None, Some(frank))) mustBe OK
+
+      def ids(res: Future[Result]) = contentAsJson(res).as[JsArray].value.map(g => (g \ "id").as[String]).toSeq
+      ids(call(GET, "/api/users/dave/grunts", None, Some(dave))) must contain allOf (open, closed)
+      ids(call(GET, "/api/users/dave/grunts", None, Some(erin))) must contain allOf (open, closed)
+      ids(call(GET, "/api/users/dave/grunts", None, Some(frank))) mustBe Seq(open)
+      ids(call(GET, "/api/users/dave/grunts")) mustBe Seq(open)
+      ids(call(GET, "/api/feed", None, Some(frank))) mustBe Seq(open)
+
+      def view(who: Session, gruntIds: String*) =
+        status(call(POST, "/api/views", Some(Json.obj("ids" -> gruntIds)), Some(who))) mustBe NO_CONTENT
+      def views = contentAsJson(call(GET, "/api/users/dave/grunts", None, Some(dave))).as[JsArray].value
+        .map(g => (g \ "id").as[String] -> (g \ "views").as[Int]).toMap
+      view(frank, open, closed) // frank can't see the friends-only one, so it isn't counted
+      view(frank, open)         // a second look isn't another view
+      view(dave, open, closed)  // nor is the author's own
+      views mustBe Map(open -> 1, closed -> 0)
+      view(erin, closed)
+      views mustBe Map(open -> 1, closed -> 1)
+      status(call(POST, "/api/views", Some(Json.obj("ids" -> Seq(open))))) mustBe UNAUTHORIZED
+
+      val unseen = post("nobody has looked", friendsOnly = false)
+      ids(call(GET, "/api/hot")) mustBe Seq(open)
+      ids(call(GET, "/api/hot", None, Some(erin))) must contain allOf (open, closed)
+      ids(call(GET, "/api/hot", None, Some(erin))) must not contain unseen
+      (availability("hot") \ "available").as[Boolean] mustBe false
     }
 
     "over real HTTP, accept the web client's requests and refuse ones forged by another site" in {
