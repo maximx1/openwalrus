@@ -78,10 +78,12 @@ export function SignUpPage() {
           type="password"
           autoComplete="new-password"
           required
-          minLength={8}
+          minLength={10}
+          maxLength={200}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+        <span className="field-hint">At least 10 characters. A few words strung together works well.</span>
       </label>
       <button type="submit" disabled={busy}>
         Sign me up

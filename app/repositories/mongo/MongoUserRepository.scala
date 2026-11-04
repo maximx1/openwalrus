@@ -61,6 +61,9 @@ class MongoUserRepository @Inject() (mongo: MongoDatabaseProvider)(using ec: Exe
 
   def setBannerImage(userId: String, imageId: String): Future[Unit] = setField(userId, "bannerImage", imageId)
 
+  def setPasswordHash(userId: String, hash: String): Future[Unit] =
+    Ids.parse(userId).fold(Future.unit)(u => coll.updateOne(equal("_id", u), set("password", hash)).toFuture().map(_ => ()))
+
   def follow(userId: String, targetId: String): Future[Unit] = (Ids.parse(userId), Ids.parse(targetId)) match {
     case (Some(u), Some(t)) =>
       for {

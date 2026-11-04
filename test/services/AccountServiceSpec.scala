@@ -18,6 +18,12 @@ class AccountServiceSpec extends PlaySpec {
     }
     "refuse short passwords" in {
       validate("Justin", "justin", "short") mustBe defined
+      validate("Justin", "justin", "ninechars") mustBe defined
+    }
+    "refuse passwords that are easy to guess" in {
+      validate("Justin", "justin_w", "Password123") mustBe defined
+      validate("Justin", "justin_w", "1212121212") mustBe defined
+      validate("Justin", "justin_w", "my justin_w password") mustBe defined
     }
   }
 }

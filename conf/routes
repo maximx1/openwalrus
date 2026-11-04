@@ -15,6 +15,10 @@ PUT     /api/users/:handle/follow           controllers.ApiController.follow(han
 DELETE  /api/users/:handle/follow           controllers.ApiController.unfollow(handle: String)
 PUT     /api/me/profile-image               controllers.ApiController.setProfileImage
 PUT     /api/me/banner-image                controllers.ApiController.setBannerImage
+PUT     /api/me/password                    controllers.ApiController.changePassword
+GET     /api/me/sessions                    controllers.ApiController.mySessions
+DELETE  /api/me/sessions                    controllers.ApiController.endOtherSessions
+DELETE  /api/me/sessions/:id                controllers.ApiController.endSession(id: String)
 
 GET     /api/feed                           controllers.ApiController.feed(before: Option[Long])
 GET     /api/hot                            controllers.ApiController.hot

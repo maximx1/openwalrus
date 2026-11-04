@@ -2,12 +2,12 @@ package controllers
 
 import javax.inject.{Inject, Singleton}
 
-import models.{GruntView, User, UserView}
+import models.{GruntView, SessionRecord, User, UserView}
 import play.api.{Configuration, Logging}
 import play.api.libs.json.*
 import play.api.mvc.*
 import repositories.DatabaseHealth
-import services.{AccountService, GruntService, ImageService, LoginThrottle, SignUp}
+import services.{AccountService, AuthThrottle, GruntService, ImageService, SessionService, SignUp}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -19,7 +19,8 @@ class ApiController @Inject() (
     accounts: AccountService,
     gruntService: GruntService,
     images: ImageService,
-    throttle: LoginThrottle,
+    throttle: AuthThrottle,
+    sessions: SessionService,
     health: DatabaseHealth,
     config: Configuration
 )(using ec: ExecutionContext) extends AbstractController(cc) with Logging {
@@ -34,6 +35,8 @@ class ApiController @Inject() (
   private given Reads[PostGrunt] = Json.reads[PostGrunt]
   private case class ImageRef(imageId: String)
   private given Reads[ImageRef] = Json.reads[ImageRef]
+  private case class PasswordChange(current: String, next: String)
+  private given Reads[PasswordChange] = Json.reads[PasswordChange]
   private case class Viewed(ids: Seq[String])
   private given Reads[Viewed] = Json.reads[Viewed]
 
@@ -52,8 +55,18 @@ class ApiController @Inject() (
       case None => Future.successful(NotFound(error(s"There is no @$handle here.")))
     }
 
-  private def signedInAs(user: User, result: Result): Result =
-    result.withSession(SessionKey -> user.id)
+  private val TooManyTries = "Too many wrong passwords. Try again in a few minutes."
+
+  /**
+   * Signs the browser in as the user with a new session (any it had is ended), and answers
+   * with the user. A fresh token at every sign-in means no one can plant one beforehand.
+   */
+  private def signInAs(user: User, request: ViewerRequest[?], status: Status): Future[Result] =
+    for {
+      _ <- endViewerSession(request)
+      token <- sessions.start(user, request.headers.get(USER_AGENT).getOrElse(""), request.remoteAddress)
+      view <- accounts.view(user, Some(user.id))
+    } yield status(Json.toJson(view)).withNewSession.withSession(SessionKey -> token)
 
   // ---- health and session ----
 
@@ -70,32 +83,88 @@ class ApiController @Inject() (
     me.map(user => Ok(Json.obj("user" -> user, "allowRegistration" -> allowRegistration)))
   }
 
-  def signIn: Action[AnyContent] = Action.async { request =>
+  private def endViewerSession(request: ViewerRequest[?]): Future[Unit] =
+    request.viewer.zip(request.viewerSession).fold(Future.unit)((u, s) => sessions.end(u, s.id).map(_ => ()))
+
+  def signIn: Action[AnyContent] = Viewer.async { request =>
     withJson[SignIn](request) { form =>
-      if (throttle.blocked(form.handle))
-        Future.successful(TooManyRequests(error("Too many wrong passwords for that handle. Try again in a few minutes.")))
+      val address = request.remoteAddress
+      if (throttle.signInBlocked(form.handle, address)) Future.successful(TooManyRequests(error(TooManyTries)))
       else accounts.signIn(form.handle, form.password).flatMap {
         case Some(user) =>
-          throttle.succeeded(form.handle)
-          accounts.view(user, Some(user.id)).map(v => signedInAs(user, Ok(Json.toJson(v))))
+          throttle.signInSucceeded(form.handle)
+          signInAs(user, request, Ok)
         case None =>
-          throttle.failed(form.handle)
+          throttle.signInFailed(form.handle, address)
           Future.successful(Unauthorized(error("That handle and password don't match.")))
       }
     }
   }
 
-  def signOut: Action[AnyContent] = Action { NoContent.withNewSession }
+  /** Ends the session for good, not just in this browser. */
+  def signOut: Action[AnyContent] = Viewer.async { request =>
+    endViewerSession(request).map(_ => NoContent.withNewSession)
+  }
 
-  def signUp: Action[AnyContent] = Action.async { request =>
+  def signUp: Action[AnyContent] = Viewer.async { request =>
+    val address = request.remoteAddress
     if (!allowRegistration) Future.successful(Forbidden(error("Sign-ups are closed here.")))
+    else if (throttle.signUpBlocked(address)) Future.successful(TooManyRequests(error("Too many new accounts from here. Try again later.")))
     else withJson[SignUp](request) { form =>
       accounts.signUp(form).flatMap {
         case Left(problem) => Future.successful(BadRequest(error(problem)))
-        case Right(user) => accounts.view(user, Some(user.id)).map(v => signedInAs(user, Created(Json.toJson(v))))
+        case Right(user) =>
+          throttle.signedUp(address)
+          signInAs(user, request, Created)
       }
     }
   }
+
+  // ---- your account's security ----
+
+  /** Wrong current passwords count against the handle like wrong sign-ins, so a borrowed session can't guess it. */
+  def changePassword: Action[AnyContent] = SignedIn.async { request =>
+    withJson[PasswordChange](request) { form =>
+      val (user, address) = (request.user, request.remoteAddress)
+      if (throttle.signInBlocked(user.handle, address)) Future.successful(TooManyRequests(error(TooManyTries)))
+      else accounts.changePassword(user, form.current, form.next).flatMap {
+        case Left(problem) =>
+          if (problem == AccountService.WrongCurrentPassword) throttle.signInFailed(user.handle, address)
+          Future.successful(BadRequest(error(problem)))
+        case Right(()) =>
+          // Anyone else signed in as you is signed out.
+          sessions.endAllBut(user, Some(request.currentSession.id)).map(_ => NoContent)
+      }
+    }
+  }
+
+  /** Where you're signed in. */
+  def mySessions: Action[AnyContent] = SignedIn.async { request =>
+    sessions.list(request.user).map(list => Ok(Json.toJson(list.map(sessionJson(_, request.currentSession.id)))))
+  }
+
+  /** Signs out one of your sessions; this one included, which also clears the cookie. */
+  def endSession(id: String): Action[AnyContent] = SignedIn.async { request =>
+    sessions.end(request.user, id).map {
+      case false => NotFound(error("That session has ended already."))
+      case true if id == request.currentSession.id => NoContent.withNewSession
+      case true => NoContent
+    }
+  }
+
+  /** Signs out everywhere but here. */
+  def endOtherSessions: Action[AnyContent] = SignedIn.async { request =>
+    sessions.endAllBut(request.user, Some(request.currentSession.id)).map(_ => NoContent)
+  }
+
+  private def sessionJson(s: SessionRecord, currentId: String) = Json.obj(
+    "id" -> s.id,
+    "current" -> (s.id == currentId),
+    "createdAt" -> s.createdAt,
+    "lastSeenAt" -> s.lastSeenAt,
+    "userAgent" -> s.userAgent,
+    "address" -> s.address
+  )
 
   /** For the sign-up form, as you type: {available: true}, or false with the reason. */
   def handleAvailability(handle: String): Action[AnyContent] = Action.async {

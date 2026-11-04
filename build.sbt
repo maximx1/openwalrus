@@ -10,6 +10,8 @@ libraryDependencies ++= Seq(
   guice,
   filters,
   "org.mongodb.scala" %% "mongo-scala-driver" % "5.14.0",
+  // Argon2id for new password hashes; jBCrypt still checks accounts made before it.
+  "org.bouncycastle" % "bcprov-jdk18on" % "1.80",
   "org.mindrot" % "jbcrypt" % "0.4",
   "org.jsoup" % "jsoup" % "1.24.1",
   "io.github.gitbucket" % "markedj" % "1.0.21",

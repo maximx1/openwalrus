@@ -21,8 +21,11 @@ class ApiIntegrationSpec extends PlaySpec with BeforeAndAfterAll {
   private val mongoUri = sys.env.get("TEST_MONGO_URI")
   private val dbName = s"openwalrus_test_${System.currentTimeMillis()}"
 
+  private val Password = "tusks-and-whiskers"
+
+  // Every test request comes from the same address, so lift the per-address sign-up limit.
   private lazy val app: Application = new GuiceApplicationBuilder()
-    .configure("mongodb.uri" -> s"${mongoUri.get.stripSuffix("/")}/$dbName")
+    .configure("mongodb.uri" -> s"${mongoUri.get.stripSuffix("/")}/$dbName", "openwalrus.throttle.signUpsPerAddress" -> 1000)
     .build()
 
   // The last test stops the app along with its server, so clean up with a client of our own.
@@ -52,7 +55,7 @@ class ApiIntegrationSpec extends PlaySpec with BeforeAndAfterAll {
   private def availability(h: String) = contentAsJson(call(GET, s"/api/handles/$h"))
 
   private def signUp(handle: String): Session = {
-    val res = call(POST, "/api/users", Some(Json.obj("fullName" -> s"$handle Walrus", "handle" -> handle, "password" -> "password123")))
+    val res = call(POST, "/api/users", Some(Json.obj("fullName" -> s"$handle Walrus", "handle" -> handle, "password" -> Password)))
     status(res) mustBe CREATED
     session(res)
   }
@@ -74,7 +77,7 @@ class ApiIntegrationSpec extends PlaySpec with BeforeAndAfterAll {
       (availability("no%20spaces") \ "reason").as[String] must include("letters, numbers or underscores")
 
       // the same handle in another case is taken
-      status(call(POST, "/api/users", Some(Json.obj("fullName" -> "x", "handle" -> "ALICE", "password" -> "password123")))) mustBe BAD_REQUEST
+      status(call(POST, "/api/users", Some(Json.obj("fullName" -> "x", "handle" -> "ALICE", "password" -> Password)))) mustBe BAD_REQUEST
 
       val posted = call(POST, "/api/grunts", Some(Json.obj("message" -> "hello **world**, @bob")), Some(alice))
       status(posted) mustBe CREATED
@@ -106,7 +109,7 @@ class ApiIntegrationSpec extends PlaySpec with BeforeAndAfterAll {
       status(call(POST, "/api/grunts", Some(Json.obj("message" -> "back again")), Some(alice))) mustBe CREATED
 
       // sign in with the password; wrong password refused
-      status(call(POST, "/api/session", Some(Json.obj("handle" -> "Alice", "password" -> "password123")))) mustBe OK
+      status(call(POST, "/api/session", Some(Json.obj("handle" -> "Alice", "password" -> Password)))) mustBe OK
       status(call(POST, "/api/session", Some(Json.obj("handle" -> "alice", "password" -> "wrong-one")))) mustBe UNAUTHORIZED
     }
 
@@ -130,8 +133,8 @@ class ApiIntegrationSpec extends PlaySpec with BeforeAndAfterAll {
     "refuse sign-in for a while after too many wrong passwords" in {
       assume(mongoUri.isDefined, "TEST_MONGO_URI is not set")
       val wrong = Some(Json.obj("handle" -> "bob", "password" -> "not-it-at-all"))
-      (1 to services.LoginThrottle.MaxFailures).foreach(_ => status(call(POST, "/api/session", wrong)) mustBe UNAUTHORIZED)
-      status(call(POST, "/api/session", Some(Json.obj("handle" -> "bob", "password" -> "password123")))) mustBe TOO_MANY_REQUESTS
+      (1 to services.AuthThrottle.MaxFailuresPerHandle).foreach(_ => status(call(POST, "/api/session", wrong)) mustBe UNAUTHORIZED)
+      status(call(POST, "/api/session", Some(Json.obj("handle" -> "bob", "password" -> Password)))) mustBe TOO_MANY_REQUESTS
     }
 
     "keep friends-only grunts to the author's friends, count views once per person, and rank what's hot" in {
@@ -173,6 +176,69 @@ class ApiIntegrationSpec extends PlaySpec with BeforeAndAfterAll {
       (availability("hot") \ "available").as[Boolean] mustBe false
     }
 
+    "keep sessions on the server: sign-out, password changes and the session list end them" in {
+      assume(mongoUri.isDefined, "TEST_MONGO_URI is not set")
+      def signIn(handle: String, password: String) = call(POST, "/api/session", Some(Json.obj("handle" -> handle, "password" -> password)))
+      def who(s: Session) = (contentAsJson(call(GET, "/api/session", None, Some(s))) \ "user" \ "handle").asOpt[String]
+      def sessionsOf(s: Session) = contentAsJson(call(GET, "/api/me/sessions", None, Some(s))).as[JsArray].value
+
+      val laptop = signUp("gina")
+      val phone = session(signIn("gina", Password))
+      val tablet = session(signIn("gina", Password))
+      Seq(laptop, phone, tablet).map(who) mustBe Seq(Some("gina"), Some("gina"), Some("gina"))
+      laptop.get("sid") must not equal phone.get("sid")
+      sessionsOf(laptop) must have size 3
+      sessionsOf(laptop).count(s => (s \ "current").as[Boolean]) mustBe 1
+
+      // Signing out ends that session on the server: a copy of the cookie is useless.
+      status(call(DELETE, "/api/session", None, Some(tablet))) mustBe NO_CONTENT
+      who(tablet) mustBe None
+      status(call(POST, "/api/grunts", Some(Json.obj("message" -> "still me?")), Some(tablet))) mustBe UNAUTHORIZED
+
+      // Ending another session from the list.
+      val phoneId = sessionsOf(laptop).find(s => !(s \ "current").as[Boolean]).map(s => (s \ "id").as[String]).get
+      status(call(DELETE, s"/api/me/sessions/$phoneId", None, Some(laptop))) mustBe NO_CONTENT
+      who(phone) mustBe None
+      status(call(DELETE, s"/api/me/sessions/$phoneId", None, Some(laptop))) mustBe NOT_FOUND
+      // Someone else's session can't be ended.
+      val other = signUp("hank")
+      val hanksId = (sessionsOf(other).head \ "id").as[String]
+      status(call(DELETE, s"/api/me/sessions/$hanksId", None, Some(laptop))) mustBe NOT_FOUND
+      who(other) mustBe Some("hank")
+
+      // A new password needs the current one, and signs out everywhere else.
+      val desk = session(signIn("gina", Password))
+      def change(s: Session, current: String, next: String) =
+        call(PUT, "/api/me/password", Some(Json.obj("current" -> current, "next" -> next)), Some(s))
+      status(change(laptop, "not-my-password", "a-whole-new-one")) mustBe BAD_REQUEST
+      (contentAsJson(change(laptop, Password, "password123")) \ "error").as[String] must include("easy to guess")
+      status(change(laptop, Password, "a-whole-new-one")) mustBe NO_CONTENT
+      who(laptop) mustBe Some("gina")
+      who(desk) mustBe None
+      status(signIn("gina", Password)) mustBe UNAUTHORIZED
+      status(signIn("gina", "a-whole-new-one")) mustBe OK
+
+      // The 2015 cookie, which held the user's id, signs no one in now.
+      val ginaId = (contentAsJson(call(GET, "/api/session", None, Some(laptop))) \ "user" \ "id").as[String]
+      who(Session(Map("userId" -> ginaId))) mustBe None
+      who(Session(Map("sid" -> ginaId))) mustBe None
+    }
+
+    "sign in an account with a 2015 bcrypt hash, and replace the hash with Argon2id" in {
+      assume(mongoUri.isDefined, "TEST_MONGO_URI is not set")
+      import org.bson.Document
+      import org.mindrot.jbcrypt.BCrypt
+      import org.mongodb.scala.SingleObservableFuture
+      import org.mongodb.scala.model.Filters
+      val mongo = app.injector.instanceOf[repositories.mongo.MongoDatabaseProvider]
+      await(mongo.users.insertOne(new Document("handle", "oldtimer").append("fullName", "Old Timer")
+        .append("password", BCrypt.hashpw("short1", BCrypt.gensalt(4))).append("creationDate", 1000L)).toFuture())
+      // The password predates today's rules; it still works.
+      status(call(POST, "/api/session", Some(Json.obj("handle" -> "oldtimer", "password" -> "short1")))) mustBe OK
+      await(mongo.users.find(Filters.equal("handle", "oldtimer")).head()).getString("password") must startWith("$argon2id$")
+      status(call(POST, "/api/session", Some(Json.obj("handle" -> "oldtimer", "password" -> "short1")))) mustBe OK
+    }
+
     "over real HTTP, accept the web client's requests and refuse ones forged by another site" in {
       assume(mongoUri.isDefined, "TEST_MONGO_URI is not set")
       import java.net.URI
@@ -190,7 +256,7 @@ class ApiIntegrationSpec extends PlaySpec with BeforeAndAfterAll {
           if (fromClient) b.header("X-Requested-With", "openwalrus")
           http.send(b.build(), HttpResponse.BodyHandlers.ofString())
         }
-        val signIn = post("/api/session", """{"handle":"alice","password":"password123"}""", "application/json", None, fromClient = true)
+        val signIn = post("/api/session", s"""{"handle":"alice","password":"$Password"}""", "application/json", None, fromClient = true)
         signIn.statusCode mustBe OK
         val cookie = signIn.headers.firstValue("Set-Cookie").get.takeWhile(_ != ';')
 

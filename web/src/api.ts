@@ -29,6 +29,17 @@ export type Grunt = {
 
 export type Session = { user: User | null; allowRegistration: boolean };
 
+/** A browser you're signed in on. */
+export type SignedInSession = {
+  id: string;
+  /** The one making this request. */
+  current: boolean;
+  createdAt: number;
+  lastSeenAt: number;
+  userAgent: string;
+  address: string;
+};
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -85,6 +96,10 @@ export const api = {
   unfollow: (handle: string) => request<User>("DELETE", `/users/${enc(handle)}/follow`),
   setProfileImage: (imageId: string) => request<void>("PUT", "/me/profile-image", { imageId }),
   setBannerImage: (imageId: string) => request<void>("PUT", "/me/banner-image", { imageId }),
+  changePassword: (current: string, next: string) => request<void>("PUT", "/me/password", { current, next }),
+  sessions: () => request<SignedInSession[]>("GET", "/me/sessions"),
+  endSession: (id: string) => request<void>("DELETE", `/me/sessions/${enc(id)}`),
+  endOtherSessions: () => request<void>("DELETE", "/me/sessions"),
 
   feed: (before?: number) => request<Grunt[]>("GET", `/feed${before ? `?before=${before}` : ""}`),
   hot: () => request<Grunt[]>("GET", "/hot"),

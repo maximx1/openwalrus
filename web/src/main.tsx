@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes } from "react-router";
 import { Layout } from "./components/Layout.tsx";
 import { HomePage } from "./pages/HomePage.tsx";
 import { HotPage } from "./pages/HotPage.tsx";
+import { SettingsPage } from "./pages/SettingsPage.tsx";
 import { SignInPage } from "./pages/SignInPage.tsx";
 import { SignUpPage } from "./pages/SignUpPage.tsx";
 import { TeamPage } from "./pages/TeamPage.tsx";
@@ -20,6 +21,7 @@ createRoot(document.getElementById("root")!).render(
             <Route index element={<HomePage />} />
             <Route path="team" element={<TeamPage />} />
             <Route path="hot" element={<HotPage />} />
+            <Route path="settings" element={<SettingsPage />} />
             <Route path="login" element={<SignInPage />} />
             <Route path="signup" element={<SignUpPage />} />
             <Route path=":handle" element={<ProfilePage tab="grunts" />} />

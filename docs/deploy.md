@@ -56,7 +56,7 @@ All of them go in `.env`, next to `compose.yaml`.
 | Setting | Required | What it does |
 | --- | --- | --- |
 | `APP_URL` | Yes | The address the app is opened at, exactly as in the browser. Requests for any other host are refused. With `https://` the session cookie is sent over HTTPS only |
-| `APP_SECRET` | Yes | Signs session cookies. Anyone who knows it can sign in as any user. Changing it signs everyone out |
+| `APP_SECRET` | Yes | Signs the session cookie. Keep it secret; changing it signs everyone out |
 | `ALLOW_REGISTRATION` | No | `false` stops new sign-ups. Default `true` |
 | `MONGO_URI` | No | The MongoDB to use. Default: the bundled `mongo` service, `mongodb://mongo:27017/openwalrus` |
 | `APP_PORT` | No | Port on the server. Default `9000` |
@@ -174,7 +174,9 @@ server {
 ```
 
 The proxy must pass the `Host` header through unchanged: the app answers only requests
-for the host in `APP_URL`.
+for the host in `APP_URL`. It should also set `X-Forwarded-For` (Caddy does by itself),
+which the app believes from proxies on this machine or a private network only. The limits
+on wrong passwords per address use it; without it every visitor looks like the proxy.
 
 ### B. Use the bundled Caddy
 
@@ -293,6 +295,22 @@ docker compose logs -f app
 docker compose ps
 ```
 
+## Sign-in security
+
+- Passwords are hashed with Argon2id. Accounts from the 2015 version had bcrypt hashes;
+  they still work, and each is replaced with Argon2id the next time its owner signs in.
+  New passwords need 10 characters and can't be the handle or a well-known password.
+- Sessions are kept in the database (the `sessions` collection), and the cookie holds only
+  a random token. Signing out ends the session for good, not just in that browser. A
+  session ends after 30 days unused, or 90 days after sign-in.
+- Settings (`/settings`) lists where you're signed in and signs out any of them. Changing
+  your password there signs out everywhere else.
+- Wrong passwords are limited to 10 per handle and 50 per address in 15 minutes, and new
+  accounts to 5 per address an hour.
+- With an `https://` `APP_URL` the session cookie is `Secure` and `__Host-` prefixed, and
+  browsers are told to use HTTPS only (HSTS). Every page sends a content security policy
+  that only runs the app's own scripts.
+
 ## When something is off
 
 | Symptom | Likely cause |
@@ -300,7 +318,7 @@ docker compose ps
 | `Set APP_URL in .env …` or `Set APP_SECRET …` when starting | `.env` is missing or lacks that line |
 | Every page is a bare 400 "Host not allowed" | The address in the browser isn't the host in `APP_URL`, or the proxy rewrites `Host` |
 | You sign in and are signed straight back out | `APP_URL` is `https://` but you opened plain `http://` |
-| "Too many wrong passwords for that handle" | Ten wrong passwords for that handle in 15 minutes. It clears by itself after that, or at once with `docker compose restart app` |
+| "Too many wrong passwords" | Ten wrong passwords for that handle, or 50 from one address, in 15 minutes. It clears by itself, or at once with `docker compose restart app`. If it happens to everyone together, the proxy isn't sending `X-Forwarded-For` |
 | `app` stays `unhealthy` | `docker compose logs app`. A timeout talking to MongoDB means `MONGO_URI` is wrong or the database is unreachable |
 | Port 9000 already in use | Another app (LeCarton is also a Play app) has it. Set `APP_PORT` to a free one |
 | `compose build requires buildx` | Install `docker-buildx` |

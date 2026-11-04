@@ -27,6 +27,7 @@ export function Layout() {
           {!loaded ? null : user ? (
             <>
               <NavLink to={`/${user.handle}`}>@{user.handle}</NavLink>
+              <NavLink to="/settings">Settings</NavLink>
               <button type="button" className="link-button" onClick={signOut}>
                 Log out
               </button>

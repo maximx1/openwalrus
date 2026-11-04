@@ -18,6 +18,7 @@ trait UserRepository {
   def all(): Future[Seq[User]]
   def setProfileImage(userId: String, imageId: String): Future[Unit]
   def setBannerImage(userId: String, imageId: String): Future[Unit]
+  def setPasswordHash(userId: String, hash: String): Future[Unit]
   /** Records both sides: userId follows targetId, and targetId is followed by userId. */
   def follow(userId: String, targetId: String): Future[Unit]
   def unfollow(userId: String, targetId: String): Future[Unit]
@@ -38,6 +39,18 @@ trait GruntRepository {
   def recordViews(ids: Seq[String], viewerId: String, reader: Reader): Future[Unit]
   /** Number of grunts each user has written. Users with none are left out. */
   def countByAuthor(): Future[Map[String, Int]]
+}
+
+trait SessionRepository {
+  def create(session: NewSession): Future[SessionRecord]
+  def findByTokenHash(tokenHash: String): Future[Option[SessionRecord]]
+  /** Notes the session as used now, and pushes back when it ends for lack of use. */
+  def touch(id: String, at: Long, expiresAt: Long): Future[Unit]
+  def forUser(userId: String): Future[Seq[SessionRecord]]
+  /** Ends one of the user's sessions. False if they have no session with that id. */
+  def delete(userId: String, id: String): Future[Boolean]
+  /** Ends all the user's sessions but `except`. */
+  def deleteAll(userId: String, except: Option[String]): Future[Unit]
 }
 
 trait ImageRepository {
