@@ -95,6 +95,14 @@ class ApiController @Inject() (
     }
   }
 
+  /** For the sign-up form, as you type: {available: true}, or false with the reason. */
+  def handleAvailability(handle: String): Action[AnyContent] = Action.async {
+    accounts.handleProblem(handle).map {
+      case None => Ok(Json.obj("available" -> true))
+      case Some(problem) => Ok(Json.obj("available" -> false, "reason" -> problem))
+    }
+  }
+
   // ---- people ----
 
   def users: Action[AnyContent] = Viewer.async { request =>

@@ -69,6 +69,8 @@ export const api = {
   signUp: (fullName: string, handle: string, password: string) =>
     request<User>("POST", "/users", { fullName, handle, password }),
 
+  handleAvailability: (handle: string) =>
+    request<{ available: boolean; reason?: string }>("GET", `/handles/${enc(handle)}`),
   users: () => request<User[]>("GET", "/users"),
   user: (handle: string) => request<User>("GET", `/users/${enc(handle)}`),
   userGrunts: (handle: string, before?: number) =>

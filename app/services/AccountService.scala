@@ -34,6 +34,15 @@ class AccountService @Inject() (users: UserRepository, grunts: GruntRepository)(
   def signIn(handle: String, password: String): Future[Option[User]] =
     users.findByHandle(handle.trim.stripPrefix("@")).map(_.filter(u => checkPassword(password, u.passwordHash)))
 
+  /** Why a handle can't be had (badly formed, or someone has it), or None if it's free. */
+  def handleProblem(raw: String): Future[Option[String]] = {
+    val handle = raw.trim.stripPrefix("@")
+    handleShapeProblem(handle) match {
+      case Some(problem) => Future.successful(Some(problem))
+      case None => users.findByHandle(handle).map(_.map(_ => "That handle is taken."))
+    }
+  }
+
   def findById(id: String): Future[Option[User]] = users.findById(id)
 
   def findByHandle(handle: String): Future[Option[User]] = users.findByHandle(handle)
@@ -82,9 +91,13 @@ object AccountService {
   def validate(fullName: String, handle: String, password: String): Option[String] =
     if (fullName.isEmpty) Some("Enter your name.")
     else if (fullName.length > 60) Some("That name is too long (60 characters at most).")
-    else if (HandlePattern.findFirstIn(handle).isEmpty) Some("A handle is 1 to 30 letters, numbers or underscores.")
+    else handleShapeProblem(handle).orElse(
+      Option.when(password.length < MinPasswordLength)(s"Use a password of at least $MinPasswordLength characters.")
+    )
+
+  def handleShapeProblem(handle: String): Option[String] =
+    if (HandlePattern.findFirstIn(handle).isEmpty) Some("A handle is 1 to 30 letters, numbers or underscores.")
     else if (ReservedHandles.contains(handle.toLowerCase)) Some("That handle is taken.")
-    else if (password.length < MinPasswordLength) Some(s"Use a password of at least $MinPasswordLength characters.")
     else None
 
   private def checkPassword(password: String, hash: String): Boolean =

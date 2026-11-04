@@ -6,6 +6,7 @@ DELETE  /api/session                        controllers.ApiController.signOut
 
 GET     /api/users                          controllers.ApiController.users
 POST    /api/users                          controllers.ApiController.signUp
+GET     /api/handles/:handle                controllers.ApiController.handleAvailability(handle: String)
 GET     /api/users/:handle                  controllers.ApiController.user(handle: String)
 GET     /api/users/:handle/grunts           controllers.ApiController.userGrunts(handle: String, before: Option[Long])
 GET     /api/users/:handle/followers        controllers.ApiController.followers(handle: String)

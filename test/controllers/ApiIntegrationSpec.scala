@@ -64,6 +64,14 @@ class ApiIntegrationSpec extends PlaySpec with BeforeAndAfterAll {
       val alice = signUp("alice")
       val bob = signUp("bob")
 
+      // the sign-up form's live check
+      def availability(h: String) = contentAsJson(call(GET, s"/api/handles/$h"))
+      (availability("ALICE") \ "available").as[Boolean] mustBe false
+      (availability("ALICE") \ "reason").as[String] must include("taken")
+      (availability("carol") \ "available").as[Boolean] mustBe true
+      (availability("team") \ "available").as[Boolean] mustBe false
+      (availability("no%20spaces") \ "reason").as[String] must include("letters, numbers or underscores")
+
       // the same handle in another case is taken
       status(call(POST, "/api/users", Some(Json.obj("fullName" -> "x", "handle" -> "ALICE", "password" -> "password123")))) mustBe BAD_REQUEST
 

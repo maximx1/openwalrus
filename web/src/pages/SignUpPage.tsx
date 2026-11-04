@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router";
 import { api } from "../api.ts";
+import { HandleOrb, type OrbState } from "../components/HandleOrb.tsx";
 import { useSession } from "../session.tsx";
 
 export function SignUpPage() {
@@ -11,6 +12,7 @@ export function SignUpPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const availability = useHandleAvailability(handle);
 
   if (user) return <Navigate to="/" replace />;
   if (!allowRegistration)
@@ -52,16 +54,22 @@ export function SignUpPage() {
       </label>
       <label>
         Handle
-        <input
-          name="handle"
-          autoComplete="username"
-          required
-          maxLength={30}
-          pattern="@?[A-Za-z0-9_]+"
-          title="Letters, numbers and underscores"
-          value={handle}
-          onChange={(e) => setHandle(e.target.value)}
-        />
+        <span className="input-with-orb">
+          <input
+            name="handle"
+            autoComplete="username"
+            required
+            maxLength={31}
+            aria-describedby="handle-status"
+            aria-invalid={availability.state === "taken"}
+            value={handle}
+            onChange={(e) => setHandle(e.target.value)}
+          />
+          <HandleOrb state={availability.state} />
+        </span>
+        <span id="handle-status" className="field-note" aria-live="polite">
+          {availability.state === "taken" ? availability.reason : ""}
+        </span>
       </label>
       <label>
         Password
@@ -83,4 +91,32 @@ export function SignUpPage() {
       </p>
     </form>
   );
+}
+
+/** Asks the server whether a handle is free, a moment after typing stops. */
+function useHandleAvailability(raw: string): { state: OrbState; reason: string } {
+  const handle = raw.trim().replace(/^@/, "");
+  const [result, setResult] = useState<{ handle: string; state: OrbState; reason: string }>({
+    handle: "",
+    state: "idle",
+    reason: "",
+  });
+
+  useEffect(() => {
+    if (!handle) return;
+    let live = true;
+    const timer = setTimeout(() => {
+      api.handleAvailability(handle).then(
+        (r) => live && setResult({ handle, state: r.available ? "available" : "taken", reason: r.reason ?? "" }),
+        () => {}, // no answer: leave the orb as it was
+      );
+    }, 300);
+    return () => {
+      live = false;
+      clearTimeout(timer);
+    };
+  }, [handle]);
+
+  // While a new answer is on its way, keep showing the last one so the orb doesn't flicker.
+  return handle ? result : { state: "idle", reason: "" };
 }
